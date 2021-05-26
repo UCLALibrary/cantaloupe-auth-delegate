@@ -4,6 +4,14 @@ A Java delegate for supporting IIIF Auth in Cantaloupe.
 
 This is not ready for use. If you've found this already somehow, bookmark it and return again later. Thanks.
 
+### Prerequisites
+
+* [A JDK](https://adoptopenjdk.net/) (>= 11)
+* [Maven](https://maven.apache.org/)
+* [git-lfs](https://git-lfs.github.com/)
+
+The git-lfs application must be installed and have been initialized locally before the Cantaloupe dependency will be able to be downloaded.
+
 ### Building the Delegate
 
 There is a two step build process. First, to install the cantaloupe jar in your local Maven repository, run:
