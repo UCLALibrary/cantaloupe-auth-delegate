@@ -11,6 +11,12 @@ release.properties
 dependency-reduced-pom.xml
 buildNumber.properties
 
+# Ignore auto-generated tool configs
+.checkstyle
+src/main/tools/eclipse
+src/main/generated
+logback-test.xml
+
 # Support for CI-friendly POM versions
 .flattened-pom.xml
 
