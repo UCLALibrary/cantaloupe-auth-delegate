@@ -1,4 +1,8 @@
+
+# Maven build artifacts
 target/
+
+# Maven release artifacts
 pom.xml.tag
 pom.xml.releaseBackup
 pom.xml.versionsBackup
@@ -6,6 +10,16 @@ pom.xml.next
 release.properties
 dependency-reduced-pom.xml
 buildNumber.properties
+
+# Ignore auto-generated tool configs
+.checkstyle
+src/main/tools/eclipse
+src/main/generated
+logback-test.xml
+
+# Support for CI-friendly POM versions
+.flattened-pom.xml
+
+# mvnw build artifacts: https://github.com/takari/maven-wrapper#usage-without-binary-jar
 .mvn/timing.properties
-# https://github.com/takari/maven-wrapper#usage-without-binary-jar
 .mvn/wrapper/maven-wrapper.jar
