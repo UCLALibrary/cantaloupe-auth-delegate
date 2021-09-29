@@ -58,15 +58,26 @@
   </developers>
 
   <properties>
-    <!-- Revision override supports CI-friendly builds -->
-    <revision>0.0.0-SNAPSHOT</revision>
-
     <!-- Dependency versions -->
-    <freelib.utils.version>2.4.0</freelib.utils.version>
-    <cantaloupe.version>5.0.2</cantaloupe.version>
+    <freelib.utils.version>3.0.1</freelib.utils.version>
+    <cantaloupe.version>5.0.4</cantaloupe.version>
 
     <!-- Plugin versions -->
-    <freelib.maven.version>0.1.3</freelib.maven.version>
+    <freelib.maven.version>0.3.0</freelib.maven.version>
+    <download.plugin.version>1.6.7</download.plugin.version>
+    <docker.maven.plugin.version>0.37.0</docker.maven.plugin.version>
+
+    <!-- Docker versions for testing -->
+    <hauth.container.version>latest</hauth.container.version>
+    <psql.container.version>12.7-alpine</psql.container.version>
+    <redis.container.version>6.2.5-alpine</redis.container.version>
+    <cantaloupe.container.version>5.0.3-0</cantaloupe.container.version>
+
+    <!-- The Docker registry user and password used for publishing images -->
+    <docker.registry.username />
+    <docker.registry.password />
+    <!-- The Docker registry account, if supplied, must end with a slash (e.g. "account/") -->
+    <docker.registry.account />
   </properties>
 
   <dependencies>
@@ -97,7 +108,30 @@
 
   <build>
     <plugins>
-    <plugin>
+      <!-- Reserve ports for our test containers -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <configuration>
+          <portNames>
+            <portName>test.http.port</portName>
+            <portName>test.db.port</portName>
+            <portName>test.iiif.images.port</portName>
+            <portName>test.db.cache.port</portName>
+          </portNames>
+        </configuration>
+        <executions>
+          <execution>
+            <id>reserve-port</id>
+            <phase>initialize</phase>
+            <goals>
+              <goal>reserve-network-port</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- Install Cantaloupe, which isn't distributed through Maven Central -->
+      <plugin>
         <artifactId>maven-install-plugin</artifactId>
         <executions>
           <execution>
@@ -118,18 +152,37 @@
           </execution>
         </executions>
       </plugin>
-      <!-- Generate our MessageCodes class from the messages resource file -->
+      <!-- Generate some default testing values -->
       <plugin>
         <groupId>info.freelibrary</groupId>
         <artifactId>freelib-maven-plugins</artifactId>
         <executions>
+          <!-- generate I18n codes execution runs by default -->
           <execution>
-            <phase>process-resources</phase>
+            <id>generate-db-password</id>
             <goals>
-              <goal>generate-codes</goal>
+              <goal>set-uuid-property</goal>
             </goals>
             <configuration>
-              <generatedSourcesDirectory>src/main/generated</generatedSourcesDirectory>
+              <name>test.db.password</name>
+            </configuration>
+          </execution>
+          <execution>
+            <id>generate-secret-key-password</id>
+            <goals>
+              <goal>set-uuid-property</goal>
+            </goals>
+            <configuration>
+              <name>test.secretkey.password</name>
+            </configuration>
+          </execution>
+          <execution>
+            <id>generate-secret-key-salt</id>
+            <goals>
+              <goal>set-uuid-property</goal>
+            </goals>
+            <configuration>
+              <name>test.secretkey.salt</name>
             </configuration>
           </execution>
         </executions>
@@ -154,13 +207,174 @@
         <artifactId>maven-enforcer-plugin</artifactId>
       </plugin>
       <plugin>
-        <artifactId>maven-dependency-plugin</artifactId>
-      </plugin>
-      <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <argLine>${jacoco.agent.arg}</argLine>
         </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-dependency-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>com.googlecode.maven-download-plugin</groupId>
+        <artifactId>download-maven-plugin</artifactId>
+        <version>${download.plugin.version}</version>
+        <executions>
+          <execution>
+            <id>download-db-config</id>
+            <phase>pre-integration-test</phase>
+            <goals>
+              <goal>wget</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <url>https://raw.githubusercontent.com/UCLALibrary/hauth/main/src/test/resources/db/authzdb.sql</url>
+          <outputDirectory>src/test/resources/db/</outputDirectory>
+          <failOnError>true</failOnError>
+          <!-- Update this each time since it may change -->
+          <overwrite>true</overwrite>
+          <skipCache>true</skipCache>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>io.fabric8</groupId>
+        <artifactId>docker-maven-plugin</artifactId>
+        <version>${docker.maven.plugin.version}</version>
+        <configuration>
+          <imagesMap>
+            <hauth_pgsql>
+              <name>postgres:${psql.container.version}</name>
+              <run>
+                <containerNamePattern>delegate_hauth_pgsql</containerNamePattern>
+                <ports>
+                  <port>${test.db.port}:5432</port>
+                </ports>
+                <volumes>
+                  <bind>
+                    <!-- Initialize the database -->
+                    <volume>${project.basedir}/src/test/resources/db/:/docker-entrypoint-initdb.d/</volume>
+                  </bind>
+                </volumes>
+                <env>
+                  <POSTGRES_PASSWORD>${test.db.password}</POSTGRES_PASSWORD>
+                </env>
+                <wait>
+                  <log>database system is ready to accept connections</log>
+                </wait>
+              </run>
+            </hauth_pgsql>
+            <hauth_redis>
+              <name>redis:${redis.container.version}</name>
+              <run>
+                <containerNamePattern>delegate_hauth_redis</containerNamePattern>
+                <ports>
+                  <port>${test.db.cache.port}:6379</port>
+                </ports>
+                <wait>
+                  <log>Ready to accept connections</log>
+                </wait>
+              </run>
+            </hauth_redis>
+            <hauth_cantaloupe>
+              <name>uclalibrary/cantaloupe:${cantaloupe.container.version}</name>
+              <run>
+                <containerNamePattern>delegate_hauth_cantaloupe</containerNamePattern>
+                <ports>
+                  <port>${test.iiif.images.port}:8182</port>
+                </ports>
+                <volumes>
+                  <bind>
+                    <!-- Location of test image(s) -->
+                    <volume>${project.basedir}/src/test/resources/images/:/imageroot/</volume>
+                    <!-- Load the delegate for integration testing -->
+                    <volume>${project.basedir}/target/cantaloupe-auth-delegate-${project.version}.jar:/usr/local/cantaloupe/delegate.jar</volume>
+                  </bind>
+                </volumes>
+                <env>
+                  <CANTALOUPE_ENDPOINT_ADMIN_SECRET>secret</CANTALOUPE_ENDPOINT_ADMIN_SECRET>
+                  <CANTALOUPE_ENDPOINT_ADMIN_ENABLED>true</CANTALOUPE_ENDPOINT_ADMIN_ENABLED>
+                  <CANTALOUPE_DELEGATE_SCRIPT_ENABLED>true</CANTALOUPE_DELEGATE_SCRIPT_ENABLED>
+                  <CANTALOUPE_DELEGATE_SCRIPT_PATHNAME>/usr/local/cantaloupe/delegate.jar</CANTALOUPE_DELEGATE_SCRIPT_PATHNAME>
+                </env>
+                <wait>
+                  <log>Started @</log>
+                </wait>
+              </run>
+            </hauth_cantaloupe>
+            <hauth>
+              <name>uclalibrary/hauth:${hauth.container.version}</name>
+              <run>
+                <containerNamePattern>delegate_hauth</containerNamePattern>
+                <ports>
+                  <!-- Start test container on an available host port -->
+                  <port>${test.http.port}:8888</port>
+                </ports>
+                <env>
+                  <ACCESS_TOKEN_EXPIRES_IN>1800</ACCESS_TOKEN_EXPIRES_IN>
+                  <HAUTH_VERSION>${hauth.container.version}</HAUTH_VERSION>
+                  <!-- Default Docker bridge host IP -->
+                  <DB_HOST>172.17.0.1</DB_HOST>
+                  <DB_PORT>${test.db.port}</DB_PORT>
+                  <DB_PASSWORD>${test.db.password}</DB_PASSWORD>
+                  <DB_CACHE_PORT>${test.db.cache.port}</DB_CACHE_PORT>
+                  <CAMPUS_NETWORK_SUBNETS>172.17.0.0/24,192.168.0.0/24</CAMPUS_NETWORK_SUBNETS>
+                  <SECRET_KEY_GENERATION_PASSWORD>${test.secretkey.password}</SECRET_KEY_GENERATION_PASSWORD>
+                  <SECRET_KEY_GENERATION_SALT>${test.secretkey.salt}</SECRET_KEY_GENERATION_SALT>
+                </env>
+                <dependsOn>
+                  <container>delegate_hauth_pgsql</container>
+                  <container>delegate_hauth_redis</container>
+                  <container>delegate_hauth_cantaloupe</container>
+                </dependsOn>
+                <!-- Test to make sure the server started as expected -->
+                <wait>
+                  <http>
+                    <url>http://localhost:${test.http.port}/status</url>
+                    <method>GET</method>
+                    <status>200</status>
+                  </http>
+                </wait>
+              </run>
+            </hauth>
+          </imagesMap>
+        </configuration>
+        <executions>
+
+          <!-- Builds the Docker image -->
+          <execution>
+            <id>docker-build</id>
+            <phase>pre-integration-test</phase>
+            <goals>
+              <goal>build</goal>
+            </goals>
+          </execution>
+
+          <!-- Starts the Docker container for integration testing -->
+          <execution>
+            <id>docker-start</id>
+            <phase>pre-integration-test</phase>
+            <goals>
+              <goal>start</goal>
+            </goals>
+          </execution>
+
+          <!-- Stops the integration tests' Docker container -->
+          <execution>
+            <id>docker-stop</id>
+            <phase>post-integration-test</phase>
+            <goals>
+              <goal>stop</goal>
+            </goals>
+            <configuration>
+              <allContainers>true</allContainers>
+              <stopNamePattern>delegate_hauth*</stopNamePattern>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
@@ -180,6 +394,6 @@
   <parent>
     <artifactId>freelib-parent</artifactId>
     <groupId>info.freelibrary</groupId>
-    <version>6.9.2</version>
+    <version>7.0.4</version>
   </parent>
 </project>
