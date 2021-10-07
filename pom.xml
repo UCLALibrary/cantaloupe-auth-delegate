@@ -59,10 +59,12 @@
 
   <properties>
     <!-- Dependency versions -->
+    <jiiify.presentation.version>0.10.0</jiiify.presentation.version>
     <freelib.utils.version>3.0.1</freelib.utils.version>
     <cantaloupe.version>5.0.4</cantaloupe.version>
 
     <!-- Plugin versions -->
+    <shade.plugin.version>3.2.4</shade.plugin.version>
     <freelib.maven.version>0.3.0</freelib.maven.version>
     <download.plugin.version>1.6.7</download.plugin.version>
     <docker.maven.plugin.version>0.37.0</docker.maven.plugin.version>
@@ -88,9 +90,15 @@
       <version>${freelib.utils.version}</version>
     </dependency>
     <dependency>
+      <groupId>info.freelibrary</groupId>
+      <artifactId>jiiify-presentation-v3</artifactId>
+      <version>${jiiify.presentation.version}</version>
+    </dependency>
+    <dependency>
       <groupId>edu.illinois.library.cantaloupe</groupId>
       <artifactId>cantaloupe</artifactId>
       <version>${cantaloupe.version}</version>
+      <scope>provided</scope>
     </dependency>
 
     <!-- Test dependencies -->
@@ -372,6 +380,34 @@
             <configuration>
               <allContainers>true</allContainers>
               <stopNamePattern>delegate_hauth*</stopNamePattern>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>${shade.plugin.version}</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <dependencyReducedPomLocation>${basedir}/.dependency-reduced-pom.xml</dependencyReducedPomLocation>
+              <minimizeJar>true</minimizeJar>
+              <filters>
+                <filter>
+                  <artifact>*:*</artifact>
+                  <excludes>
+                    <exclude>module-info.class</exclude>
+                    <exclude>META-INF/MANIFEST.MF</exclude>
+                    <exclude>META-INF/LICENSE</exclude>
+                    <exclude>META-INF/NOTICE</exclude>
+                  </excludes>
+                </filter>
+              </filters>
             </configuration>
           </execution>
         </executions>
