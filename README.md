@@ -42,7 +42,17 @@ To find out which host ports the containers are running on, look for output in t
 
 Those port numbers can be used, in conjunction with the localhost host name, to access each service's public interface. The port numbers will change with each run, according to which ports are free on the machine.
 
+It's also possible to override one (or more) of these values from the command line (if you don't want to look the port number of a particular service each time you restart). To do this, you'd type:
+
+    mvn initialize docker:build docker:run -Dtest.iiif.images.port=8888
+
 Once all manual testing is completed, the containers can be stopped by typing: [ctrl]-C.
+
+### Required Environmental Properties
+
+There are some environmental properties that are supplied automatically for the tests, but which need to be explicitly set on a production (test, dev, etc.) system. These include:
+
+    AUTH_COOKIE_SERVICE="https://example.com/cookie"
 
 ### Deploying the Delegate
 
@@ -52,10 +62,10 @@ To deploy a SNAPSHOT version of the delegate, run the following (with the proper
 
 To use the deployed Jar file with a [docker-cantaloupe](https://github.com/uclalibrary/docker-cantaloupe) container, supply the Maven repository location of the delegate via the DELEGATE_URL.
 
-For instance:
+For instance, on a Linux machine:
 
     docker run -p 8182:8182 -e "CANTALOUPE_ENDPOINT_ADMIN_SECRET=secret" -e "CANTALOUPE_ENDPOINT_ADMIN_ENABLED=true" \
       -e "DELEGATE_URL=https://s01.oss.sonatype.org/content/repositories/snapshots/edu/ucla/library/cantaloupe-auth-delegate/0.0.1-SNAPSHOT/cantaloupe-auth-delegate-0.0.1-20210526.031106-2.jar" \
-      --name melon -v "/home/kevin/Workspace/docker-cantaloupe/src/test/resources/images:/imageroot" cantaloupe:latest
+      --name melon -v "$PWD/src/test/resources/images:/imageroot" cantaloupe:latest
 
 Note that the SNAPSHOT version will change each time the deploy is run. That part of the example above will need to be updated after a new snapshot deployment. The path to the mounted image directory will also need to be changed to work with your local file system. Improved instructions will be provided once we publish a versioned release of the delegate.
