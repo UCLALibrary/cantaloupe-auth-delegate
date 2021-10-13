@@ -6,11 +6,9 @@ import static org.junit.Assert.assertEquals;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
-import java.util.TreeMap;
 
 import org.junit.Test;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import info.freelibrary.util.StringUtils;
@@ -26,11 +24,6 @@ import okhttp3.Response;
 public class CantaloupeAuthDelegateIT {
 
     /**
-     * A Jackson TypeReference for a Map.
-     */
-    private static final TypeReference<Map<String, Object>> MAP_TYPE_REFERENCE = new TypeReference<>() {};
-
-    /**
      * The URL path for the test info.json file.
      */
     private static final String TEST_INFO_FILE = "/2/test.tif/info.json";
@@ -44,11 +37,6 @@ public class CantaloupeAuthDelegateIT {
      * The test's HTTP client.
      */
     private static final OkHttpClient HTTP_CLIENT = new OkHttpClient();
-
-    /**
-     * The test's Jackson mapper.
-     */
-    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     /**
      * Tests pre-authorizing a request.
@@ -99,10 +87,10 @@ public class CantaloupeAuthDelegateIT {
         final String[] urls = new String[] { iiifURL, hauthURL, hauthURL };
         final String json = StringUtils.format(StringUtils.read(TEST_FILE_PATH), urls);
         final Request request = new Builder().url(iiifURL + TEST_INFO_FILE).build();
-        final Map<String, Object> expected = new TreeMap<>(MAPPER.readValue(json, MAP_TYPE_REFERENCE));
+        final ObjectMapper mapper = new ObjectMapper();
 
         try (Response response = HTTP_CLIENT.newCall(request).execute()) {
-            assertEquals(expected, new TreeMap<>(MAPPER.readValue(response.body().string(), MAP_TYPE_REFERENCE)));
+            assertEquals(mapper.readTree(json), mapper.readTree(response.body().string()));
         }
     }
 }
