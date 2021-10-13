@@ -19,7 +19,6 @@ import info.freelibrary.iiif.presentation.v3.services.auth.AuthTokenService1;
 import info.freelibrary.iiif.presentation.v3.utils.JSON;
 import info.freelibrary.iiif.presentation.v3.utils.JsonKeys;
 
-import edu.illinois.library.cantaloupe.delegate.JavaContext;
 import edu.illinois.library.cantaloupe.delegate.JavaDelegate;
 import edu.illinois.library.cantaloupe.delegate.Logger;
 
@@ -32,6 +31,18 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
      * A Jackson TypeReference for a Map.
      */
     private static final TypeReference<Map<String, Object>> MAP_TYPE_REFERENCE = new TypeReference<>() {};
+
+    /**
+     * A delegate configuration.
+     */
+    private final Config myConfig;
+
+    /**
+     * Creates a new Cantaloupe authorization delegate.
+     */
+    public CantaloupeAuthDelegate() {
+        myConfig = getConfig();
+    }
 
     /**
      * Authorizes a request for image information. Not all image information will necessarily be calculated at this
@@ -68,11 +79,11 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
      * @return A map of additional response keys
      */
     private Map<String, Object> getExtraInformationResponseKeys() {
-        final JavaContext context = getContext();
-        final Map<String, String> headers = context.getRequestHeaders();
+        final Map<String, String> headers = getContext().getRequestHeaders();
         final Optional<HauthToken> token = getToken(headers.get(HauthToken.HEADER));
 
         if (!token.isPresent()) {
+            // TODO: Use hauth client to look up access [IIIF-1223]
             return getAuthServices();
         }
 
@@ -85,9 +96,8 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
      * @return A map of authorization services
      */
     private Map<String, Object> getAuthServices() {
-        final Config config = getConfig();
-        final AuthCookieService1 cookieService = new AuthCookieService1(Profile.KIOSK, config.getCookieService());
-        final AuthTokenService1 tokenService = new AuthTokenService1(config.getTokenService());
+        final AuthCookieService1 cookieService = new AuthCookieService1(Profile.KIOSK, myConfig.getCookieService());
+        final AuthTokenService1 tokenService = new AuthTokenService1(myConfig.getTokenService());
         final Map<String, Object> services = JSON.convertValue(cookieService, MAP_TYPE_REFERENCE);
         final List<Map<String, Object>> relatedServices = new ArrayList<>();
 

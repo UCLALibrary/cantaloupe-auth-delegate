@@ -63,9 +63,14 @@
     <freelib.utils.version>3.0.1</freelib.utils.version>
     <cantaloupe.version>5.0.4</cantaloupe.version>
 
+    <!-- Test dependency versions -->
+    <okhttp.version>4.9.2</okhttp.version>
+    <logback.version>1.2.5</logback.version>
+
     <!-- Plugin versions -->
     <shade.plugin.version>3.2.4</shade.plugin.version>
     <download.plugin.version>1.6.7</download.plugin.version>
+    <failsafe.plugin.version>2.22.0</failsafe.plugin.version>
     <docker.maven.plugin.version>0.37.0</docker.maven.plugin.version>
 
     <!-- Docker images versions used in testing -->
@@ -91,18 +96,24 @@
       <groupId>edu.illinois.library.cantaloupe</groupId>
       <artifactId>cantaloupe</artifactId>
       <version>${cantaloupe.version}</version>
-      <scope>provided</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>ch.qos.logback</groupId>
+          <artifactId>logback-classic</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <!-- Test dependencies -->
     <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
+      <groupId>com.squareup.okhttp3</groupId>
+      <artifactId>okhttp</artifactId>
+      <version>${okhttp.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -211,6 +222,17 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <argLine>${jacoco.agent.arg}</argLine>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <configuration>
+          <argLine>${jacoco.agent.arg}</argLine>
+          <useModulePath>false</useModulePath>
+          <environmentVariables>
+            <HAUTH_URL>http://localhost:${test.hauth.port}</HAUTH_URL>
+            <IIIF_IMAGE_URL>http://localhost:${test.iiif.images.port}/iiif</IIIF_IMAGE_URL>
+          </environmentVariables>
         </configuration>
       </plugin>
       <plugin>
@@ -399,6 +421,13 @@
             <configuration>
               <dependencyReducedPomLocation>${basedir}/.dependency-reduced-pom.xml</dependencyReducedPomLocation>
               <minimizeJar>true</minimizeJar>
+              <artifactSet>
+                <includes>
+                  <include>info.freelibrary:*</include>
+                  <include>edu.ucla.library:*</include>
+                  <include>org.slf4j:*</include>
+                </includes>
+              </artifactSet>
               <filters>
                 <filter>
                   <artifact>*:*</artifact>
