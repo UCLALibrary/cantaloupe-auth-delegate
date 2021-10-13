@@ -1,8 +1,6 @@
 
 package edu.ucla.library.iiif.auth.delegate;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
@@ -41,7 +39,7 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
      * Creates a new Cantaloupe authorization delegate.
      */
     public CantaloupeAuthDelegate() {
-        myConfig = getConfig();
+        myConfig = new Config();
     }
 
     /**
@@ -105,39 +103,6 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
         services.put(JsonKeys.SERVICE, relatedServices);
 
         return Collections.singletonMap(JsonKeys.SERVICE, services);
-    }
-
-    /**
-     * Gets the application configuration from the system environment.
-     *
-     * @return Configuration properties for the authorization delegate
-     * @throws ConfigException If the expected configuration property is missing or invalid
-     */
-    private Config getConfig() {
-        final Map<String, String> envMap = System.getenv();
-        final Config config = new Config();
-
-        if (!envMap.containsKey(Config.AUTH_COOKIE_SERVICE)) {
-            throw new ConfigException(Config.AUTH_COOKIE_SERVICE);
-        }
-
-        if (!envMap.containsKey(Config.AUTH_TOKEN_SERVICE)) {
-            throw new ConfigException(Config.AUTH_TOKEN_SERVICE);
-        }
-
-        try {
-            config.setCookieService(new URL(envMap.get(Config.AUTH_COOKIE_SERVICE)));
-        } catch (final MalformedURLException details) {
-            throw new ConfigException(details, envMap.get(Config.AUTH_COOKIE_SERVICE));
-        }
-
-        try {
-            config.setTokenService(new URL(envMap.get(Config.AUTH_TOKEN_SERVICE)));
-        } catch (final MalformedURLException details) {
-            throw new ConfigException(details, envMap.get(Config.AUTH_TOKEN_SERVICE));
-        }
-
-        return config;
     }
 
     /**

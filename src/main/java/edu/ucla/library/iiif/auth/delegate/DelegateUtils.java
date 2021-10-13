@@ -5,6 +5,7 @@ import static info.freelibrary.util.Constants.EQUALS;
 
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Utilities that Cantaloupe delegates can use.
@@ -25,8 +26,8 @@ public final class DelegateUtils {
      * @return A string representation of the supplied map
      */
     public static String toString(final Map<String, Object> aMap) {
-        return aMap.keySet().stream() //
-                .map(key -> key + EQUALS + aMap.get(key)) //
-                .collect(Collectors.joining(", ", "{", "}"));
+        final Stream<String> keyStream = aMap.keySet().stream();
+        return keyStream.map(key -> key + EQUALS + aMap.get(key)).collect(Collectors.joining(", ", "{", "}"));
     }
+
 }

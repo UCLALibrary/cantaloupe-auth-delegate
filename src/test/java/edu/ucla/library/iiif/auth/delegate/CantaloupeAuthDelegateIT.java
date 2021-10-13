@@ -6,6 +6,7 @@ import static org.junit.Assert.assertEquals;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.junit.Test;
 
@@ -86,22 +87,22 @@ public class CantaloupeAuthDelegateIT {
     }
 
     /**
-     * Tests getting extra IIIF information response keys for v2 or v3. We read the keys into a map to be able to get a
-     * consistent representation (regardless of JSON formatting).
+     * Tests getting extra IIIF information response keys for v2 or v3. We read the keys into a sorted map to be able to
+     * get a consistent representation (regardless of JSON formatting).
      *
      * @throws IOException If there is trouble reading the test file
      */
-    private final void testGetExtraIIIFInformationResponseKeys() throws IOException {
+    private void testGetExtraIIIFInformationResponseKeys() throws IOException {
         final Map<String, String> envProperties = System.getenv();
         final String hauthURL = envProperties.get(TestConfig.HAUTH_URL_PROPERTY);
         final String iiifURL = envProperties.get(TestConfig.IIIF_URL_PROPERTY);
         final String[] urls = new String[] { iiifURL, hauthURL, hauthURL };
         final String json = StringUtils.format(StringUtils.read(TEST_FILE_PATH), urls);
         final Request request = new Builder().url(iiifURL + TEST_INFO_FILE).build();
-        final Map<String, Object> expected = MAPPER.readValue(json, MAP_TYPE_REFERENCE);
+        final Map<String, Object> expected = new TreeMap<>(MAPPER.readValue(json, MAP_TYPE_REFERENCE));
 
         try (Response response = HTTP_CLIENT.newCall(request).execute()) {
-            assertEquals(expected, MAPPER.readValue(response.body().string(), MAP_TYPE_REFERENCE));
+            assertEquals(expected, new TreeMap<>(MAPPER.readValue(response.body().string(), MAP_TYPE_REFERENCE)));
         }
     }
 }

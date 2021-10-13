@@ -1,6 +1,8 @@
 package edu.ucla.library.iiif.auth.delegate;
 
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Map;
 
 /**
  * A configuration class.
@@ -31,7 +33,8 @@ public final class Config {
      * Creates a new configuration.
      */
     public Config() {
-        // This is intentionally left empty.
+        myCookieService = getProperty(Config.AUTH_COOKIE_SERVICE);
+        myTokenService = getProperty(Config.AUTH_TOKEN_SERVICE);
     }
 
     /**
@@ -83,5 +86,28 @@ public final class Config {
     public Config setTokenService(final URL aTokenService) {
         myTokenService = aTokenService;
         return this;
+    }
+
+    /**
+     * Gets an environmental property and checks that its value is valid.
+     *
+     * @param aEnvPropertyName An environmental property name
+     * @return A URL
+     * @throws ConfigException If the supplied property value isn't a URL
+     */
+    private URL getProperty(final String aEnvPropertyName) {
+        final Map<String, String> envMap = System.getenv();
+
+        // Does our ENV property exist?
+        if (!envMap.containsKey(aEnvPropertyName)) {
+            throw new ConfigException(aEnvPropertyName);
+        }
+
+        // Is our ENV property a URL?
+        try {
+            return new URL(envMap.get(aEnvPropertyName));
+        } catch (final MalformedURLException details) {
+            throw new ConfigException(details, aEnvPropertyName);
+        }
     }
 }
