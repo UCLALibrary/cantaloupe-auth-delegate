@@ -65,7 +65,6 @@
 
     <!-- Test dependency versions -->
     <okhttp.version>4.9.2</okhttp.version>
-    <logback.version>1.2.5</logback.version>
 
     <!-- Plugin versions -->
     <shade.plugin.version>3.2.4</shade.plugin.version>
@@ -97,6 +96,7 @@
       <artifactId>cantaloupe</artifactId>
       <version>${cantaloupe.version}</version>
       <exclusions>
+        <!-- To avoid multiple SLF4J bindings problem -->
         <exclusion>
           <groupId>ch.qos.logback</groupId>
           <artifactId>logback-classic</artifactId>
@@ -228,6 +228,7 @@
         <artifactId>maven-failsafe-plugin</artifactId>
         <configuration>
           <argLine>${jacoco.agent.arg}</argLine>
+          <!-- Workaround for GitHub issue: freelib-utils#38 -->
           <useModulePath>false</useModulePath>
           <environmentVariables>
             <HAUTH_URL>http://localhost:${test.hauth.port}</HAUTH_URL>
@@ -422,6 +423,7 @@
               <dependencyReducedPomLocation>${basedir}/.dependency-reduced-pom.xml</dependencyReducedPomLocation>
               <minimizeJar>true</minimizeJar>
               <artifactSet>
+                <!-- The Cantaloupe environment already has Logback, Jackson, etc. -->
                 <includes>
                   <include>info.freelibrary:*</include>
                   <include>edu.ucla.library:*</include>
@@ -432,7 +434,9 @@
                 <filter>
                   <artifact>*:*</artifact>
                   <excludes>
+                    <!-- Stripping modules for the all-in-one environment -->
                     <exclude>module-info.class</exclude>
+                    <!-- Duplicated files that are okay to exclude -->
                     <exclude>META-INF/MANIFEST.MF</exclude>
                     <exclude>META-INF/LICENSE</exclude>
                     <exclude>META-INF/NOTICE</exclude>
