@@ -67,17 +67,31 @@ public class CantaloupeAuthDelegateIT {
 
     /**
      * Tests getting extra IIIF (v2) information response keys.
+     *
+     * @throws IOException If there is trouble reading the test file
      */
     @Test
-    public final void testGetExtraIIIF2InformationResponseKeys() {
-        // TODO in the AM
+    public final void testGetExtraIIIF2InformationResponseKeys() throws IOException {
+        testGetExtraIIIFInformationResponseKeys();
     }
 
     /**
      * Tests getting extra IIIF (v3) information response keys.
+     *
+     * @throws IOException If there is trouble reading the test file
      */
     @Test
     public final void testGetExtraIIIF3InformationResponseKeys() throws IOException {
+        testGetExtraIIIFInformationResponseKeys();
+    }
+
+    /**
+     * Tests getting extra IIIF information response keys for v2 or v3. We read the keys into a map to be able to get a
+     * consistent representation (regardless of JSON formatting).
+     *
+     * @throws IOException If there is trouble reading the test file
+     */
+    private final void testGetExtraIIIFInformationResponseKeys() throws IOException {
         final Map<String, String> envProperties = System.getenv();
         final String hauthURL = envProperties.get(TestConfig.HAUTH_URL_PROPERTY);
         final String iiifURL = envProperties.get(TestConfig.IIIF_URL_PROPERTY);
@@ -90,5 +104,4 @@ public class CantaloupeAuthDelegateIT {
             assertEquals(expected, MAPPER.readValue(response.body().string(), MAP_TYPE_REFERENCE));
         }
     }
-
 }
