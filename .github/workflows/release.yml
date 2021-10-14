@@ -21,8 +21,8 @@ jobs:
           path: |
             ~/.m2
             lib
-          key: uclalibrary-cache-${{ secrets.MAVEN_CACHE_KEY }}-${{ hashFiles('**/pom.xml') }}
-          restore-keys: uclalibrary-cache-${{ secrets.MAVEN_CACHE_KEY }}-
+          key: uclalibrary-cache-${{ env.MAVEN_CACHE_KEY }}-${{ hashFiles('**/pom.xml') }}
+          restore-keys: uclalibrary-cache-${{ env.MAVEN_CACHE_KEY }}-
       - name: Check out source code
         uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f # v2
         with:
