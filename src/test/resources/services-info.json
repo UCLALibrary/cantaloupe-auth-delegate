@@ -78,7 +78,7 @@
       ]
     }
   ],
-  "service": {
+  "service": [{
     "@context": "http://iiif.io/api/auth/1/context.json",
     "@id": "{}/cookie",
     "@type": "AuthCookieService1",
@@ -90,5 +90,5 @@
         "profile": "http://iiif.io/api/auth/1/token"
       }
     ]
-  }
+  }]
 }

@@ -96,11 +96,13 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
     private Map<String, Object> getAuthServices() {
         final AuthCookieService1 cookieService = new AuthCookieService1(Profile.KIOSK, myConfig.getCookieService());
         final AuthTokenService1 tokenService = new AuthTokenService1(myConfig.getTokenService());
-        final Map<String, Object> services = JSON.convertValue(cookieService, MAP_TYPE_REFERENCE);
+        final Map<String, Object> service = JSON.convertValue(cookieService, MAP_TYPE_REFERENCE);
         final List<Map<String, Object>> relatedServices = new ArrayList<>();
+        final List<Map<String, Object>> services = new ArrayList<>();
 
         relatedServices.add(JSON.convertValue(tokenService, MAP_TYPE_REFERENCE));
-        services.put(JsonKeys.SERVICE, relatedServices);
+        service.put(JsonKeys.SERVICE, relatedServices);
+        services.add(service);
 
         return Collections.singletonMap(JsonKeys.SERVICE, services);
     }
