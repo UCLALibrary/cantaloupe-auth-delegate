@@ -38,7 +38,7 @@ public final class TestUtils {
     }
 
     /**
-     * Assert that the two JSON strings are the equal (regardless of order, including order of array values).
+     * Assert that the two JSON strings are equal (regardless of order, including order of array values).
      *
      * @param aExpected A first JSON string
      * @param aFound A second JSON string
@@ -70,7 +70,7 @@ public final class TestUtils {
     }
 
     /**
-     * A sorted node array. This is just for comparison purposes. The node value is not modified.
+     * A sorted array node. This is just for comparison purposes. The array node values are not modified.
      */
     private static class SortedArrayNode extends ArrayNode {
 
@@ -80,7 +80,7 @@ public final class TestUtils {
         private static final long serialVersionUID = 4000699652392697259L;
 
         /**
-         * An internal sorted node list.
+         * An internal sorted child node list.
          */
         private final List<JsonNode> myList;
 
