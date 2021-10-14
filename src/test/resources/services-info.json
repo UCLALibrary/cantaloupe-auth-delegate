@@ -43,8 +43,8 @@
     "http://iiif.io/api/image/2/level2.json",
     {
       "formats": [
-        "tif",
         "jpg",
+        "tif",
         "gif",
         "png"
       ],

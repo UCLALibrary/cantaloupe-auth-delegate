@@ -1,15 +1,11 @@
 
 package edu.ucla.library.iiif.auth.delegate;
 
-import static org.junit.Assert.assertEquals;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
 import org.junit.Test;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import info.freelibrary.util.StringUtils;
 
@@ -87,10 +83,9 @@ public class CantaloupeAuthDelegateIT {
         final String[] urls = new String[] { iiifURL, hauthURL, hauthURL };
         final String json = StringUtils.format(StringUtils.read(TEST_FILE_PATH), urls);
         final Request request = new Builder().url(iiifURL + TEST_INFO_FILE).build();
-        final ObjectMapper mapper = new ObjectMapper();
 
         try (Response response = HTTP_CLIENT.newCall(request).execute()) {
-            assertEquals(mapper.readTree(json), mapper.readTree(response.body().string()));
+            TestUtils.assertEquals(json, response.body().string());
         }
     }
 }
