@@ -63,23 +63,20 @@
     <freelib.utils.version>3.0.1</freelib.utils.version>
     <cantaloupe.version>5.0.4</cantaloupe.version>
 
+    <!-- Test dependency versions -->
+    <okhttp.version>4.9.2</okhttp.version>
+
     <!-- Plugin versions -->
     <shade.plugin.version>3.2.4</shade.plugin.version>
-    <freelib.maven.version>0.3.0</freelib.maven.version>
     <download.plugin.version>1.6.7</download.plugin.version>
+    <failsafe.plugin.version>2.22.0</failsafe.plugin.version>
     <docker.maven.plugin.version>0.37.0</docker.maven.plugin.version>
 
-    <!-- Docker versions for testing -->
-    <hauth.container.version>latest</hauth.container.version>
+    <!-- Docker images versions used in testing -->
+    <hauth.container.version>0.0.2</hauth.container.version>
     <psql.container.version>12.7-alpine</psql.container.version>
     <redis.container.version>6.2.5-alpine</redis.container.version>
-    <cantaloupe.container.version>5.0.3-0</cantaloupe.container.version>
-
-    <!-- The Docker registry user and password used for publishing images -->
-    <docker.registry.username />
-    <docker.registry.password />
-    <!-- The Docker registry account, if supplied, must end with a slash (e.g. "account/") -->
-    <docker.registry.account />
+    <cantaloupe.container.version>5.0.4-0</cantaloupe.container.version>
   </properties>
 
   <dependencies>
@@ -98,18 +95,25 @@
       <groupId>edu.illinois.library.cantaloupe</groupId>
       <artifactId>cantaloupe</artifactId>
       <version>${cantaloupe.version}</version>
-      <scope>provided</scope>
+      <exclusions>
+        <!-- To avoid multiple SLF4J bindings problem -->
+        <exclusion>
+          <groupId>ch.qos.logback</groupId>
+          <artifactId>logback-classic</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <!-- Test dependencies -->
     <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
+      <groupId>com.squareup.okhttp3</groupId>
+      <artifactId>okhttp</artifactId>
+      <version>${okhttp.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -122,7 +126,7 @@
         <artifactId>build-helper-maven-plugin</artifactId>
         <configuration>
           <portNames>
-            <portName>test.http.port</portName>
+            <portName>test.hauth.port</portName>
             <portName>test.db.port</portName>
             <portName>test.iiif.images.port</portName>
             <portName>test.db.cache.port</portName>
@@ -221,6 +225,18 @@
         </configuration>
       </plugin>
       <plugin>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <configuration>
+          <argLine>${jacoco.agent.arg}</argLine>
+          <!-- Workaround for GitHub issue: freelib-utils#38 -->
+          <useModulePath>false</useModulePath>
+          <environmentVariables>
+            <HAUTH_URL>http://localhost:${test.hauth.port}</HAUTH_URL>
+            <IIIF_IMAGE_URL>http://localhost:${test.iiif.images.port}/iiif</IIIF_IMAGE_URL>
+          </environmentVariables>
+        </configuration>
+      </plugin>
+      <plugin>
         <artifactId>maven-dependency-plugin</artifactId>
       </plugin>
       <plugin>
@@ -303,12 +319,21 @@
                   </bind>
                 </volumes>
                 <env>
+                  <AUTH_COOKIE_SERVICE>http://localhost:${test.hauth.port}/cookie</AUTH_COOKIE_SERVICE>
+                  <AUTH_TOKEN_SERVICE>http://localhost:${test.hauth.port}/token</AUTH_TOKEN_SERVICE>
+                  <CANTALOUPE_LOG_APPLICATION_LEVEL>debug</CANTALOUPE_LOG_APPLICATION_LEVEL>
                   <CANTALOUPE_ENDPOINT_ADMIN_SECRET>secret</CANTALOUPE_ENDPOINT_ADMIN_SECRET>
                   <CANTALOUPE_ENDPOINT_ADMIN_ENABLED>true</CANTALOUPE_ENDPOINT_ADMIN_ENABLED>
                   <CANTALOUPE_DELEGATE_SCRIPT_ENABLED>true</CANTALOUPE_DELEGATE_SCRIPT_ENABLED>
                   <CANTALOUPE_DELEGATE_SCRIPT_PATHNAME>/usr/local/cantaloupe/delegate.jar</CANTALOUPE_DELEGATE_SCRIPT_PATHNAME>
                 </env>
                 <wait>
+                  <http>
+                    <url>http://localhost:${test.iiif.images.port}</url>
+                    <method>GET</method>
+                    <status>200</status>
+                  </http>
+                  <!-- Below depends on 'info' logging level being set -->
                   <log>Started @</log>
                 </wait>
               </run>
@@ -319,7 +344,7 @@
                 <containerNamePattern>delegate_hauth</containerNamePattern>
                 <ports>
                   <!-- Start test container on an available host port -->
-                  <port>${test.http.port}:8888</port>
+                  <port>${test.hauth.port}:8888</port>
                 </ports>
                 <env>
                   <ACCESS_TOKEN_EXPIRES_IN>1800</ACCESS_TOKEN_EXPIRES_IN>
@@ -341,7 +366,7 @@
                 <!-- Test to make sure the server started as expected -->
                 <wait>
                   <http>
-                    <url>http://localhost:${test.http.port}/status</url>
+                    <url>http://localhost:${test.hauth.port}/status</url>
                     <method>GET</method>
                     <status>200</status>
                   </http>
@@ -397,11 +422,21 @@
             <configuration>
               <dependencyReducedPomLocation>${basedir}/.dependency-reduced-pom.xml</dependencyReducedPomLocation>
               <minimizeJar>true</minimizeJar>
+              <artifactSet>
+                <!-- The Cantaloupe environment already has Logback, Jackson, etc. -->
+                <includes>
+                  <include>info.freelibrary:*</include>
+                  <include>edu.ucla.library:*</include>
+                  <include>org.slf4j:*</include>
+                </includes>
+              </artifactSet>
               <filters>
                 <filter>
                   <artifact>*:*</artifact>
                   <excludes>
+                    <!-- Stripping modules for the all-in-one environment -->
                     <exclude>module-info.class</exclude>
+                    <!-- Duplicated files that are okay to exclude -->
                     <exclude>META-INF/MANIFEST.MF</exclude>
                     <exclude>META-INF/LICENSE</exclude>
                     <exclude>META-INF/NOTICE</exclude>

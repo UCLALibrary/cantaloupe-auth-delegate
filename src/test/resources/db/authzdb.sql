@@ -76,28 +76,28 @@ COMMENT ON COLUMN public.origins.degraded_allowed IS 'Whether this origin allows
 
 
 --
--- Data for Name: items; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Name: items; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.items (uid, access_level) FROM stdin;
 \.
 
 --
--- Data for Name: origins; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Name: origins; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.origins (url, degraded_allowed) FROM stdin;
 \.
 
 --
--- Name: items items_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: items_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.items
     ADD CONSTRAINT items_pkey PRIMARY KEY (uid);
 
 --
--- Name: items origins_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: origins_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.origins

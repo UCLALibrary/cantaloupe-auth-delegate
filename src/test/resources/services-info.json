@@ -1,0 +1,94 @@
+{
+  "@context": "http://iiif.io/api/image/2/context.json",
+  "@id": "{}/2/test.tif",
+  "protocol": "http://iiif.io/api/image",
+  "width": 2000,
+  "height": 2000,
+  "sizes": [
+    {
+      "width": 125,
+      "height": 125
+    },
+    {
+      "width": 250,
+      "height": 250
+    },
+    {
+      "width": 500,
+      "height": 500
+    },
+    {
+      "width": 1000,
+      "height": 1000
+    },
+    {
+      "width": 2000,
+      "height": 2000
+    }
+  ],
+  "tiles": [
+    {
+      "width": 512,
+      "height": 512,
+      "scaleFactors": [
+        1,
+        2,
+        4,
+        8,
+        16
+      ]
+    }
+  ],
+  "profile": [
+    "http://iiif.io/api/image/2/level2.json",
+    {
+      "formats": [
+        "jpg",
+        "tif",
+        "gif",
+        "png"
+      ],
+      "maxArea": 4000000,
+      "qualities": [
+        "bitonal",
+        "default",
+        "gray",
+        "color"
+      ],
+      "supports": [
+        "regionByPx",
+        "sizeByW",
+        "sizeByWhListed",
+        "cors",
+        "regionSquare",
+        "sizeByDistortedWh",
+        "canonicalLinkHeader",
+        "sizeByConfinedWh",
+        "sizeByPct",
+        "jsonldMediaType",
+        "regionByPct",
+        "rotationArbitrary",
+        "sizeByH",
+        "baseUriRedirect",
+        "rotationBy90s",
+        "profileLinkHeader",
+        "sizeByForcedWh",
+        "sizeByWh",
+        "mirroring"
+      ]
+    }
+  ],
+  "service": [{
+    "@context": "http://iiif.io/api/auth/1/context.json",
+    "@id": "{}/cookie",
+    "@type": "AuthCookieService1",
+    "profile": "http://iiif.io/api/auth/1/kiosk",
+    "service": [
+      {
+        "@id": "{}/token",
+        "@type": "AuthTokenService1",
+        "profile": "http://iiif.io/api/auth/1/token"
+      }
+    ]
+  }]
+}
