@@ -62,8 +62,6 @@
     <jiiify.presentation.version>0.10.0</jiiify.presentation.version>
     <freelib.utils.version>3.0.1</freelib.utils.version>
     <cantaloupe.version>5.0.4</cantaloupe.version>
-
-    <!-- Test dependency versions -->
     <okhttp.version>4.9.2</okhttp.version>
 
     <!-- Plugin versions -->
@@ -108,12 +106,6 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.squareup.okhttp3</groupId>
-      <artifactId>okhttp</artifactId>
-      <version>${okhttp.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -222,6 +214,11 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <argLine>${jacoco.agent.arg}</argLine>
+          <environmentVariables>
+            <AUTH_COOKIE_SERVICE>http://0.0.0.0:${test.hauth.port}/cookie</AUTH_COOKIE_SERVICE>
+            <AUTH_TOKEN_SERVICE>http://0.0.0.0:${test.hauth.port}/token</AUTH_TOKEN_SERVICE>
+            <AUTH_ACCESS_SERVICE>http://0.0.0.0:${test.hauth.port}/access/{}</AUTH_ACCESS_SERVICE>
+          </environmentVariables>
         </configuration>
       </plugin>
       <plugin>
@@ -231,8 +228,8 @@
           <!-- Workaround for GitHub issue: freelib-utils#38 -->
           <useModulePath>false</useModulePath>
           <environmentVariables>
-            <HAUTH_URL>http://localhost:${test.hauth.port}</HAUTH_URL>
-            <IIIF_IMAGE_URL>http://localhost:${test.iiif.images.port}/iiif</IIIF_IMAGE_URL>
+            <HAUTH_URL>http://0.0.0.0:${test.hauth.port}</HAUTH_URL>
+            <IIIF_IMAGE_URL>http://0.0.0.0:${test.iiif.images.port}/iiif</IIIF_IMAGE_URL>
           </environmentVariables>
         </configuration>
       </plugin>
@@ -270,7 +267,7 @@
         <version>${docker.maven.plugin.version}</version>
         <configuration>
           <imagesMap>
-            <hauth_pgsql>
+            <delegate_hauth_pgsql>
               <name>postgres:${psql.container.version}</name>
               <run>
                 <containerNamePattern>delegate_hauth_pgsql</containerNamePattern>
@@ -290,8 +287,8 @@
                   <log>database system is ready to accept connections</log>
                 </wait>
               </run>
-            </hauth_pgsql>
-            <hauth_redis>
+            </delegate_hauth_pgsql>
+            <delegate_hauth_redis>
               <name>redis:${redis.container.version}</name>
               <run>
                 <containerNamePattern>delegate_hauth_redis</containerNamePattern>
@@ -302,43 +299,8 @@
                   <log>Ready to accept connections</log>
                 </wait>
               </run>
-            </hauth_redis>
-            <hauth_cantaloupe>
-              <name>uclalibrary/cantaloupe:${cantaloupe.container.version}</name>
-              <run>
-                <containerNamePattern>delegate_hauth_cantaloupe</containerNamePattern>
-                <ports>
-                  <port>${test.iiif.images.port}:8182</port>
-                </ports>
-                <volumes>
-                  <bind>
-                    <!-- Location of test image(s) -->
-                    <volume>${project.basedir}/src/test/resources/images/:/imageroot/</volume>
-                    <!-- Load the delegate for integration testing -->
-                    <volume>${project.basedir}/target/cantaloupe-auth-delegate-${project.version}.jar:/usr/local/cantaloupe/delegate.jar</volume>
-                  </bind>
-                </volumes>
-                <env>
-                  <AUTH_COOKIE_SERVICE>http://localhost:${test.hauth.port}/cookie</AUTH_COOKIE_SERVICE>
-                  <AUTH_TOKEN_SERVICE>http://localhost:${test.hauth.port}/token</AUTH_TOKEN_SERVICE>
-                  <CANTALOUPE_LOG_APPLICATION_LEVEL>debug</CANTALOUPE_LOG_APPLICATION_LEVEL>
-                  <CANTALOUPE_ENDPOINT_ADMIN_SECRET>secret</CANTALOUPE_ENDPOINT_ADMIN_SECRET>
-                  <CANTALOUPE_ENDPOINT_ADMIN_ENABLED>true</CANTALOUPE_ENDPOINT_ADMIN_ENABLED>
-                  <CANTALOUPE_DELEGATE_SCRIPT_ENABLED>true</CANTALOUPE_DELEGATE_SCRIPT_ENABLED>
-                  <CANTALOUPE_DELEGATE_SCRIPT_PATHNAME>/usr/local/cantaloupe/delegate.jar</CANTALOUPE_DELEGATE_SCRIPT_PATHNAME>
-                </env>
-                <wait>
-                  <http>
-                    <url>http://localhost:${test.iiif.images.port}</url>
-                    <method>GET</method>
-                    <status>200</status>
-                  </http>
-                  <!-- Below depends on 'info' logging level being set -->
-                  <log>Started @</log>
-                </wait>
-              </run>
-            </hauth_cantaloupe>
-            <hauth>
+            </delegate_hauth_redis>
+            <delegate_hauth>
               <name>uclalibrary/hauth:${hauth.container.version}</name>
               <run>
                 <containerNamePattern>delegate_hauth</containerNamePattern>
@@ -361,18 +323,56 @@
                 <dependsOn>
                   <container>delegate_hauth_pgsql</container>
                   <container>delegate_hauth_redis</container>
-                  <container>delegate_hauth_cantaloupe</container>
                 </dependsOn>
                 <!-- Test to make sure the server started as expected -->
                 <wait>
                   <http>
-                    <url>http://localhost:${test.hauth.port}/status</url>
+                    <url>http://0.0.0.0:${test.hauth.port}/status</url>
                     <method>GET</method>
                     <status>200</status>
                   </http>
                 </wait>
               </run>
-            </hauth>
+            </delegate_hauth>
+            <delegate_cantaloupe>
+              <name>uclalibrary/cantaloupe:${cantaloupe.container.version}</name>
+              <run>
+                <containerNamePattern>delegate_hauth_cantaloupe</containerNamePattern>
+                <ports>
+                  <port>${test.iiif.images.port}:8182</port>
+                </ports>
+                <volumes>
+                  <bind>
+                    <!-- Location of test image(s) -->
+                    <volume>${project.basedir}/src/test/resources/images/:/imageroot/</volume>
+                    <!-- Load the delegate for integration testing -->
+                    <volume>${project.basedir}/target/cantaloupe-auth-delegate-${project.version}.jar:/usr/local/cantaloupe/delegate.jar</volume>
+                  </bind>
+                </volumes>
+                <env>
+                  <AUTH_COOKIE_SERVICE>http://0.0.0.0:${test.hauth.port}/cookie</AUTH_COOKIE_SERVICE>
+                  <AUTH_TOKEN_SERVICE>http://0.0.0.0:${test.hauth.port}/token</AUTH_TOKEN_SERVICE>
+                  <AUTH_ACCESS_SERVICE>http://0.0.0.0:${test.hauth.port}/access/{}</AUTH_ACCESS_SERVICE>
+                  <CANTALOUPE_LOG_APPLICATION_LEVEL>debug</CANTALOUPE_LOG_APPLICATION_LEVEL>
+                  <CANTALOUPE_ENDPOINT_ADMIN_SECRET>secret</CANTALOUPE_ENDPOINT_ADMIN_SECRET>
+                  <CANTALOUPE_ENDPOINT_ADMIN_ENABLED>true</CANTALOUPE_ENDPOINT_ADMIN_ENABLED>
+                  <CANTALOUPE_DELEGATE_SCRIPT_ENABLED>true</CANTALOUPE_DELEGATE_SCRIPT_ENABLED>
+                  <CANTALOUPE_DELEGATE_SCRIPT_PATHNAME>/usr/local/cantaloupe/delegate.jar</CANTALOUPE_DELEGATE_SCRIPT_PATHNAME>
+                </env>
+                <dependsOn>
+                  <container>delegate_hauth</container>
+                </dependsOn>
+                <wait>
+                  <http>
+                    <url>http://0.0.0.0:${test.iiif.images.port}</url>
+                    <method>GET</method>
+                    <status>200</status>
+                  </http>
+                  <!-- Below depends on 'info' logging level being set -->
+                  <log>Started @</log>
+                </wait>
+              </run>
+            </delegate_cantaloupe>
           </imagesMap>
         </configuration>
         <executions>
@@ -404,7 +404,7 @@
             </goals>
             <configuration>
               <allContainers>true</allContainers>
-              <stopNamePattern>delegate_hauth*</stopNamePattern>
+              <stopNamePattern>delegate_*</stopNamePattern>
             </configuration>
           </execution>
         </executions>

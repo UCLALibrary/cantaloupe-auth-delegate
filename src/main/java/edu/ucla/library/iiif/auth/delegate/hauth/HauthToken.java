@@ -1,4 +1,4 @@
-package edu.ucla.library.iiif.auth.delegate;
+package edu.ucla.library.iiif.auth.delegate.hauth;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;

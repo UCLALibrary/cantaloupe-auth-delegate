@@ -1,6 +1,7 @@
 
 package edu.ucla.library.iiif.auth.delegate;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
@@ -11,19 +12,30 @@ import java.util.Optional;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 
+import info.freelibrary.util.Logger;
+import info.freelibrary.util.LoggerFactory;
+
 import info.freelibrary.iiif.presentation.v3.services.auth.AuthCookieService1;
 import info.freelibrary.iiif.presentation.v3.services.auth.AuthCookieService1.Profile;
 import info.freelibrary.iiif.presentation.v3.services.auth.AuthTokenService1;
 import info.freelibrary.iiif.presentation.v3.utils.JSON;
 import info.freelibrary.iiif.presentation.v3.utils.JsonKeys;
 
+import edu.ucla.library.iiif.auth.delegate.hauth.HauthItem;
+import edu.ucla.library.iiif.auth.delegate.hauth.HauthToken;
+
+import edu.illinois.library.cantaloupe.delegate.JavaContext;
 import edu.illinois.library.cantaloupe.delegate.JavaDelegate;
-import edu.illinois.library.cantaloupe.delegate.Logger;
 
 /**
  * A Cantaloupe delegate for handing IIIF Auth interactions.
  */
 public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaDelegate {
+
+    /**
+     * The authorization delegate's logger.
+     */
+    private static final Logger LOGGER = LoggerFactory.getLogger(CantaloupeAuthDelegate.class, MessageCodes.BUNDLE);
 
     /**
      * A Jackson TypeReference for a Map.
@@ -48,7 +60,7 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
      */
     @Override
     public Object preAuthorize() {
-        Logger.info("The pre-authorize identifier is: " + getContext().getIdentifier());
+        LOGGER.info("The pre-authorize identifier is: " + getContext().getIdentifier());
         return true;
     }
 
@@ -57,7 +69,7 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
      */
     @Override
     public Object authorize() {
-        Logger.debug("authorize");
+        LOGGER.debug("authorize");
         return true;
     }
 
@@ -77,12 +89,18 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
      * @return A map of additional response keys
      */
     private Map<String, Object> getExtraInformationResponseKeys() {
-        final Map<String, String> headers = getContext().getRequestHeaders();
+        final JavaContext context = getContext();
+        final Map<String, String> headers = context.getRequestHeaders();
         final Optional<HauthToken> token = getToken(headers.get(HauthToken.HEADER));
+        final HauthItem item = new HauthItem(myConfig);
 
-        if (!token.isPresent()) {
-            // TODO: Use hauth client to look up access [IIIF-1223]
-            return getAuthServices();
+        try {
+            LOGGER.debug("Checking for access restrictions");
+            if (!token.isPresent() && item.isRestricted(context.getIdentifier())) {
+                return getAuthServices();
+            }
+        } catch (final IOException details) {
+            LOGGER.error(details.getMessage(), details);
         }
 
         return Collections.emptyMap();
@@ -123,7 +141,7 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
                 try {
                     return Optional.ofNullable(JSON.getReader(HauthToken.class).readValue(value));
                 } catch (final JsonProcessingException details) {
-                    Logger.trace(details.getMessage(), details);
+                    LOGGER.trace(details.getMessage(), details);
                 }
             }
         }
