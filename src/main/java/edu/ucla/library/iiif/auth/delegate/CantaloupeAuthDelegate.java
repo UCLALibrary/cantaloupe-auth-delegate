@@ -43,15 +43,29 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
     private static final TypeReference<Map<String, Object>> MAP_TYPE_REFERENCE = new TypeReference<>() {};
 
     /**
-     * A delegate configuration.
+     * The access service this delegate uses.
      */
-    private final Config myConfig;
+    private final String myAccessService;
+
+    /**
+     * The cookie service this delegate uses.
+     */
+    private final String myCookieService;
+
+    /**
+     * The token service this delegate uses.
+     */
+    private final String myTokenService;
 
     /**
      * Creates a new Cantaloupe authorization delegate.
      */
     public CantaloupeAuthDelegate() {
-        myConfig = new Config();
+        final Config config = new Config();
+
+        myAccessService = config.getAccessService();
+        myCookieService = config.getCookieService();
+        myTokenService = config.getTokenService();
     }
 
     /**
@@ -60,7 +74,7 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
      */
     @Override
     public Object preAuthorize() {
-        LOGGER.info("The pre-authorize identifier is: " + getContext().getIdentifier());
+        // Q: Do we want to limit access to info.json if auth service is configured and an item isn't found in it?
         return true;
     }
 
@@ -69,7 +83,6 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
      */
     @Override
     public Object authorize() {
-        LOGGER.debug("authorize");
         return true;
     }
 
@@ -92,11 +105,10 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
         final JavaContext context = getContext();
         final Map<String, String> headers = context.getRequestHeaders();
         final Optional<HauthToken> token = getToken(headers.get(HauthToken.HEADER));
-        final HauthItem item = new HauthItem(myConfig);
+        final HauthItem item = new HauthItem(myAccessService, context.getIdentifier());
 
         try {
-            LOGGER.debug("Checking for access restrictions");
-            if (!token.isPresent() && item.isRestricted(context.getIdentifier())) {
+            if (!token.isPresent() && item.isRestricted()) {
                 return getAuthServices();
             }
         } catch (final IOException details) {
@@ -112,8 +124,8 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
      * @return A map of authorization services
      */
     private Map<String, Object> getAuthServices() {
-        final AuthCookieService1 cookieService = new AuthCookieService1(Profile.KIOSK, myConfig.getCookieService());
-        final AuthTokenService1 tokenService = new AuthTokenService1(myConfig.getTokenService());
+        final AuthCookieService1 cookieService = new AuthCookieService1(Profile.KIOSK, myCookieService);
+        final AuthTokenService1 tokenService = new AuthTokenService1(myTokenService);
         final Map<String, Object> service = JSON.convertValue(cookieService, MAP_TYPE_REFERENCE);
         final List<Map<String, Object>> relatedServices = new ArrayList<>();
         final List<Map<String, Object>> services = new ArrayList<>();

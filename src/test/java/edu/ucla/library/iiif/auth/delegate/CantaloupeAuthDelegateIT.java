@@ -3,16 +3,16 @@ package edu.ucla.library.iiif.auth.delegate;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.net.http.HttpResponse.BodyHandlers;
 import java.util.Map;
 
 import org.junit.Test;
 
 import info.freelibrary.util.StringUtils;
-
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Request.Builder;
-import okhttp3.Response;
 
 /**
  * A test of CantaloupeAuthDelegate.
@@ -22,17 +22,27 @@ public class CantaloupeAuthDelegateIT {
     /**
      * The URL path for the test info.json file.
      */
-    private static final String TEST_INFO_FILE = "/2/test.tif/info.json";
+    private static final String RESTRICTED_TEST_INFO_FILE = "/2/test-1.tif/info.json";
 
     /**
-     * The file path for the services-info.json file.
+     * The URL path for the test info.json file.
      */
-    private static final File TEST_FILE_PATH = new File("src/test/resources/services-info.json");
+    private static final String OPEN_TEST_INFO_FILE = "/2/test-2.tif/info.json";
 
     /**
-     * The test's HTTP client.
+     * The file path for the restricted services info.json file.
      */
-    private static final OkHttpClient HTTP_CLIENT = new OkHttpClient();
+    private static final File RESTRICTED_TEST_FILE_PATH = new File("src/test/resources/services-info-restricted.json");
+
+    /**
+     * The file path for the open services info.json file.
+     */
+    private static final File OPEN_TEST_FILE_PATH = new File("src/test/resources/services-info-open.json");
+
+    /**
+     * An internal HTTP client.
+     */
+    private static final HttpClient HTTP = HttpClient.newHttpClient();
 
     /**
      * Tests pre-authorizing a request.
@@ -51,41 +61,70 @@ public class CantaloupeAuthDelegateIT {
     }
 
     /**
-     * Tests getting extra IIIF (v2) information response keys.
+     * Tests getting extra restricted IIIF (v2) information response keys.
      *
      * @throws IOException If there is trouble reading the test file
      */
     @Test
-    public final void testGetExtraIIIF2InformationResponseKeys() throws IOException {
-        testGetExtraIIIFInformationResponseKeys();
+    public final void testGetExtraIIIF2InformationResponseKeysRestricted() throws IOException, InterruptedException {
+        testGetExtraIIIFInformationResponseKeys(RESTRICTED_TEST_INFO_FILE, RESTRICTED_TEST_FILE_PATH);
     }
 
     /**
-     * Tests getting extra IIIF (v3) information response keys.
+     * Tests getting extra restricted IIIF (v3) information response keys.
      *
      * @throws IOException If there is trouble reading the test file
      */
     @Test
-    public final void testGetExtraIIIF3InformationResponseKeys() throws IOException {
-        testGetExtraIIIFInformationResponseKeys();
+    public final void testGetExtraIIIF3InformationResponseKeysRestricted() throws IOException, InterruptedException {
+        testGetExtraIIIFInformationResponseKeys(RESTRICTED_TEST_INFO_FILE, RESTRICTED_TEST_FILE_PATH);
+    }
+
+    /**
+     * Tests getting extra non-restricted IIIF (v2) information response keys.
+     *
+     * @throws IOException If there is trouble reading the test file
+     */
+    @Test
+    public final void testGetExtraIIIF2InformationResponseKeysOpen() throws IOException, InterruptedException {
+        testGetExtraIIIFInformationResponseKeys(OPEN_TEST_INFO_FILE, OPEN_TEST_FILE_PATH);
+    }
+
+    /**
+     * Tests getting extra non-restricted IIIF (v3) information response keys.
+     *
+     * @throws IOException If there is trouble reading the test file
+     */
+    @Test
+    public final void testGetExtraIIIF3InformationResponseKeysOpen() throws IOException, InterruptedException {
+        testGetExtraIIIFInformationResponseKeys(OPEN_TEST_INFO_FILE, OPEN_TEST_FILE_PATH);
     }
 
     /**
      * Tests getting extra IIIF information response keys for v2 or v3. We read the keys into a sorted map to be able to
      * get a consistent representation (regardless of JSON formatting).
      *
+     * @param aFound A string with the found JSON response
+     * @param aExpected An file with the expected JSON response
      * @throws IOException If there is trouble reading the test file
      */
-    private void testGetExtraIIIFInformationResponseKeys() throws IOException {
+    private void testGetExtraIIIFInformationResponseKeys(final String aFound, final File aExpected)
+            throws IOException, InterruptedException {
         final Map<String, String> envProperties = System.getenv();
         final String hauthURL = envProperties.get(TestConfig.HAUTH_URL_PROPERTY);
         final String iiifURL = envProperties.get(TestConfig.IIIF_URL_PROPERTY);
-        final String[] urls = new String[] { iiifURL, hauthURL, hauthURL };
-        final String json = StringUtils.format(StringUtils.read(TEST_FILE_PATH), urls);
-        final Request request = new Builder().url(iiifURL + TEST_INFO_FILE).build();
+        final HttpRequest request = HttpRequest.newBuilder(URI.create(iiifURL + aFound)).build();
+        final HttpResponse<String> response = HTTP.send(request, BodyHandlers.ofString());
+        final String[] urls;
 
-        try (Response response = HTTP_CLIENT.newCall(request).execute()) {
-            TestUtils.assertEquals(json, response.body().string());
+        // If we have a restricted item, the Hauth services URLs also need to be added to the info.json
+        if (aExpected == RESTRICTED_TEST_FILE_PATH) {
+            urls = new String[] { iiifURL, hauthURL, hauthURL };
+        } else {
+            urls = new String[] { iiifURL };
         }
+
+        TestUtils.assertEquals(StringUtils.format(StringUtils.read(aExpected), urls), response.body());
     }
+
 }
