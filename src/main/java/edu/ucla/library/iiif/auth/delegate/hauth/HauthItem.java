@@ -1,12 +1,16 @@
 
 package edu.ucla.library.iiif.auth.delegate.hauth;
 
+import static edu.ucla.library.iiif.auth.delegate.hauth.HauthResponse.ACCESS_KEY;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -82,8 +86,8 @@ public class HauthItem {
 
             switch (response.statusCode()) {
                 case 200:
-                    // This will default to 'false' if value is unexpected and throw an NPE if key isn't found
-                    return MAPPER.readTree(response.body()).get(HauthResponse.ACCESS_KEY).asBoolean();
+                    // This will default to 'false' if value is unexpected, throw NoSuchElementException if missing
+                    return Optional.of(MAPPER.readTree(response.body()).get(ACCESS_KEY)).orElseThrow().asBoolean();
                 case 404:
                     LOGGER.debug(MessageCodes.CAD_003, myID);
                     return false; // The default for unknowns is that access is not restricted
@@ -91,7 +95,7 @@ public class HauthItem {
                     LOGGER.error(MessageCodes.CAD_004, myID, response.statusCode(), response.body());
                     break;
             }
-        } catch (IOException | InterruptedException | NullPointerException details) {
+        } catch (IOException | InterruptedException | NoSuchElementException details) {
             LOGGER.error(details.getMessage(), details);
         }
 
