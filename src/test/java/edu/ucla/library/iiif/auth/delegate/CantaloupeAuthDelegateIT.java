@@ -25,7 +25,7 @@ public class CantaloupeAuthDelegateIT {
     private static final String RESTRICTED_TEST_INFO_FILE = "/2/test-1.tif/info.json";
 
     /**
-     * The URL path for the test info.json file.
+     * The URL path for the open test info.json file.
      */
     private static final String OPEN_TEST_INFO_FILE = "/2/test-2.tif/info.json";
 
