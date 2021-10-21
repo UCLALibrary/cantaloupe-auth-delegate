@@ -1,17 +1,13 @@
 
 package edu.ucla.library.iiif.auth.delegate.hauth;
 
-import static info.freelibrary.util.Constants.SINGLE_INSTANCE;
-
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
-import java.util.List;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import info.freelibrary.util.Logger;
@@ -86,21 +82,8 @@ public class HauthItem {
 
             switch (response.statusCode()) {
                 case 200:
-                    final String authResponse = response.body();
-                    final JsonNode node = MAPPER.readTree(authResponse);
-                    final List<String> accessCodes = node.findValuesAsText(HauthResponse.ACCESS_KEY);
-
-                    // Confirm the JSON structure is what we expect from the auth service
-                    if (accessCodes.size() == SINGLE_INSTANCE) {
-                        final String accessCode = accessCodes.get(0);
-
-                        LOGGER.debug(MessageCodes.CAD_010, myID, accessCode);
-                        return Boolean.valueOf(accessCode);
-                    }
-
-                    LOGGER.error(MessageCodes.CAD_008, authResponse);
-
-                    break;
+                    // This will default to 'false' if value is unexpected and throw an NPE if key isn't found
+                    return MAPPER.readTree(response.body()).get(HauthResponse.ACCESS_KEY).asBoolean();
                 case 404:
                     LOGGER.debug(MessageCodes.CAD_003, myID);
                     return false; // The default for unknowns is that access is not restricted
@@ -108,7 +91,7 @@ public class HauthItem {
                     LOGGER.error(MessageCodes.CAD_004, myID, response.statusCode(), response.body());
                     break;
             }
-        } catch (IOException | InterruptedException details) {
+        } catch (IOException | InterruptedException | NullPointerException details) {
             LOGGER.error(details.getMessage(), details);
         }
 
