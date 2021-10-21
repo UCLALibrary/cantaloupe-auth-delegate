@@ -1,6 +1,8 @@
 
 package edu.ucla.library.iiif.auth.delegate.hauth;
 
+import static info.freelibrary.util.Constants.SINGLE_INSTANCE;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -84,24 +86,19 @@ public class HauthItem {
 
             switch (response.statusCode()) {
                 case 200:
-                    final String authResponseJSON = response.body();
-                    final JsonNode node = MAPPER.readTree(authResponseJSON);
-                    final List<String> ids = node.findValuesAsText(HauthResponse.ID_KEY);
+                    final String authResponse = response.body();
+                    final JsonNode node = MAPPER.readTree(authResponse);
                     final List<String> accessCodes = node.findValuesAsText(HauthResponse.ACCESS_KEY);
 
-                    if (!ids.isEmpty() && !accessCodes.isEmpty()) {
+                    // Confirm the JSON structure is what we expect from the auth service
+                    if (accessCodes.size() == SINGLE_INSTANCE) {
                         final String accessCode = accessCodes.get(0);
-                        final String id = ids.get(0);
 
-                        if (myID.equals(id)) {
-                            LOGGER.debug(MessageCodes.CAD_010, myID, accessCode);
-                            return Boolean.valueOf(accessCode);
-                        }
-
-                        LOGGER.error(MessageCodes.CAD_007, id, myID);
-                    } else {
-                        LOGGER.error(MessageCodes.CAD_008, authResponseJSON);
+                        LOGGER.debug(MessageCodes.CAD_010, myID, accessCode);
+                        return Boolean.valueOf(accessCode);
                     }
+
+                    LOGGER.error(MessageCodes.CAD_008, authResponse);
 
                     break;
                 case 404:
