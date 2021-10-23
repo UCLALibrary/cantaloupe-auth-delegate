@@ -18,7 +18,7 @@ public class ConfigException extends I18nRuntimeException {
      * @param aMessageKey A message key for additional details
      */
     public ConfigException(final String aMessageKey) {
-        super(MessageCodes.CAD_001, aMessageKey);
+        super(MessageCodes.BUNDLE, MessageCodes.CAD_001, aMessageKey);
     }
 
     /**
@@ -28,6 +28,6 @@ public class ConfigException extends I18nRuntimeException {
      * @param aMessageKey A message key for additional details
      */
     public ConfigException(final Throwable aThrowable, final String aMessageKey) {
-        super(aThrowable, MessageCodes.CAD_002, aMessageKey);
+        super(aThrowable, MessageCodes.BUNDLE, MessageCodes.CAD_002, aMessageKey);
     }
 }
