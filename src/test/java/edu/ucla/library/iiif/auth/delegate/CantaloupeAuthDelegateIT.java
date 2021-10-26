@@ -63,6 +63,10 @@ public class CantaloupeAuthDelegateIT {
         // TODO
     }
 
+    /******
+     * v2 *
+     ******/
+
     /**
      * Tests the HTTP response of a request for a restricted image using Image API 2.
      *
@@ -74,16 +78,6 @@ public class CantaloupeAuthDelegateIT {
     }
 
     /**
-     * Tests the HTTP response of a request for a restricted image using Image API 3.
-     *
-     * @throws IOException If there is trouble reading the test file
-     */
-    @Test
-    public final void testResponseRestrictedV3() throws IOException, InterruptedException {
-        testResponse(RESTRICTED_TEST_INFO_FILE, RESTRICTED_TEST_FILE_PATH);
-    }
-
-    /**
      * Tests the HTTP response of a request for a non-restricted image using Image API 2.
      *
      * @throws IOException If there is trouble reading the test file
@@ -91,6 +85,20 @@ public class CantaloupeAuthDelegateIT {
     @Test
     public final void testResponseOpenV2() throws IOException, InterruptedException {
         testResponse(OPEN_TEST_INFO_FILE, OPEN_TEST_FILE_PATH);
+    }
+
+    /******
+     * v3 *
+     ******/
+
+    /**
+     * Tests the HTTP response of a request for a restricted image using Image API 3.
+     *
+     * @throws IOException If there is trouble reading the test file
+     */
+    @Test
+    public final void testResponseRestrictedV3() throws IOException, InterruptedException {
+        testResponse(RESTRICTED_TEST_INFO_FILE, RESTRICTED_TEST_FILE_PATH);
     }
 
     /**
