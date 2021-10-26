@@ -12,6 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       MAVEN_CACHE_KEY: ${{ secrets.MAVEN_CACHE_KEY }}
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      UCLALIBRARY_SNYK_ORG: ${{ secrets.UCLALIBRARY_SNYK_ORG }}
     strategy:
       matrix:
         java: [ 11 ]
@@ -50,6 +52,7 @@ jobs:
           maven_profiles: default
           maven_args: >
             -V -ntp -Dorg.slf4j.simpleLogger.log.net.sourceforge.pmd=error
+            -Dsnyk.skip=${{ secrets.SKIP_SNYK }}
       - name: Build with Maven
         uses: samuelmeuli/action-maven-publish@201a45a3f311b2ee888f252ba9f4194257545709 # v1.4.0
         with:
@@ -57,3 +60,4 @@ jobs:
           maven_profiles: default
           maven_args: >
             -V -ntp -Dorg.slf4j.simpleLogger.log.net.sourceforge.pmd=error -Ddocker.showLogs=true
+            -Dsnyk.skip=${{ secrets.SKIP_SNYK }}
