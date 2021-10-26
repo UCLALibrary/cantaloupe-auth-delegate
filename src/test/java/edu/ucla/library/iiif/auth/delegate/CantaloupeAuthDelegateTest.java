@@ -1,11 +1,13 @@
 
 package edu.ucla.library.iiif.auth.delegate;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
  * A test of CantaloupeAuthDelegate.
  */
+@Ignore
 public class CantaloupeAuthDelegateTest {
 
     /**
@@ -13,7 +15,7 @@ public class CantaloupeAuthDelegateTest {
      */
     @Test
     public final void testPreAuthorize() {
-
+        // TODO
     }
 
     /**
@@ -21,7 +23,7 @@ public class CantaloupeAuthDelegateTest {
      */
     @Test
     public final void testAuthorize() {
-
+        // TODO
     }
 
     /**
@@ -29,7 +31,7 @@ public class CantaloupeAuthDelegateTest {
      */
     @Test
     public final void testGetExtraIIIF2InformationResponseKeys() {
-
+        // TODO
     }
 
     /**
@@ -37,6 +39,6 @@ public class CantaloupeAuthDelegateTest {
      */
     @Test
     public final void testGetExtraIIIF3InformationResponseKeys() {
-
+        // TODO
     }
 }

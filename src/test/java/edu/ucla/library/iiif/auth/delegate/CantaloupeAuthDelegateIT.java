@@ -10,6 +10,7 @@ import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.util.Map;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import info.freelibrary.util.StringUtils;
@@ -47,17 +48,19 @@ public class CantaloupeAuthDelegateIT {
     /**
      * Tests pre-authorizing a request.
      */
+    @Ignore
     @Test
     public final void testPreAuthorize() {
-
+        // TODO
     }
 
     /**
      * Tests authorizing a request.
      */
+    @Ignore
     @Test
     public final void testAuthorize() {
-
+        // TODO
     }
 
     /**
