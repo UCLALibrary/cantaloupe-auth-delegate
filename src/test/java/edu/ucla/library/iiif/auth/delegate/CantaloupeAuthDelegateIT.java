@@ -64,54 +64,54 @@ public class CantaloupeAuthDelegateIT {
     }
 
     /**
-     * Tests getting extra restricted IIIF (v2) information response keys.
+     * Tests the HTTP response of a request for a restricted image using Image API 2.
      *
      * @throws IOException If there is trouble reading the test file
      */
     @Test
-    public final void testGetExtraIIIF2InformationResponseKeysRestricted() throws IOException, InterruptedException {
-        testGetExtraIIIFInformationResponseKeys(RESTRICTED_TEST_INFO_FILE, RESTRICTED_TEST_FILE_PATH);
+    public final void testResponseRestrictedV2() throws IOException, InterruptedException {
+        testResponse(RESTRICTED_TEST_INFO_FILE, RESTRICTED_TEST_FILE_PATH);
     }
 
     /**
-     * Tests getting extra restricted IIIF (v3) information response keys.
+     * Tests the HTTP response of a request for a restricted image using Image API 3.
      *
      * @throws IOException If there is trouble reading the test file
      */
     @Test
-    public final void testGetExtraIIIF3InformationResponseKeysRestricted() throws IOException, InterruptedException {
-        testGetExtraIIIFInformationResponseKeys(RESTRICTED_TEST_INFO_FILE, RESTRICTED_TEST_FILE_PATH);
+    public final void testResponseRestrictedV3() throws IOException, InterruptedException {
+        testResponse(RESTRICTED_TEST_INFO_FILE, RESTRICTED_TEST_FILE_PATH);
     }
 
     /**
-     * Tests getting extra non-restricted IIIF (v2) information response keys.
+     * Tests the HTTP response of a request for a non-restricted image using Image API 2.
      *
      * @throws IOException If there is trouble reading the test file
      */
     @Test
-    public final void testGetExtraIIIF2InformationResponseKeysOpen() throws IOException, InterruptedException {
-        testGetExtraIIIFInformationResponseKeys(OPEN_TEST_INFO_FILE, OPEN_TEST_FILE_PATH);
+    public final void testResponseOpenV2() throws IOException, InterruptedException {
+        testResponse(OPEN_TEST_INFO_FILE, OPEN_TEST_FILE_PATH);
     }
 
     /**
-     * Tests getting extra non-restricted IIIF (v3) information response keys.
+     * Tests the HTTP response of a request for a non-restricted image using Image API 3.
      *
      * @throws IOException If there is trouble reading the test file
      */
     @Test
-    public final void testGetExtraIIIF3InformationResponseKeysOpen() throws IOException, InterruptedException {
-        testGetExtraIIIFInformationResponseKeys(OPEN_TEST_INFO_FILE, OPEN_TEST_FILE_PATH);
+    public final void testResponseOpenV3() throws IOException, InterruptedException {
+        testResponse(OPEN_TEST_INFO_FILE, OPEN_TEST_FILE_PATH);
     }
 
     /**
-     * Tests getting extra IIIF information response keys for v2 or v3. We read the keys into a sorted map to be able to
-     * get a consistent representation (regardless of JSON formatting).
+     * Tests the HTTP response of a request. We read the keys into a sorted map to be able to get a consistent
+     * representation (regardless of JSON formatting).
      *
      * @param aFound A string with the found JSON response
      * @param aExpected An file with the expected JSON response
      * @throws IOException If there is trouble reading the test file
      */
-    private void testGetExtraIIIFInformationResponseKeys(final String aFound, final File aExpected)
+    private void testResponse(final String aFound, final File aExpected)
             throws IOException, InterruptedException {
         final Map<String, String> envProperties = System.getenv();
         final String hauthURL = envProperties.get(TestConfig.HAUTH_URL_PROPERTY);
