@@ -63,6 +63,9 @@
     <freelib.utils.version>3.0.1</freelib.utils.version>
     <cantaloupe.version>5.0.4</cantaloupe.version>
 
+    <!-- Test dependency versions -->
+    <vertx.version>4.1.4</vertx.version>
+
     <!-- Plugin versions -->
     <shade.plugin.version>3.2.4</shade.plugin.version>
     <download.plugin.version>1.6.7</download.plugin.version>
@@ -108,6 +111,12 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-core</artifactId>
+      <version>${vertx.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

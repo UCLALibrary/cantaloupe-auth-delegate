@@ -18,19 +18,16 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import info.freelibrary.util.HTTP;
-import info.freelibrary.util.Logger;
-import info.freelibrary.util.LoggerFactory;
 import info.freelibrary.util.StringUtils;
+
+import edu.ucla.library.iiif.auth.delegate.hauth.HauthToken;
+
+import io.vertx.core.http.HttpHeaders;
 
 /**
  * A test of CantaloupeAuthDelegate.
  */
 public class CantaloupeAuthDelegateIT {
-
-    /**
-     * The test's logger.
-     */
-    private static final Logger LOGGER = LoggerFactory.getLogger(CantaloupeAuthDelegateIT.class, MessageCodes.BUNDLE);
 
     /**
      * The template for image URLs. The slots are:
@@ -41,6 +38,15 @@ public class CantaloupeAuthDelegateIT {
      * </ul>
      */
     private static final String IMAGE_URL_TEMPLATE = "{}/iiif/{}/{}";
+
+    /**
+     * A token generated using the following shell command:
+     * <p>
+     * <code>$ base64 <<< '{"version": "0.0.0-SNAPSHOT", "campus-network": true}'
+     * </code>
+     */
+    private static final String VALID_TOKEN =
+            "eyJ2ZXJzaW9uIjogIjAuMC4wLVNOQVBTSE9UIiwiY2FtcHVzLW5ldHdvcmsiOiB0cnVlfQo=";
 
     /**
      * The id of the restricted image.
@@ -93,25 +99,59 @@ public class CantaloupeAuthDelegateIT {
      ******/
 
     /**
+     * Tests the HTTP response of a request with an Authorization header for a restricted image using Image API 2.
+     *
+     * @throws IOException If there is trouble sending the HTTP request(s) or getting the expected info.json response
+     * @throws InterruptedException If there is trouble sending the HTTP request(s)
+     */
+    @Test
+    public final void testResponseRestrictedWithTokenV2() throws IOException, InterruptedException {
+        final HttpResponse<String> response = sendImageInfoRequest(RESTRICTED_IMAGE_ID, VALID_TOKEN);
+        final String expectedResponse = getExpectedDescriptionResource(RESTRICTED_IMAGE_ID);
+
+        TestUtils.assertEquals(expectedResponse, response.body());
+    }
+
+    /**
      * Tests the HTTP response of a request without an Authorization header for a restricted image using Image API 2.
      *
-     * @throws IOException If there is trouble reading the test file
+     * @throws IOException If there is trouble sending the HTTP request(s) or getting the expected info.json response
+     * @throws InterruptedException If there is trouble sending the HTTP request(s)
      */
     @Test
     public final void testResponseRestrictedNoTokenV2() throws IOException, InterruptedException {
-        testResponse(RESTRICTED_IMAGE_ID, null);
+        final HttpResponse<String> firstResponse;
+        final HttpResponse<String> secondResponse;
+        final Optional<String> firstResponseLocation;
+        final String expectedSecondResponse;
+
+        firstResponse = sendImageInfoRequest(RESTRICTED_IMAGE_ID, null);
+
+        // Check first response
+        firstResponseLocation = firstResponse.headers().firstValue(HttpHeaders.LOCATION.toString());
+        Assert.assertTrue(HTTP.FOUND == firstResponse.statusCode());
+        Assert.assertTrue(firstResponseLocation.isPresent() &&
+                firstResponseLocation.get().contains(RESTRICTED_IMAGE_DEGRADED_ID));
+
         // Now do the redirect
-        testResponse(RESTRICTED_IMAGE_DEGRADED_ID, null);
+        secondResponse = sendImageInfoRequest(RESTRICTED_IMAGE_DEGRADED_ID, null);
+
+        expectedSecondResponse = getExpectedDescriptionResource(RESTRICTED_IMAGE_DEGRADED_ID);
+        TestUtils.assertEquals(expectedSecondResponse, secondResponse.body());
     }
 
     /**
      * Tests the HTTP response of a request for a non-restricted image using Image API 2.
      *
-     * @throws IOException If there is trouble reading the test file
+     * @throws IOException If there is trouble sending the HTTP request(s) or getting the expected info.json response
+     * @throws InterruptedException If there is trouble sending the HTTP request(s)
      */
     @Test
     public final void testResponseOpenV2() throws IOException, InterruptedException {
-        testResponse(OPEN_IMAGE_ID, null);
+        final HttpResponse<String> response = sendImageInfoRequest(OPEN_IMAGE_ID, null);
+        final String expectedResponse = getExpectedDescriptionResource(OPEN_IMAGE_ID);
+
+        TestUtils.assertEquals(expectedResponse, response.body());
     }
 
     /******
@@ -119,49 +159,98 @@ public class CantaloupeAuthDelegateIT {
      ******/
 
     /**
+     * Tests the HTTP response of a request with an Authorization header for a restricted image using Image API 3.
+     *
+     * @throws IOException If there is trouble sending the HTTP request(s) or getting the expected info.json response
+     * @throws InterruptedException If there is trouble sending the HTTP request(s)
+     */
+    @Test
+    public final void testResponseRestrictedWithTokenV3() throws IOException, InterruptedException {
+        final HttpResponse<String> response = sendImageInfoRequest(RESTRICTED_IMAGE_ID, VALID_TOKEN);
+        final String expectedResponse = getExpectedDescriptionResource(RESTRICTED_IMAGE_ID);
+
+        TestUtils.assertEquals(expectedResponse, response.body());
+    }
+
+    /**
      * Tests the HTTP response of a request without an Authorization header for a restricted image using Image API 3.
      *
-     * @throws IOException If there is trouble reading the test file
+     * @throws IOException If there is trouble sending the HTTP request(s) or getting the expected info.json response
+     * @throws InterruptedException If there is trouble sending the HTTP request(s)
      */
     @Test
     public final void testResponseRestrictedNoTokenV3() throws IOException, InterruptedException {
-        testResponse(RESTRICTED_IMAGE_ID, null);
+        final HttpResponse<String> firstResponse;
+        final HttpResponse<String> secondResponse;
+        final Optional<String> firstResponseLocation;
+        final String expectedSecondResponse;
+
+        firstResponse = sendImageInfoRequest(RESTRICTED_IMAGE_ID, null);
+
+        // Check first response
+        firstResponseLocation = firstResponse.headers().firstValue(HttpHeaders.LOCATION.toString());
+        Assert.assertTrue(HTTP.FOUND == firstResponse.statusCode());
+        Assert.assertTrue(firstResponseLocation.isPresent() &&
+                firstResponseLocation.get().contains(RESTRICTED_IMAGE_DEGRADED_ID));
+
         // Now do the redirect
-        testResponse(RESTRICTED_IMAGE_DEGRADED_ID, null);
+        secondResponse = sendImageInfoRequest(RESTRICTED_IMAGE_DEGRADED_ID, null);
+
+        expectedSecondResponse = getExpectedDescriptionResource(RESTRICTED_IMAGE_DEGRADED_ID);
+        TestUtils.assertEquals(expectedSecondResponse, secondResponse.body());
     }
 
     /**
      * Tests the HTTP response of a request for a non-restricted image using Image API 3.
      *
-     * @throws IOException If there is trouble reading the test file
+     * @throws IOException If there is trouble sending the HTTP request(s) or getting the expected info.json response
+     * @throws InterruptedException If there is trouble sending the HTTP request(s)
      */
     @Test
     public final void testResponseOpenV3() throws IOException, InterruptedException {
-        testResponse(OPEN_IMAGE_ID, null);
+        final HttpResponse<String> response = sendImageInfoRequest(OPEN_IMAGE_ID, null);
+        final String expectedResponse = getExpectedDescriptionResource(OPEN_IMAGE_ID);
+
+        TestUtils.assertEquals(expectedResponse, response.body());
     }
 
     /**
-     * Tests the HTTP response of a request.
+     * Sends an HTTP request for the description resource containing image information (info.json).
      *
      * @param aImageID The identifier of the image whose info we're requesting
-     * @param aToken An access token for authentication, to be added to the Cantaloupe request in an Authorization
-     *        header
+     * @param aToken A bearer token for authorization
+     * @return The HTTP response
+     * @throws IOException If there is trouble sending the HTTP request
+     * @throws InterruptedException If there is trouble sending the HTTP request
+     */
+    private static HttpResponse<String> sendImageInfoRequest(final String aImageID, final String aToken)
+            throws IOException, InterruptedException {
+        final String imageURL =
+                getDescriptionResourceID(System.getenv().get(TestConfig.IIIF_URL_PROPERTY), 2, aImageID);
+        final HttpRequest.Builder requestBuilder = HttpRequest.newBuilder(URI.create(imageURL + "/info.json"));
+
+        if (aToken != null) {
+            requestBuilder.header(HauthToken.HEADER, StringUtils.format("{} {}", HauthToken.TYPE, aToken));
+        }
+
+        return HTTP_CLIENT.send(requestBuilder.build(), BodyHandlers.ofString());
+    }
+
+    /**
+     * Generates the expected info.json for a given image.
+     *
+     * @param aImageID The identifier of the image whose info we're requesting
+     * @return The expected info.json response for the image
      * @throws IOException If there is trouble reading the test file
      */
-    private void testResponse(final String aImageID, final String aToken)
-            throws IOException, InterruptedException {
+    private static String getExpectedDescriptionResource(final String aImageID) throws IOException {
         final Map<String, String> envProperties = System.getenv();
-        final String iiifURL = envProperties.get(TestConfig.IIIF_URL_PROPERTY);
-
+        final String descriptionResourceID =
+                getDescriptionResourceID(envProperties.get(TestConfig.IIIF_URL_PROPERTY), 2, aImageID);
+        final File responseTemplate = RESPONSE_TEMPLATES.get(aImageID);
         final List<String> responseTemplateURLs = new ArrayList<>();
-        final File templateResponseFile = RESPONSE_TEMPLATES.get(aImageID);
-        final String expected;
 
-        final String imageURL = StringUtils.format(IMAGE_URL_TEMPLATE, iiifURL, "2", aImageID);
-        final HttpRequest.Builder requestBuilder;
-        final HttpResponse<String> response;
-
-        responseTemplateURLs.add(imageURL);
+        responseTemplateURLs.add(descriptionResourceID);
 
         if (aImageID.startsWith(RESTRICTED_IMAGE_ID)) {
             // The Hauth service URLs need to be added to the info.json
@@ -169,31 +258,20 @@ public class CantaloupeAuthDelegateIT {
             responseTemplateURLs.add(envProperties.get(Config.AUTH_TOKEN_SERVICE));
         }
 
-        expected = StringUtils.format(StringUtils.read(templateResponseFile), responseTemplateURLs.toArray());
+        return StringUtils.format(StringUtils.read(responseTemplate), responseTemplateURLs.toArray());
+    }
 
-        requestBuilder = HttpRequest.newBuilder(URI.create(imageURL + "/info.json"));
-
-        if (aToken != null) {
-            requestBuilder.header("Authorization", StringUtils.format("Bearer {}", aToken));
-        }
-
-        response = HTTP_CLIENT.send(requestBuilder.build(), BodyHandlers.ofString());
-
-        switch (response.statusCode()) {
-            case HTTP.OK:
-                TestUtils.assertEquals(expected, response.body());
-                break;
-            case HTTP.FOUND:
-                final Optional<String> locationHeader = response.headers().firstValue("Location");
-
-                Assert.assertTrue(locationHeader.isPresent() && locationHeader.get().contains(";1:2"));
-                break;
-            default:
-                final String errorMessage = LOGGER.getMessage(MessageCodes.CAD_006, response.statusCode());
-
-                Assert.fail(errorMessage);
-                break;
-        }
+    /**
+     * Constructs the ID of a description resource.
+     *
+     * @param aBaseURL The base URL of the Cantaloupe server
+     * @param aImageApiVersion The IIIF Image API version
+     * @param aImageID The identifier of the image
+     * @return The ID of the description resource
+     */
+    private static String getDescriptionResourceID(final String aBaseURL, final int aImageApiVersion,
+            final String aImageID) {
+        return StringUtils.format(IMAGE_URL_TEMPLATE, aBaseURL, aImageApiVersion, aImageID);
     }
 
 }
