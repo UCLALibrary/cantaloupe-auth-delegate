@@ -20,14 +20,4 @@ public class ConfigException extends I18nRuntimeException {
     public ConfigException(final String aMessageKey) {
         super(MessageCodes.BUNDLE, MessageCodes.CAD_001, aMessageKey);
     }
-
-    /**
-     * Create a configuration exception from the supplied message key.
-     *
-     * @param aThrowable A parent exception
-     * @param aMessageKey A message key for additional details
-     */
-    public ConfigException(final Throwable aThrowable, final String aMessageKey) {
-        super(aThrowable, MessageCodes.BUNDLE, MessageCodes.CAD_002, aMessageKey);
-    }
 }

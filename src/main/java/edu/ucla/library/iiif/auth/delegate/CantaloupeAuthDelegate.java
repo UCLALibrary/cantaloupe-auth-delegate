@@ -58,6 +58,11 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
     private final String myTokenService;
 
     /**
+     * The scale constraint this delegate uses for degraded images.
+     */
+    private final long[] myScaleConstraint;
+
+    /**
      * Whether or not access to the requested item is restricted.
      */
     private boolean myItemIsRestricted;
@@ -76,6 +81,7 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
         myAccessService = config.getAccessService();
         myCookieService = config.getCookieService();
         myTokenService = config.getTokenService();
+        myScaleConstraint = config.getScaleConstraint();
     }
 
     /**
@@ -123,7 +129,8 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
             return true;
         } else if (myItemIsRestricted && !myIsValidIP) {
             // The long types make a difference here, apparently; JRuby?
-            return Map.of("status_code", Long.valueOf(HTTP.FOUND), "scale_numerator", 1L, "scale_denominator", 2L);
+            return Map.of("status_code", Long.valueOf(HTTP.FOUND), "scale_numerator", myScaleConstraint[0],
+                    "scale_denominator", myScaleConstraint[1]);
         } else {
             // Client is authorized to view full resource
             return true;

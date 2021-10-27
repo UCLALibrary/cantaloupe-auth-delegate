@@ -56,7 +56,8 @@ public class CantaloupeAuthDelegateIT {
     /**
      * The id of the restricted image.
      */
-    private static final String RESTRICTED_IMAGE_DEGRADED_ID = "test-restricted.tif;1:2";
+    private static final String RESTRICTED_IMAGE_DEGRADED_ID =
+            StringUtils.format("test-restricted.tif;{}", System.getenv().get(Config.DEGRADED_IMAGE_SCALE_CONSTRAINT));
 
     /**
      * The id of the non-restricted image.
