@@ -135,7 +135,7 @@ public class CantaloupeAuthDelegateIT {
 
         // Check first response
         firstResponseLocation = firstResponse.headers().firstValue(HttpHeaders.LOCATION.toString());
-        Assert.assertTrue(HTTP.FOUND == firstResponse.statusCode());
+        Assert.assertEquals(HTTP.FOUND, firstResponse.statusCode());
         Assert.assertTrue(firstResponseLocation.isPresent() &&
                 firstResponseLocation.get().contains(RESTRICTED_IMAGE_DEGRADED_ID));
 
@@ -209,7 +209,7 @@ public class CantaloupeAuthDelegateIT {
 
         // Check first response
         firstResponseLocation = firstResponse.headers().firstValue(HttpHeaders.LOCATION.toString());
-        Assert.assertTrue(HTTP.FOUND == firstResponse.statusCode());
+        Assert.assertEquals(HTTP.FOUND, firstResponse.statusCode());
         Assert.assertTrue(firstResponseLocation.isPresent() &&
                 firstResponseLocation.get().contains(RESTRICTED_IMAGE_DEGRADED_ID));
 
