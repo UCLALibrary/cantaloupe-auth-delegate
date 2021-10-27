@@ -233,7 +233,7 @@
           <!-- IPs inside the containers use the Docker bridge IP address -->
           <environmentVariables>
             <HAUTH_URL>http://172.17.0.1:${test.hauth.port}</HAUTH_URL>
-            <IIIF_IMAGE_URL>http://172.17.0.1:${test.iiif.images.port}/iiif</IIIF_IMAGE_URL>
+            <IIIF_IMAGE_URL>http://172.17.0.1:${test.iiif.images.port}</IIIF_IMAGE_URL>
           </environmentVariables>
         </configuration>
       </plugin>
