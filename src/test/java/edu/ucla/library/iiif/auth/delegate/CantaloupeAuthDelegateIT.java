@@ -8,6 +8,8 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.Ignore;
@@ -85,7 +87,7 @@ public class CantaloupeAuthDelegateIT {
      */
     @Test
     public final void testResponseRestrictedNoTokenV2() throws IOException, InterruptedException {
-        testResponse(RESTRICTED_IMAGE_ID, RESTRICTED_RESPONSE_TEMPLATE, null);
+        testResponse(RESTRICTED_IMAGE_ID, null);
     }
 
     /**
@@ -95,7 +97,7 @@ public class CantaloupeAuthDelegateIT {
      */
     @Test
     public final void testResponseOpenV2() throws IOException, InterruptedException {
-        testResponse(OPEN_IMAGE_ID, OPEN_RESPONSE_TEMPLATE, null);
+        testResponse(OPEN_IMAGE_ID, null);
     }
 
     /******
@@ -109,7 +111,7 @@ public class CantaloupeAuthDelegateIT {
      */
     @Test
     public final void testResponseRestrictedNoTokenV3() throws IOException, InterruptedException {
-        testResponse(RESTRICTED_IMAGE_ID, RESTRICTED_RESPONSE_TEMPLATE, null);
+        testResponse(RESTRICTED_IMAGE_ID, null);
     }
 
     /**
@@ -119,46 +121,63 @@ public class CantaloupeAuthDelegateIT {
      */
     @Test
     public final void testResponseOpenV3() throws IOException, InterruptedException {
-        testResponse(OPEN_IMAGE_ID, OPEN_RESPONSE_TEMPLATE, null);
+        testResponse(OPEN_IMAGE_ID, null);
     }
 
     /**
      * Tests the HTTP response of a request.
      *
      * @param aImageID The identifier of the image whose info we're requesting
-     * @param aExpectedTemplate A file with the expected JSON response as a template, with slots for filling in URLs
      * @param aToken An access token for authentication, to be added to the Cantaloupe request in an Authorization
      *        header
      * @throws IOException If there is trouble reading the test file
      */
-    private void testResponse(final String aImageID, final File aExpectedTemplate, final String aToken)
+    private void testResponse(final String aImageID, final String aToken)
             throws IOException, InterruptedException {
         final Map<String, String> envProperties = System.getenv();
-
         final String iiifURL = envProperties.get(TestConfig.IIIF_URL_PROPERTY);
-        final String imageURL = StringUtils.format(IMAGE_URL_TEMPLATE, iiifURL, "2", aImageID);
-        final URI requestURL = URI.create(imageURL + "/info.json");
-        final HttpRequest.Builder requestBuilder = HttpRequest.newBuilder(requestURL);
 
-        final String[] templateURLs;
+        final List<String> authServiceURLs;
+        final List<String> responseTemplateURLs;
+        final File templateResponseFile;
         final String expected;
 
+        final String imageID;
+        final String imageURL;
+        final HttpRequest.Builder requestBuilder;
         final HttpResponse<String> response;
 
-        // If we have a restricted item, the Hauth services URLs also need to be added to the info.json
-        if (aExpectedTemplate == RESTRICTED_RESPONSE_TEMPLATE) {
-            final String cookieServiceURL = envProperties.get(Config.AUTH_COOKIE_SERVICE);
-            final String tokenServiceURL = envProperties.get(Config.AUTH_TOKEN_SERVICE);
+        if (aImageID == RESTRICTED_IMAGE_ID) {
+            // The Hauth service URLs need to be added to the info.json
+            authServiceURLs = List.of(envProperties.get(Config.AUTH_COOKIE_SERVICE),
+                    envProperties.get(Config.AUTH_TOKEN_SERVICE));
 
-            templateURLs = new String[] { imageURL, cookieServiceURL, tokenServiceURL };
+            // We expect a scaled image in the response
+            imageID = StringUtils.format("{};{}", aImageID, "1:2");
+            templateResponseFile = RESTRICTED_RESPONSE_TEMPLATE;
         } else {
-            templateURLs = new String[] { imageURL };
+            // No Hauth service URLs are expected in the info.json
+            authServiceURLs = List.of();
+
+            // We expect the full image to be available
+            imageID = aImageID;
+            templateResponseFile = OPEN_RESPONSE_TEMPLATE;
         }
-        expected = StringUtils.format(StringUtils.read(aExpectedTemplate), templateURLs);
+
+        imageURL = StringUtils.format(IMAGE_URL_TEMPLATE, iiifURL, "2", imageID);
+
+        responseTemplateURLs = new ArrayList<>();
+        responseTemplateURLs.add(imageURL);
+        responseTemplateURLs.addAll(authServiceURLs);
+
+        expected = StringUtils.format(StringUtils.read(templateResponseFile), responseTemplateURLs.toArray());
+
+        requestBuilder = HttpRequest.newBuilder(URI.create(imageURL + "/info.json"));
 
         if (aToken != null) {
             requestBuilder.header("Authorization", StringUtils.format("Bearer {}", aToken));
         }
+
         response = HTTP.send(requestBuilder.build(), BodyHandlers.ofString());
 
         TestUtils.assertEquals(expected, response.body());
