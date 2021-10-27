@@ -56,7 +56,7 @@ public class CantaloupeAuthDelegateIT {
     /**
      * An internal HTTP client.
      */
-    private static final HttpClient HTTP = HttpClient.newHttpClient();
+    private static final HttpClient HTTP_CLIENT = HttpClient.newHttpClient();
 
     /**
      * Tests pre-authorizing a request.
@@ -178,7 +178,7 @@ public class CantaloupeAuthDelegateIT {
             requestBuilder.header("Authorization", StringUtils.format("Bearer {}", aToken));
         }
 
-        response = HTTP.send(requestBuilder.build(), BodyHandlers.ofString());
+        response = HTTP_CLIENT.send(requestBuilder.build(), BodyHandlers.ofString());
 
         TestUtils.assertEquals(expected, response.body());
     }
