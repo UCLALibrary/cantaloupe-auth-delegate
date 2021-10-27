@@ -11,7 +11,7 @@
   <entry key="CAD-003">Requested item '{}' was not found in the authorization service's database</entry>
   <entry key="CAD-004">Unexpected error while checking item '{}' in authorization database: [{}] {}</entry>
   <entry key="CAD-005">Making {} request: {}</entry>
-  <entry key="CAD-006"></entry><!-- This can be used for a new message -->
+  <entry key="CAD-006">Unexpected HTTP response code: {}</entry>
   <entry key="CAD-007">ID returned by authorization lookup doesn't match requested: {} != {}</entry>
   <entry key="CAD-008"></entry><!-- This can be used for a new message -->
   <entry key="CAD-009">The code to indicate whether access is allowed was not expected: {} [{}]</entry>

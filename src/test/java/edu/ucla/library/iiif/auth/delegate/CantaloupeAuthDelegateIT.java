@@ -11,16 +11,26 @@ import java.net.http.HttpResponse.BodyHandlers;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
+import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import info.freelibrary.util.HTTP;
+import info.freelibrary.util.Logger;
+import info.freelibrary.util.LoggerFactory;
 import info.freelibrary.util.StringUtils;
 
 /**
  * A test of CantaloupeAuthDelegate.
  */
 public class CantaloupeAuthDelegateIT {
+
+    /**
+     * The test's logger.
+     */
+    private static final Logger LOGGER = LoggerFactory.getLogger(CantaloupeAuthDelegateIT.class, MessageCodes.BUNDLE);
 
     /**
      * The template for image URLs. The slots are:
@@ -38,20 +48,22 @@ public class CantaloupeAuthDelegateIT {
     private static final String RESTRICTED_IMAGE_ID = "test-restricted.tif";
 
     /**
+     * The id of the restricted image.
+     */
+    private static final String RESTRICTED_IMAGE_DEGRADED_ID = "test-restricted.tif;1:2";
+
+    /**
      * The id of the non-restricted image.
      */
     private static final String OPEN_IMAGE_ID = "test-open.tif";
 
     /**
-     * The file path of the info.json template for restricted images.
+     * The file paths of the info.json templates.
      */
-    private static final File RESTRICTED_RESPONSE_TEMPLATE =
-            new File("src/test/resources/services-info-restricted.json");
-
-    /**
-     * The file path of the info.json template for non-restricted images.
-     */
-    private static final File OPEN_RESPONSE_TEMPLATE = new File("src/test/resources/services-info-open.json");
+    private static final Map<String, File> RESPONSE_TEMPLATES =
+            Map.of(RESTRICTED_IMAGE_ID, new File("src/test/resources/services-info-restricted.json"),
+                    RESTRICTED_IMAGE_DEGRADED_ID, new File("src/test/resources/services-info-restricted;1:2.json"),
+                    OPEN_IMAGE_ID, new File("src/test/resources/services-info-open.json"));
 
     /**
      * An internal HTTP client.
@@ -88,6 +100,8 @@ public class CantaloupeAuthDelegateIT {
     @Test
     public final void testResponseRestrictedNoTokenV2() throws IOException, InterruptedException {
         testResponse(RESTRICTED_IMAGE_ID, null);
+        // Now do the redirect
+        testResponse(RESTRICTED_IMAGE_DEGRADED_ID, null);
     }
 
     /**
@@ -112,6 +126,8 @@ public class CantaloupeAuthDelegateIT {
     @Test
     public final void testResponseRestrictedNoTokenV3() throws IOException, InterruptedException {
         testResponse(RESTRICTED_IMAGE_ID, null);
+        // Now do the redirect
+        testResponse(RESTRICTED_IMAGE_DEGRADED_ID, null);
     }
 
     /**
@@ -137,38 +153,21 @@ public class CantaloupeAuthDelegateIT {
         final Map<String, String> envProperties = System.getenv();
         final String iiifURL = envProperties.get(TestConfig.IIIF_URL_PROPERTY);
 
-        final List<String> authServiceURLs;
-        final List<String> responseTemplateURLs;
-        final File templateResponseFile;
+        final List<String> responseTemplateURLs = new ArrayList<>();
+        final File templateResponseFile = RESPONSE_TEMPLATES.get(aImageID);
         final String expected;
 
-        final String imageID;
-        final String imageURL;
+        final String imageURL = StringUtils.format(IMAGE_URL_TEMPLATE, iiifURL, "2", aImageID);
         final HttpRequest.Builder requestBuilder;
         final HttpResponse<String> response;
 
-        if (aImageID == RESTRICTED_IMAGE_ID) {
-            // The Hauth service URLs need to be added to the info.json
-            authServiceURLs = List.of(envProperties.get(Config.AUTH_COOKIE_SERVICE),
-                    envProperties.get(Config.AUTH_TOKEN_SERVICE));
-
-            // We expect a scaled image in the response
-            imageID = StringUtils.format("{};{}", aImageID, "1:2");
-            templateResponseFile = RESTRICTED_RESPONSE_TEMPLATE;
-        } else {
-            // No Hauth service URLs are expected in the info.json
-            authServiceURLs = List.of();
-
-            // We expect the full image to be available
-            imageID = aImageID;
-            templateResponseFile = OPEN_RESPONSE_TEMPLATE;
-        }
-
-        imageURL = StringUtils.format(IMAGE_URL_TEMPLATE, iiifURL, "2", imageID);
-
-        responseTemplateURLs = new ArrayList<>();
         responseTemplateURLs.add(imageURL);
-        responseTemplateURLs.addAll(authServiceURLs);
+
+        if (aImageID.startsWith(RESTRICTED_IMAGE_ID)) {
+            // The Hauth service URLs need to be added to the info.json
+            responseTemplateURLs.add(envProperties.get(Config.AUTH_COOKIE_SERVICE));
+            responseTemplateURLs.add(envProperties.get(Config.AUTH_TOKEN_SERVICE));
+        }
 
         expected = StringUtils.format(StringUtils.read(templateResponseFile), responseTemplateURLs.toArray());
 
@@ -180,7 +179,21 @@ public class CantaloupeAuthDelegateIT {
 
         response = HTTP_CLIENT.send(requestBuilder.build(), BodyHandlers.ofString());
 
-        TestUtils.assertEquals(expected, response.body());
+        switch (response.statusCode()) {
+            case HTTP.OK:
+                TestUtils.assertEquals(expected, response.body());
+                break;
+            case HTTP.FOUND:
+                final Optional<String> locationHeader = response.headers().firstValue("Location");
+
+                Assert.assertTrue(locationHeader.isPresent() && locationHeader.get().contains(";1:2"));
+                break;
+            default:
+                final String errorMessage = LOGGER.getMessage(MessageCodes.CAD_006, response.statusCode());
+
+                Assert.fail(errorMessage);
+                break;
+        }
     }
 
 }
