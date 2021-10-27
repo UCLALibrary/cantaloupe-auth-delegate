@@ -133,7 +133,6 @@ public class CantaloupeAuthDelegateIT {
     private void testResponse(final String aImageID, final File aExpected)
             throws IOException, InterruptedException {
         final Map<String, String> envProperties = System.getenv();
-        final String hauthURL = envProperties.get(TestConfig.HAUTH_URL_PROPERTY);
         final String iiifURL = envProperties.get(TestConfig.IIIF_URL_PROPERTY);
         final String imageURL = StringUtils.format(IMAGE_URL_TEMPLATE, iiifURL, "2", aImageID);
         final URI requestURL = URI.create(imageURL + "/info.json");
@@ -143,7 +142,10 @@ public class CantaloupeAuthDelegateIT {
 
         // If we have a restricted item, the Hauth services URLs also need to be added to the info.json
         if (aExpected == RESTRICTED_RESPONSE_TEMPLATE) {
-            urls = new String[] { imageURL, hauthURL, hauthURL };
+            final String cookieServiceURL = envProperties.get(Config.AUTH_COOKIE_SERVICE);
+            final String tokenServiceURL = envProperties.get(Config.AUTH_TOKEN_SERVICE);
+
+            urls = new String[] { imageURL, cookieServiceURL, tokenServiceURL };
         } else {
             urls = new String[] { imageURL };
         }

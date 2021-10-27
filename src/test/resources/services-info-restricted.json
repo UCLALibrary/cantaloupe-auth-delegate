@@ -80,12 +80,12 @@
   ],
   "service": [{
     "@context": "http://iiif.io/api/auth/1/context.json",
-    "@id": "{}/cookie",
+    "@id": "{}",
     "@type": "AuthCookieService1",
     "profile": "http://iiif.io/api/auth/1/kiosk",
     "service": [
       {
-        "@id": "{}/token",
+        "@id": "{}",
         "@type": "AuthTokenService1",
         "profile": "http://iiif.io/api/auth/1/token"
       }
