@@ -12,6 +12,7 @@ import java.util.Optional;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 
+import info.freelibrary.util.HTTP;
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
 
@@ -24,7 +25,6 @@ import info.freelibrary.iiif.presentation.v3.utils.JsonKeys;
 import edu.ucla.library.iiif.auth.delegate.hauth.HauthItem;
 import edu.ucla.library.iiif.auth.delegate.hauth.HauthToken;
 
-import edu.illinois.library.cantaloupe.delegate.JavaContext;
 import edu.illinois.library.cantaloupe.delegate.JavaDelegate;
 
 /**
@@ -58,6 +58,16 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
     private final String myTokenService;
 
     /**
+     * Whether or not access to the requested item is restricted.
+     */
+    private boolean myItemIsRestricted;
+
+    /**
+     * Whether or not the client is allowed to access restricted content.
+     */
+    private boolean myIsValidIP;
+
+    /**
      * Creates a new Cantaloupe authorization delegate.
      */
     public CantaloupeAuthDelegate() {
@@ -69,13 +79,55 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
     }
 
     /**
+     * Called by {@link #preAuthorize()}, caches the results of some computations that are used by more than one method
+     * in the delegate. It would be preferable if this code could run in the constructor instead, but that does not
+     * appear possible.
+     */
+    private void cacheRequestMetadata() {
+        final Optional<HauthToken> token = getToken(getContext().getRequestHeaders().get(HauthToken.HEADER));
+        boolean itemIsRestricted;
+
+        try {
+            final HauthItem item = new HauthItem(myAccessService, getContext().getIdentifier());
+
+            itemIsRestricted = item.isRestricted();
+        } catch (final IOException details) {
+            LOGGER.error(details.getMessage(), details);
+            // Q: Do we want to limit access to info.json if auth service is configured and an item isn't found in it?
+            itemIsRestricted = false;
+        }
+        myItemIsRestricted = itemIsRestricted;
+
+        if (token.isPresent() && token.get().isValidIP()) {
+            myIsValidIP = true;
+        } else {
+            myIsValidIP = false;
+        }
+    }
+
+    /**
      * Authorizes a request for image information. Not all image information will necessarily be calculated at this
      * point in time.
      */
     @Override
     public Object preAuthorize() {
-        // Q: Do we want to limit access to info.json if auth service is configured and an item isn't found in it?
-        return true;
+        // Careful with this array; for plain old requests, it is equal to { 1, 1 }
+        final int[] scaleConstraint = getContext().getScaleConstraint();
+
+        // This method must be called here, since it sets member variables that are referenced below and by other
+        // methods which get called later
+        cacheRequestMetadata();
+
+        if (scaleConstraint[0] != scaleConstraint[1]) {
+            // This request is for a scaled resource (i.e., already degraded via an earlier HTTP 302 redirect)
+            return true;
+        } else if (myItemIsRestricted && !myIsValidIP) {
+            // The long types make a difference here, apparently; JRuby?
+            return Map.of("status_code", Long.valueOf(HTTP.FOUND), "scale_numerator", 1L, "scale_denominator", 2L);
+        } else {
+            // Client is authorized to view full resource
+            return true;
+        }
     }
 
     /**
@@ -102,20 +154,11 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
      * @return A map of additional response keys
      */
     private Map<String, Object> getExtraInformationResponseKeys() {
-        final JavaContext context = getContext();
-        final Map<String, String> headers = context.getRequestHeaders();
-        final Optional<HauthToken> token = getToken(headers.get(HauthToken.HEADER));
-        final HauthItem item = new HauthItem(myAccessService, context.getIdentifier());
-
-        try {
-            if (!token.isPresent() && item.isRestricted()) {
-                return getAuthServices();
-            }
-        } catch (final IOException details) {
-            LOGGER.error(details.getMessage(), details);
+        if (myItemIsRestricted) {
+            return getAuthServices();
+        } else {
+            return Collections.emptyMap();
         }
-
-        return Collections.emptyMap();
     }
 
     /**
