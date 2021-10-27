@@ -126,7 +126,12 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
 
         if (scaleConstraint[0] != scaleConstraint[1]) {
             // This request is for a scaled resource (i.e., already degraded via an earlier HTTP 302 redirect)
-            return true;
+            if (scaleConstraint[0] == myScaleConstraint[0] && scaleConstraint[1] == myScaleConstraint[1]) {
+                return true;
+            } else {
+                // The client is requesting something other than the allowed scale constraint
+                return false;
+            }
         } else if (myItemIsRestricted && !myIsValidIP) {
             // The long types make a difference here, apparently; JRuby?
             return Map.of("status_code", Long.valueOf(HTTP.FOUND), "scale_numerator", myScaleConstraint[0],

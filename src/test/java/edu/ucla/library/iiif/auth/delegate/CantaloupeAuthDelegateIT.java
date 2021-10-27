@@ -60,6 +60,11 @@ public class CantaloupeAuthDelegateIT {
             StringUtils.format("test-restricted.tif;{}", System.getenv().get(Config.DEGRADED_IMAGE_SCALE_CONSTRAINT));
 
     /**
+     * The id of the restricted image with a vitual scale constraint that is not allowed.
+     */
+    private static final String RESTRICTED_IMAGE_DEGRADED_DISALLOWED_ID = "test-restricted.tif;3:4";
+
+    /**
      * The id of the non-restricted image.
      */
     private static final String OPEN_IMAGE_ID = "test-open.tif";
@@ -142,6 +147,20 @@ public class CantaloupeAuthDelegateIT {
     }
 
     /**
+     * Tests the HTTP response of a request without an Authorization header for a restricted image at a disallowed scale
+     * using Image API 2.
+     *
+     * @throws IOException If there is trouble sending the HTTP request(s) or getting the expected info.json response
+     * @throws InterruptedException If there is trouble sending the HTTP request(s)
+     */
+    @Test
+    public final void testResponseRestrictedNoTokenDisallowedScaleV2() throws IOException, InterruptedException {
+        final HttpResponse<String> response = sendImageInfoRequest(RESTRICTED_IMAGE_DEGRADED_DISALLOWED_ID, null);
+
+        Assert.assertEquals(HTTP.FORBIDDEN, response.statusCode());
+    }
+
+    /**
      * Tests the HTTP response of a request for a non-restricted image using Image API 2.
      *
      * @throws IOException If there is trouble sending the HTTP request(s) or getting the expected info.json response
@@ -199,6 +218,20 @@ public class CantaloupeAuthDelegateIT {
 
         expectedSecondResponse = getExpectedDescriptionResource(RESTRICTED_IMAGE_DEGRADED_ID);
         TestUtils.assertEquals(expectedSecondResponse, secondResponse.body());
+    }
+
+    /**
+     * Tests the HTTP response of a request without an Authorization header for a restricted image at a disallowed scale
+     * using Image API 3.
+     *
+     * @throws IOException If there is trouble sending the HTTP request(s) or getting the expected info.json response
+     * @throws InterruptedException If there is trouble sending the HTTP request(s)
+     */
+    @Test
+    public final void testResponseRestrictedNoTokenDisallowedScaleV3() throws IOException, InterruptedException {
+        final HttpResponse<String> response = sendImageInfoRequest(RESTRICTED_IMAGE_DEGRADED_DISALLOWED_ID, null);
+
+        Assert.assertEquals(HTTP.FORBIDDEN, response.statusCode());
     }
 
     /**
