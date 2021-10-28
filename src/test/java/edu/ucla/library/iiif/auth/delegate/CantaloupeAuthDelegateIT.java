@@ -105,6 +105,20 @@ public class CantaloupeAuthDelegateIT {
      ******/
 
     /**
+     * Tests the HTTP response of a request for a non-restricted image using Image API 2.
+     *
+     * @throws IOException If there is trouble sending the HTTP request(s) or getting the expected info.json response
+     * @throws InterruptedException If there is trouble sending the HTTP request(s)
+     */
+    @Test
+    public final void testResponseOpenV2() throws IOException, InterruptedException {
+        final HttpResponse<String> response = sendImageInfoRequest(OPEN_IMAGE_ID, null);
+        final String expectedResponse = getExpectedDescriptionResource(OPEN_IMAGE_ID);
+
+        TestUtils.assertEquals(expectedResponse, response.body());
+    }
+
+    /**
      * Tests the HTTP response of a request with an Authorization header for a restricted image using Image API 2.
      *
      * @throws IOException If there is trouble sending the HTTP request(s) or getting the expected info.json response
@@ -160,23 +174,23 @@ public class CantaloupeAuthDelegateIT {
         Assert.assertEquals(HTTP.FORBIDDEN, response.statusCode());
     }
 
+    /******
+     * v3 *
+     ******/
+
     /**
-     * Tests the HTTP response of a request for a non-restricted image using Image API 2.
+     * Tests the HTTP response of a request for a non-restricted image using Image API 3.
      *
      * @throws IOException If there is trouble sending the HTTP request(s) or getting the expected info.json response
      * @throws InterruptedException If there is trouble sending the HTTP request(s)
      */
     @Test
-    public final void testResponseOpenV2() throws IOException, InterruptedException {
+    public final void testResponseOpenV3() throws IOException, InterruptedException {
         final HttpResponse<String> response = sendImageInfoRequest(OPEN_IMAGE_ID, null);
         final String expectedResponse = getExpectedDescriptionResource(OPEN_IMAGE_ID);
 
         TestUtils.assertEquals(expectedResponse, response.body());
     }
-
-    /******
-     * v3 *
-     ******/
 
     /**
      * Tests the HTTP response of a request with an Authorization header for a restricted image using Image API 3.
@@ -234,19 +248,6 @@ public class CantaloupeAuthDelegateIT {
         Assert.assertEquals(HTTP.FORBIDDEN, response.statusCode());
     }
 
-    /**
-     * Tests the HTTP response of a request for a non-restricted image using Image API 3.
-     *
-     * @throws IOException If there is trouble sending the HTTP request(s) or getting the expected info.json response
-     * @throws InterruptedException If there is trouble sending the HTTP request(s)
-     */
-    @Test
-    public final void testResponseOpenV3() throws IOException, InterruptedException {
-        final HttpResponse<String> response = sendImageInfoRequest(OPEN_IMAGE_ID, null);
-        final String expectedResponse = getExpectedDescriptionResource(OPEN_IMAGE_ID);
-
-        TestUtils.assertEquals(expectedResponse, response.body());
-    }
 
     /**
      * Sends an HTTP request for the description resource containing image information (info.json).
