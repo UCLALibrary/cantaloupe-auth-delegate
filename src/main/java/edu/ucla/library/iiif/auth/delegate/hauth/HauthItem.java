@@ -90,6 +90,8 @@ public class HauthItem {
                     return Optional.of(MAPPER.readTree(response.body()).get(ACCESS_KEY)).orElseThrow().asBoolean();
                 case 404:
                     LOGGER.debug(MessageCodes.CAD_003, myID);
+                    // Q: Do we want to limit access to info.json if auth service is configured and an item isn't found
+                    // in it?
                     return false; // The default for unknowns is that access is not restricted
                 default:
                     LOGGER.error(MessageCodes.CAD_004, myID, response.statusCode(), response.body());

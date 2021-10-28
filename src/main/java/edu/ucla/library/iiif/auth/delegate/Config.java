@@ -53,7 +53,7 @@ public final class Config {
     /**
      * A configured degraded image scale constraint.
      */
-    private long[] myScaleConstraint;
+    private int[] myScaleConstraint;
 
     /**
      * Creates a new configuration.
@@ -154,7 +154,7 @@ public final class Config {
      * @return The configured scale constraint for degraded images
      */
     @SuppressWarnings({ "PMD.MethodReturnsInternalArray" })
-    public long[] getScaleConstraint() {
+    public int[] getScaleConstraint() {
         return myScaleConstraint;
     }
 
@@ -167,7 +167,7 @@ public final class Config {
     @SuppressWarnings({ "PMD.PreserveStackTrace" })
     public Config setScaleConstraint(final String aScaleConstraint) {
         try {
-            myScaleConstraint = Stream.of(aScaleConstraint.split(COLON)).mapToLong(Long::parseLong).toArray();
+            myScaleConstraint = Stream.of(aScaleConstraint.split(COLON)).mapToInt(Integer::parseInt).toArray();
         } catch (final NumberFormatException details) {
             throw new ConfigException(aScaleConstraint);
         }

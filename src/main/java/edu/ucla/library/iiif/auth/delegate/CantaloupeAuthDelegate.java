@@ -1,8 +1,8 @@
 
 package edu.ucla.library.iiif.auth.delegate;
 
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
@@ -58,19 +58,14 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
     private final String myTokenService;
 
     /**
-     * The scale constraint this delegate uses for degraded images.
+     * The scale constraint this delegate allows for degraded images.
      */
-    private final long[] myScaleConstraint;
+    private final int[] myScaleConstraint;
 
     /**
      * Whether or not access to the requested item is restricted.
      */
-    private boolean myItemIsRestricted;
-
-    /**
-     * Whether or not the client is allowed to access restricted content.
-     */
-    private boolean myIsValidIP;
+    private boolean isItemRestricted;
 
     /**
      * Creates a new Cantaloupe authorization delegate.
@@ -85,59 +80,27 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
     }
 
     /**
-     * Called by {@link #preAuthorize()}, caches the results of some computations that are used by more than one method
-     * in the delegate. It would be preferable if this code could run in the constructor instead, but that does not
-     * appear possible.
-     */
-    private void cacheRequestMetadata() {
-        final Optional<HauthToken> token = getToken(getContext().getRequestHeaders().get(HauthToken.HEADER));
-        boolean itemIsRestricted;
-
-        try {
-            final HauthItem item = new HauthItem(myAccessService, getContext().getIdentifier());
-
-            itemIsRestricted = item.isRestricted();
-        } catch (final IOException details) {
-            LOGGER.error(details.getMessage(), details);
-            // Q: Do we want to limit access to info.json if auth service is configured and an item isn't found in it?
-            itemIsRestricted = false;
-        }
-        myItemIsRestricted = itemIsRestricted;
-
-        if (token.isPresent() && token.get().isValidIP()) {
-            myIsValidIP = true;
-        } else {
-            myIsValidIP = false;
-        }
-    }
-
-    /**
      * Authorizes a request for image information. Not all image information will necessarily be calculated at this
      * point in time.
      */
     @Override
     public Object preAuthorize() {
-        final int[] scaleConstraint;
-
-        // This method must be called here, since it sets member variables that are referenced below and by other
-        // methods which get called later
-        cacheRequestMetadata();
-
+        final Optional<HauthToken> token = getToken(getContext().getRequestHeaders().get(HauthToken.HEADER));
+        final boolean hasValidIP = token.isPresent() && token.get().isValidIP();
         // For full image requests, this array value is equal to { 1, 1 }
-        scaleConstraint = getContext().getScaleConstraint();
+        final int[] scaleConstraint = getContext().getScaleConstraint();
+
+        // Cache the result of the access level HTTP request
+        isItemRestricted = new HauthItem(myAccessService, getContext().getIdentifier()).isRestricted();
 
         if (scaleConstraint[0] != scaleConstraint[1]) {
             // This request is for a scaled resource (i.e., already degraded via an earlier HTTP 302 redirect)
-            if (scaleConstraint[0] == myScaleConstraint[0] && scaleConstraint[1] == myScaleConstraint[1]) {
-                return true;
-            } else {
-                // The client is requesting something other than the allowed scale constraint
-                return false;
-            }
-        } else if (myItemIsRestricted && !myIsValidIP) {
+            // Make sure the requested scale constraint is the one that we allow
+            return Arrays.equals(myScaleConstraint, scaleConstraint);
+        } else if (isItemRestricted && !hasValidIP) {
             // The long types make a difference here, apparently; JRuby?
-            return Map.of("status_code", Long.valueOf(HTTP.FOUND), "scale_numerator", myScaleConstraint[0],
-                    "scale_denominator", myScaleConstraint[1]);
+            return Map.of("status_code", Long.valueOf(HTTP.FOUND), "scale_numerator", (long) myScaleConstraint[0],
+                    "scale_denominator", (long) myScaleConstraint[1]);
         } else {
             // Client is authorized to view full resource
             return true;
@@ -168,11 +131,7 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
      * @return A map of additional response keys
      */
     private Map<String, Object> getExtraInformationResponseKeys() {
-        if (myItemIsRestricted) {
-            return getAuthServices();
-        } else {
-            return Collections.emptyMap();
-        }
+        return isItemRestricted ? getAuthServices() : Collections.emptyMap();
     }
 
     /**
