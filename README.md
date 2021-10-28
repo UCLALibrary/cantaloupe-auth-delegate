@@ -52,8 +52,10 @@ Once all manual testing is completed, the containers can be stopped by typing: [
 
 There are some environmental properties that are supplied automatically for the tests, but which need to be explicitly set on a production (test, dev, etc.) system. These include:
 
+    AUTH_ACCESS_SERVICE="https://example.com/access/{}"
     AUTH_COOKIE_SERVICE="https://example.com/cookie"
     AUTH_TOKEN_SERVICE="https://example.com/token"
+    DEGRADED_IMAGE_SCALE_CONSTRAINT="1:2"
 
 ### Deploying the Delegate
 
