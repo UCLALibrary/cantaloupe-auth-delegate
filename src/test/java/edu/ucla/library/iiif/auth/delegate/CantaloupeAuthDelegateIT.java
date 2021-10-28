@@ -293,7 +293,7 @@ public class CantaloupeAuthDelegateIT {
 
         responseTemplateURLs.add(descriptionResourceID);
 
-        if (aImageID.startsWith(RESTRICTED_IMAGE_ID)) {
+        if (aImageID.equals(RESTRICTED_IMAGE_ID)) {
             // The Hauth service URLs need to be added to the info.json
             responseTemplateURLs.add(envProperties.get(Config.AUTH_COOKIE_SERVICE));
             responseTemplateURLs.add(envProperties.get(Config.AUTH_TOKEN_SERVICE));

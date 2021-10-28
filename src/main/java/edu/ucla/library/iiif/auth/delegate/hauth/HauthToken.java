@@ -4,15 +4,15 @@ import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSetter;
 
-import edu.illinois.library.cantaloupe.delegate.JavaContext;
-
 /**
  * An authorization token created by the Hauth service.
  */
 public class HauthToken {
 
     /**
-     * An authorization header. Cantaloupe's {@link JavaContext#getRequestHeaders} returns a map with lowercase keys.
+     * An authorization header.
+     * <p>
+     * N.B.: Cantaloupe's request context uses a map with lowercase keys.
      */
     @JsonIgnore
     public static final String HEADER = "authorization";
