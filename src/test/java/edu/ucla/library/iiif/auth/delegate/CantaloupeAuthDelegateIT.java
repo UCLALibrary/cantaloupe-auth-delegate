@@ -22,8 +22,6 @@ import info.freelibrary.util.StringUtils;
 
 import edu.ucla.library.iiif.auth.delegate.hauth.HauthToken;
 
-import io.vertx.core.http.HttpHeaders;
-
 /**
  * A test of CantaloupeAuthDelegate.
  */
@@ -81,6 +79,11 @@ public class CantaloupeAuthDelegateIT {
      * An internal HTTP client.
      */
     private static final HttpClient HTTP_CLIENT = HttpClient.newHttpClient();
+
+    /**
+     * The key of the "Location" HTTP response header.
+     */
+    private static final String LOCATION = "Location";
 
     /**
      * Tests pre-authorizing a request.
@@ -148,7 +151,7 @@ public class CantaloupeAuthDelegateIT {
         firstResponse = sendImageInfoRequest(RESTRICTED_IMAGE_ID, null);
 
         // Check first response
-        firstResponseLocation = firstResponse.headers().firstValue(HttpHeaders.LOCATION.toString());
+        firstResponseLocation = firstResponse.headers().firstValue(LOCATION);
         Assert.assertEquals(HTTP.FOUND, firstResponse.statusCode());
         Assert.assertTrue(firstResponseLocation.isPresent() &&
                 firstResponseLocation.get().contains(RESTRICTED_IMAGE_DEGRADED_ID));
@@ -222,7 +225,7 @@ public class CantaloupeAuthDelegateIT {
         firstResponse = sendImageInfoRequest(RESTRICTED_IMAGE_ID, null);
 
         // Check first response
-        firstResponseLocation = firstResponse.headers().firstValue(HttpHeaders.LOCATION.toString());
+        firstResponseLocation = firstResponse.headers().firstValue(LOCATION);
         Assert.assertEquals(HTTP.FOUND, firstResponse.statusCode());
         Assert.assertTrue(firstResponseLocation.isPresent() &&
                 firstResponseLocation.get().contains(RESTRICTED_IMAGE_DEGRADED_ID));
