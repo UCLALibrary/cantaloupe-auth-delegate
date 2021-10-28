@@ -75,7 +75,7 @@ public class HauthItem {
      *
      * @return Whether access to the object with the supplied ID is restricted
      */
-    public boolean isRestricted() throws IOException {
+    public boolean isRestricted() {
         final URI uri = URI.create(StringUtils.format(myAccessService, myID));
         final HttpRequest request = HttpRequest.newBuilder().uri(uri).build();
 
