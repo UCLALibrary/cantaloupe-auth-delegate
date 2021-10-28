@@ -181,11 +181,11 @@ public final class Config {
     }
 
     /**
-     * Gets an environmental property and checks that its value is valid.
+     * Gets an environmental property and checks that it exists.
      *
      * @param aEnvPropertyName An environmental property name
-     * @return A URL
-     * @throws ConfigException If the supplied property value isn't a URL
+     * @return The property value
+     * @throws ConfigException If the supplied property name doesn't exist in the environment
      */
     static String getProperty(final String aEnvPropertyName) {
         final Map<String, String> envMap = System.getenv();
