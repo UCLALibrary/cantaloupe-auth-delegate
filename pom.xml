@@ -74,7 +74,7 @@
     <psql.container.version>12.7-alpine</psql.container.version>
     <redis.container.version>6.2.5-alpine</redis.container.version>
     <cantaloupe.container.version>5.0.4-0</cantaloupe.container.version>
-    
+
     <!-- Build-time options -->
     <update.sql>false</update.sql>
   </properties>
@@ -455,6 +455,50 @@
     </plugins>
   </build>
 
+  <profiles>
+    <profile>
+      <id>snyk-check</id>
+      <activation>
+        <property>
+          <name>env.SNYK_TOKEN</name>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>io.snyk</groupId>
+            <artifactId>snyk-maven-plugin</artifactId>
+            <!-- Configurations have to be overridden in the executions' configuration elements -->
+            <executions>
+              <execution>
+                <id>snyk-test</id>
+                <goals>
+                  <goal>test</goal>
+                </goals>
+                <configuration>
+                  <args>
+                    <arg>--org=${env.UCLALIBRARY_SNYK_ORG}</arg>
+                  </args>
+                </configuration>
+              </execution>
+              <execution>
+                <id>snyk-monitor</id>
+                <goals>
+                  <goal>monitor</goal>
+                </goals>
+                <configuration>
+                  <args>
+                    <arg>--org=${env.UCLALIBRARY_SNYK_ORG}</arg>
+                  </args>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
   <!-- Override the default distribution management with the new repo URLs -->
   <distributionManagement>
     <repository>
@@ -470,6 +514,6 @@
   <parent>
     <artifactId>freelib-parent</artifactId>
     <groupId>info.freelibrary</groupId>
-    <version>7.0.4</version>
+    <version>7.1.2</version>
   </parent>
 </project>
