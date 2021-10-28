@@ -248,6 +248,9 @@ public class CantaloupeAuthDelegateIT {
         Assert.assertEquals(HTTP.FORBIDDEN, response.statusCode());
     }
 
+    /******************
+     * Helper methods *
+     ******************/
 
     /**
      * Sends an HTTP request for the description resource containing image information (info.json).
