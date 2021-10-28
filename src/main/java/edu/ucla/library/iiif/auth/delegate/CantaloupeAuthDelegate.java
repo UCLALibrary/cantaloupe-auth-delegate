@@ -117,12 +117,14 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
      */
     @Override
     public Object preAuthorize() {
-        // Careful with this array; for plain old requests, it is equal to { 1, 1 }
-        final int[] scaleConstraint = getContext().getScaleConstraint();
+        final int[] scaleConstraint;
 
         // This method must be called here, since it sets member variables that are referenced below and by other
         // methods which get called later
         cacheRequestMetadata();
+
+        // For full image requests, this array value is equal to { 1, 1 }
+        scaleConstraint = getContext().getScaleConstraint();
 
         if (scaleConstraint[0] != scaleConstraint[1]) {
             // This request is for a scaled resource (i.e., already degraded via an earlier HTTP 302 redirect)
