@@ -38,29 +38,32 @@ public class CantaloupeAuthDelegateIT {
     private static final String IMAGE_URL_TEMPLATE = "{}/iiif/{}/{}";
 
     /**
-     * A token generated using the following shell command:
+     * An access token generated using the following shell command:
      * <p>
-     * <code>$ base64 <<< '{"version": "0.0.0-SNAPSHOT", "campus-network": true}'
+     * <code> $ base64 <<< '{"version": "0.0.0-SNAPSHOT", "campus-network": true}'
      * </code>
+     * <p>
+     * This would be the value of the "accessToken" key shown
+     * <a href="https://iiif.io/api/auth/1.0/#the-json-access-token-response">here</a>.
      */
-    private static final String VALID_TOKEN =
+    private static final String ACCESS_TOKEN =
             "eyJ2ZXJzaW9uIjogIjAuMC4wLVNOQVBTSE9UIiwiY2FtcHVzLW5ldHdvcmsiOiB0cnVlfQo=";
 
     /**
      * The id of the restricted image.
      */
-    private static final String RESTRICTED_IMAGE_ID = "test-restricted.tif";
+    private static final String RESTRICTED_IMAGE = "test-restricted.tif";
 
     /**
-     * The id of the restricted image with a vitual scale constraint.
+     * The id of the restricted image at the allowed degraded access tier.
      */
-    private static final String RESTRICTED_IMAGE_DEGRADED_ID =
-            StringUtils.format("test-restricted.tif;{}", System.getenv().get(Config.DEGRADED_IMAGE_SCALE_CONSTRAINT));
+    private static final String RESTRICTED_IMAGE_VALID_TIER =
+            StringUtils.format("test-restricted.tif;{}", System.getenv().get(Config.TIERED_ACCESS_SCALE_CONSTRAINT));
 
     /**
-     * The id of the restricted image with a vitual scale constraint that is not allowed.
+     * The id of the restricted image at a degraded access tier that is not allowed.
      */
-    private static final String RESTRICTED_IMAGE_DEGRADED_DISALLOWED_ID = "test-restricted.tif;3:4";
+    private static final String RESTRICTED_IMAGE_INVALID_TIER = "test-restricted.tif;3:4";
 
     /**
      * The id of the non-restricted image.
@@ -71,8 +74,8 @@ public class CantaloupeAuthDelegateIT {
      * The file paths of the info.json templates.
      */
     private static final Map<String, File> RESPONSE_TEMPLATES =
-            Map.of(RESTRICTED_IMAGE_ID, new File("src/test/resources/services-info-restricted.json"),
-                    RESTRICTED_IMAGE_DEGRADED_ID, new File("src/test/resources/services-info-restricted;1:2.json"),
+            Map.of(RESTRICTED_IMAGE, new File("src/test/resources/services-info-restricted.json"),
+                    RESTRICTED_IMAGE_VALID_TIER, new File("src/test/resources/services-info-restricted;1:2.json"),
                     OPEN_IMAGE_ID, new File("src/test/resources/services-info-open.json"));
 
     /**
@@ -129,8 +132,8 @@ public class CantaloupeAuthDelegateIT {
      */
     @Test
     public final void testResponseRestrictedWithTokenV2() throws IOException, InterruptedException {
-        final HttpResponse<String> response = sendImageInfoRequest(RESTRICTED_IMAGE_ID, VALID_TOKEN);
-        final String expectedResponse = getExpectedDescriptionResource(RESTRICTED_IMAGE_ID);
+        final HttpResponse<String> response = sendImageInfoRequest(RESTRICTED_IMAGE, ACCESS_TOKEN);
+        final String expectedResponse = getExpectedDescriptionResource(RESTRICTED_IMAGE);
 
         TestUtils.assertEquals(expectedResponse, response.body());
     }
@@ -148,18 +151,18 @@ public class CantaloupeAuthDelegateIT {
         final Optional<String> firstResponseLocation;
         final String expectedSecondResponse;
 
-        firstResponse = sendImageInfoRequest(RESTRICTED_IMAGE_ID, null);
+        firstResponse = sendImageInfoRequest(RESTRICTED_IMAGE, null);
 
         // Check first response
         firstResponseLocation = firstResponse.headers().firstValue(LOCATION);
         Assert.assertEquals(HTTP.FOUND, firstResponse.statusCode());
         Assert.assertTrue(firstResponseLocation.isPresent() &&
-                firstResponseLocation.get().contains(RESTRICTED_IMAGE_DEGRADED_ID));
+                firstResponseLocation.get().contains(RESTRICTED_IMAGE_VALID_TIER));
 
         // Now do the redirect
-        secondResponse = sendImageInfoRequest(RESTRICTED_IMAGE_DEGRADED_ID, null);
+        secondResponse = sendImageInfoRequest(RESTRICTED_IMAGE_VALID_TIER, null);
 
-        expectedSecondResponse = getExpectedDescriptionResource(RESTRICTED_IMAGE_DEGRADED_ID);
+        expectedSecondResponse = getExpectedDescriptionResource(RESTRICTED_IMAGE_VALID_TIER);
         TestUtils.assertEquals(expectedSecondResponse, secondResponse.body());
     }
 
@@ -172,7 +175,7 @@ public class CantaloupeAuthDelegateIT {
      */
     @Test
     public final void testResponseRestrictedNoTokenDisallowedScaleV2() throws IOException, InterruptedException {
-        final HttpResponse<String> response = sendImageInfoRequest(RESTRICTED_IMAGE_DEGRADED_DISALLOWED_ID, null);
+        final HttpResponse<String> response = sendImageInfoRequest(RESTRICTED_IMAGE_INVALID_TIER, null);
 
         Assert.assertEquals(HTTP.FORBIDDEN, response.statusCode());
     }
@@ -203,8 +206,8 @@ public class CantaloupeAuthDelegateIT {
      */
     @Test
     public final void testResponseRestrictedWithTokenV3() throws IOException, InterruptedException {
-        final HttpResponse<String> response = sendImageInfoRequest(RESTRICTED_IMAGE_ID, VALID_TOKEN);
-        final String expectedResponse = getExpectedDescriptionResource(RESTRICTED_IMAGE_ID);
+        final HttpResponse<String> response = sendImageInfoRequest(RESTRICTED_IMAGE, ACCESS_TOKEN);
+        final String expectedResponse = getExpectedDescriptionResource(RESTRICTED_IMAGE);
 
         TestUtils.assertEquals(expectedResponse, response.body());
     }
@@ -222,18 +225,18 @@ public class CantaloupeAuthDelegateIT {
         final Optional<String> firstResponseLocation;
         final String expectedSecondResponse;
 
-        firstResponse = sendImageInfoRequest(RESTRICTED_IMAGE_ID, null);
+        firstResponse = sendImageInfoRequest(RESTRICTED_IMAGE, null);
 
         // Check first response
         firstResponseLocation = firstResponse.headers().firstValue(LOCATION);
         Assert.assertEquals(HTTP.FOUND, firstResponse.statusCode());
         Assert.assertTrue(firstResponseLocation.isPresent() &&
-                firstResponseLocation.get().contains(RESTRICTED_IMAGE_DEGRADED_ID));
+                firstResponseLocation.get().contains(RESTRICTED_IMAGE_VALID_TIER));
 
         // Now do the redirect
-        secondResponse = sendImageInfoRequest(RESTRICTED_IMAGE_DEGRADED_ID, null);
+        secondResponse = sendImageInfoRequest(RESTRICTED_IMAGE_VALID_TIER, null);
 
-        expectedSecondResponse = getExpectedDescriptionResource(RESTRICTED_IMAGE_DEGRADED_ID);
+        expectedSecondResponse = getExpectedDescriptionResource(RESTRICTED_IMAGE_VALID_TIER);
         TestUtils.assertEquals(expectedSecondResponse, secondResponse.body());
     }
 
@@ -246,7 +249,7 @@ public class CantaloupeAuthDelegateIT {
      */
     @Test
     public final void testResponseRestrictedNoTokenDisallowedScaleV3() throws IOException, InterruptedException {
-        final HttpResponse<String> response = sendImageInfoRequest(RESTRICTED_IMAGE_DEGRADED_DISALLOWED_ID, null);
+        final HttpResponse<String> response = sendImageInfoRequest(RESTRICTED_IMAGE_INVALID_TIER, null);
 
         Assert.assertEquals(HTTP.FORBIDDEN, response.statusCode());
     }
@@ -293,7 +296,7 @@ public class CantaloupeAuthDelegateIT {
 
         responseTemplateURLs.add(descriptionResourceID);
 
-        if (aImageID.equals(RESTRICTED_IMAGE_ID)) {
+        if (aImageID.equals(RESTRICTED_IMAGE)) {
             // The Hauth service URLs need to be added to the info.json
             responseTemplateURLs.add(envProperties.get(Config.AUTH_COOKIE_SERVICE));
             responseTemplateURLs.add(envProperties.get(Config.AUTH_TOKEN_SERVICE));

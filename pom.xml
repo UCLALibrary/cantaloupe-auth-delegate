@@ -221,7 +221,7 @@
             <AUTH_ACCESS_SERVICE>http://0.0.0.0:${test.hauth.port}/access/{}</AUTH_ACCESS_SERVICE>
             <AUTH_COOKIE_SERVICE>http://0.0.0.0:${test.hauth.port}/cookie</AUTH_COOKIE_SERVICE>
             <AUTH_TOKEN_SERVICE>http://0.0.0.0:${test.hauth.port}/token</AUTH_TOKEN_SERVICE>
-            <DEGRADED_IMAGE_SCALE_CONSTRAINT>1:2</DEGRADED_IMAGE_SCALE_CONSTRAINT>
+            <TIERED_ACCESS_SCALE_CONSTRAINT>1:2</TIERED_ACCESS_SCALE_CONSTRAINT>
           </environmentVariables>
         </configuration>
       </plugin>
@@ -235,7 +235,7 @@
           <environmentVariables>
             <AUTH_COOKIE_SERVICE>http://172.17.0.1:${test.hauth.port}/cookie</AUTH_COOKIE_SERVICE>
             <AUTH_TOKEN_SERVICE>http://172.17.0.1:${test.hauth.port}/token</AUTH_TOKEN_SERVICE>
-            <DEGRADED_IMAGE_SCALE_CONSTRAINT>1:2</DEGRADED_IMAGE_SCALE_CONSTRAINT>
+            <TIERED_ACCESS_SCALE_CONSTRAINT>1:2</TIERED_ACCESS_SCALE_CONSTRAINT>
             <IIIF_IMAGE_URL>http://172.17.0.1:${test.iiif.images.port}</IIIF_IMAGE_URL>
           </environmentVariables>
         </configuration>
@@ -366,7 +366,7 @@
                   <CANTALOUPE_ENDPOINT_ADMIN_ENABLED>true</CANTALOUPE_ENDPOINT_ADMIN_ENABLED>
                   <CANTALOUPE_DELEGATE_SCRIPT_ENABLED>true</CANTALOUPE_DELEGATE_SCRIPT_ENABLED>
                   <CANTALOUPE_DELEGATE_SCRIPT_PATHNAME>/usr/local/cantaloupe/delegate.jar</CANTALOUPE_DELEGATE_SCRIPT_PATHNAME>
-                  <DEGRADED_IMAGE_SCALE_CONSTRAINT>1:2</DEGRADED_IMAGE_SCALE_CONSTRAINT>
+                  <TIERED_ACCESS_SCALE_CONSTRAINT>1:2</TIERED_ACCESS_SCALE_CONSTRAINT>
                 </env>
                 <dependsOn>
                   <container>delegate_hauth</container>

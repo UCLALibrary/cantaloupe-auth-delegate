@@ -58,7 +58,7 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
     private final String myTokenService;
 
     /**
-     * The scale constraint this delegate allows for degraded images.
+     * The scale constraint this delegate allows for tiered access.
      */
     private final int[] myScaleConstraint;
 
@@ -68,9 +68,9 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
     private boolean isItemRestricted;
 
     /**
-     * Whether or not the request is for a scale constrained image that we allow.
+     * Whether or not the request is valid for tiered access.
      */
-    private boolean isRequestedScaleAllowed;
+    private boolean isValidTieredAccessRequest;
 
     /**
      * Creates a new Cantaloupe authorization delegate.
@@ -98,11 +98,11 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
         // Cache the result of the access level HTTP request
         isItemRestricted = new HauthItem(myAccessService, getContext().getIdentifier()).isRestricted();
         // Cache the result of detecting if the scale constraint is one we allow
-        isRequestedScaleAllowed = Arrays.equals(myScaleConstraint, scaleConstraint);
+        isValidTieredAccessRequest = Arrays.equals(myScaleConstraint, scaleConstraint);
 
         if (scaleConstraint[0] != scaleConstraint[1]) {
-            // This request is for a scaled resource (i.e., already degraded via an earlier HTTP 302 redirect)
-            return isRequestedScaleAllowed;
+            // This request is for the resource at the degraded access tier, usually via an earlier HTTP 302 redirect
+            return isValidTieredAccessRequest;
         } else if (isItemRestricted && !hasValidIP) {
             // The long types make a difference here, apparently; JRuby?
             return Map.of("status_code", Long.valueOf(HTTP.FOUND), "scale_numerator", (long) myScaleConstraint[0],
@@ -137,8 +137,8 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
      * @return A map of additional response keys
      */
     private Map<String, Object> getExtraInformationResponseKeys() {
-        // No auth services are necessary for open access or degraded images
-        return isItemRestricted && !isRequestedScaleAllowed ? getAuthServices() : Collections.emptyMap();
+        // No auth services are necessary for images that are either open access or at the degraded access tier
+        return isItemRestricted && !isValidTieredAccessRequest ? getAuthServices() : Collections.emptyMap();
     }
 
     /**

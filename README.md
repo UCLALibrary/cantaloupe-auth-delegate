@@ -55,7 +55,7 @@ There are some environmental properties that are supplied automatically for the 
     AUTH_ACCESS_SERVICE="https://example.com/access/{}"
     AUTH_COOKIE_SERVICE="https://example.com/cookie"
     AUTH_TOKEN_SERVICE="https://example.com/token"
-    DEGRADED_IMAGE_SCALE_CONSTRAINT="1:2"
+    TIERED_ACCESS_SCALE_CONSTRAINT="1:2"
 
 ### Deploying the Delegate
 

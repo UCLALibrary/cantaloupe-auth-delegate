@@ -29,11 +29,11 @@ public final class Config {
     public static final String AUTH_ACCESS_SERVICE = "AUTH_ACCESS_SERVICE";
 
     /**
-     * An environmental property for the scale constraint to use for degraded images.
+     * An environmental property for the scale constraint to use for tiered access.
      * <p>
      * See https://cantaloupe-project.github.io/manual/5.0/access-control.html#Tiered%20Access for more information.
      */
-    public static final String DEGRADED_IMAGE_SCALE_CONSTRAINT = "DEGRADED_IMAGE_SCALE_CONSTRAINT";
+    public static final String TIERED_ACCESS_SCALE_CONSTRAINT = "TIERED_ACCESS_SCALE_CONSTRAINT";
 
     /**
      * A configured cookie service.
@@ -51,7 +51,7 @@ public final class Config {
     private URL myAccessService;
 
     /**
-     * A configured degraded image scale constraint.
+     * A configured tiered access scale constraint.
      */
     private int[] myScaleConstraint;
 
@@ -68,7 +68,7 @@ public final class Config {
             throw new ConfigException(details.getMessage());
         }
 
-        setScaleConstraint(getProperty(Config.DEGRADED_IMAGE_SCALE_CONSTRAINT));
+        setScaleConstraint(getProperty(Config.TIERED_ACCESS_SCALE_CONSTRAINT));
     }
 
     /**
@@ -77,7 +77,7 @@ public final class Config {
      * @param aCookieService A cookie service URL
      * @param aTokenService A token service URL
      * @param aAccessService An access service URL
-     * @param aScaleConstraint A scale constraint for degraded images
+     * @param aScaleConstraint A scale constraint for tiered access
      */
     public Config(final URL aCookieService, final URL aTokenService, final URL aAccessService,
             final String aScaleConstraint) {
@@ -149,9 +149,9 @@ public final class Config {
     }
 
     /**
-     * Gets the configured scale constraint for degraded images.
+     * Gets the configured scale constraint for tiered access.
      *
-     * @return The configured scale constraint for degraded images
+     * @return The configured scale constraint for tiered access
      */
     @SuppressWarnings({ "PMD.MethodReturnsInternalArray" })
     public int[] getScaleConstraint() {
@@ -159,9 +159,9 @@ public final class Config {
     }
 
     /**
-     * Sets a scale constraint for degraded images.
+     * Sets a scale constraint for tiered access.
      *
-     * @param aScaleConstraint A scale constraint for degraded images
+     * @param aScaleConstraint A scale constraint for tiered access
      * @return This configuration
      */
     @SuppressWarnings({ "PMD.PreserveStackTrace" })
@@ -172,7 +172,7 @@ public final class Config {
             throw new ConfigException(aScaleConstraint);
         }
 
-        // Must be parse-able into an array of length 2, and numerator must be less than the denominator
+        // Must be able to be mapped to an array of length 2, and numerator must be less than the denominator
         if (myScaleConstraint.length != 2 || myScaleConstraint[0] >= myScaleConstraint[1]) {
             throw new ConfigException(aScaleConstraint);
         }

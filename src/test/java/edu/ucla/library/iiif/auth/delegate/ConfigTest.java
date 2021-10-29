@@ -55,7 +55,7 @@ public class ConfigTest {
         final String cookieService = Config.getProperty(Config.AUTH_COOKIE_SERVICE);
         final String tokenService = Config.getProperty(Config.AUTH_TOKEN_SERVICE);
         final String accessService = Config.getProperty(Config.AUTH_ACCESS_SERVICE);
-        final String scaleConstraint = Config.getProperty(Config.DEGRADED_IMAGE_SCALE_CONSTRAINT);
+        final String scaleConstraint = Config.getProperty(Config.TIERED_ACCESS_SCALE_CONSTRAINT);
         final Config config =
                 new Config(new URL(cookieService), new URL(tokenService), new URL(accessService), scaleConstraint);
 
@@ -103,7 +103,7 @@ public class ConfigTest {
      */
     @Test
     public final void testSetScaleConstraint() {
-        final String scaleConstraint = Config.getProperty(Config.DEGRADED_IMAGE_SCALE_CONSTRAINT);
+        final String scaleConstraint = Config.getProperty(Config.TIERED_ACCESS_SCALE_CONSTRAINT);
         assertEquals(2, myConfig.setScaleConstraint(scaleConstraint).getScaleConstraint().length);
     }
 
