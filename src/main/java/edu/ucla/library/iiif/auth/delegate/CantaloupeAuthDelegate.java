@@ -1,8 +1,8 @@
 
 package edu.ucla.library.iiif.auth.delegate;
 
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
@@ -12,6 +12,7 @@ import java.util.Optional;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 
+import info.freelibrary.util.HTTP;
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
 
@@ -24,7 +25,6 @@ import info.freelibrary.iiif.presentation.v3.utils.JsonKeys;
 import edu.ucla.library.iiif.auth.delegate.hauth.HauthItem;
 import edu.ucla.library.iiif.auth.delegate.hauth.HauthToken;
 
-import edu.illinois.library.cantaloupe.delegate.JavaContext;
 import edu.illinois.library.cantaloupe.delegate.JavaDelegate;
 
 /**
@@ -58,6 +58,21 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
     private final String myTokenService;
 
     /**
+     * The scale constraint this delegate allows for tiered access.
+     */
+    private final int[] myScaleConstraint;
+
+    /**
+     * Whether or not access to the requested item is restricted.
+     */
+    private boolean isItemRestricted;
+
+    /**
+     * Whether or not the request is valid for tiered access.
+     */
+    private boolean isValidTieredAccessRequest;
+
+    /**
      * Creates a new Cantaloupe authorization delegate.
      */
     public CantaloupeAuthDelegate() {
@@ -66,6 +81,7 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
         myAccessService = config.getAccessService();
         myCookieService = config.getCookieService();
         myTokenService = config.getTokenService();
+        myScaleConstraint = config.getScaleConstraint();
     }
 
     /**
@@ -74,8 +90,27 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
      */
     @Override
     public Object preAuthorize() {
-        // Q: Do we want to limit access to info.json if auth service is configured and an item isn't found in it?
-        return true;
+        final Optional<HauthToken> token = getToken(getContext().getRequestHeaders().get(HauthToken.HEADER));
+        final boolean hasValidIP = token.isPresent() && token.get().isValidIP();
+        // For full image requests, this array value is equal to { 1, 1 }
+        final int[] scaleConstraint = getContext().getScaleConstraint();
+
+        // Cache the result of the access level HTTP request
+        isItemRestricted = new HauthItem(myAccessService, getContext().getIdentifier()).isRestricted();
+        // Cache the result of detecting if the scale constraint is one we allow
+        isValidTieredAccessRequest = Arrays.equals(myScaleConstraint, scaleConstraint);
+
+        if (scaleConstraint[0] != scaleConstraint[1]) {
+            // This request is for the resource at the degraded access tier, usually via an earlier HTTP 302 redirect
+            return isValidTieredAccessRequest;
+        } else if (isItemRestricted && !hasValidIP) {
+            // The long types make a difference here, apparently; JRuby?
+            return Map.of("status_code", Long.valueOf(HTTP.FOUND), "scale_numerator", (long) myScaleConstraint[0],
+                    "scale_denominator", (long) myScaleConstraint[1]);
+        } else {
+            // Client is authorized to view full resource
+            return true;
+        }
     }
 
     /**
@@ -102,20 +137,8 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
      * @return A map of additional response keys
      */
     private Map<String, Object> getExtraInformationResponseKeys() {
-        final JavaContext context = getContext();
-        final Map<String, String> headers = context.getRequestHeaders();
-        final Optional<HauthToken> token = getToken(headers.get(HauthToken.HEADER));
-        final HauthItem item = new HauthItem(myAccessService, context.getIdentifier());
-
-        try {
-            if (!token.isPresent() && item.isRestricted()) {
-                return getAuthServices();
-            }
-        } catch (final IOException details) {
-            LOGGER.error(details.getMessage(), details);
-        }
-
-        return Collections.emptyMap();
+        // No auth services are necessary for images that are either open access or at the degraded access tier
+        return isItemRestricted && !isValidTieredAccessRequest ? getAuthServices() : Collections.emptyMap();
     }
 
     /**

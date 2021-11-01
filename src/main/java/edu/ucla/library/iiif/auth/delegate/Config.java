@@ -1,9 +1,12 @@
 
 package edu.ucla.library.iiif.auth.delegate;
 
+import static info.freelibrary.util.Constants.COLON;
+
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Map;
+import java.util.stream.Stream;
 
 /**
  * A configuration class.
@@ -26,6 +29,13 @@ public final class Config {
     public static final String AUTH_ACCESS_SERVICE = "AUTH_ACCESS_SERVICE";
 
     /**
+     * An environmental property for the scale constraint to use for tiered access.
+     * <p>
+     * See https://cantaloupe-project.github.io/manual/5.0/access-control.html#Tiered%20Access for more information.
+     */
+    public static final String TIERED_ACCESS_SCALE_CONSTRAINT = "TIERED_ACCESS_SCALE_CONSTRAINT";
+
+    /**
      * A configured cookie service.
      */
     private URL myCookieService;
@@ -41,12 +51,24 @@ public final class Config {
     private URL myAccessService;
 
     /**
+     * A configured tiered access scale constraint.
+     */
+    private int[] myScaleConstraint;
+
+    /**
      * Creates a new configuration.
      */
+    @SuppressWarnings({ "PMD.PreserveStackTrace" })
     public Config() {
-        myCookieService = getProperty(Config.AUTH_COOKIE_SERVICE);
-        myTokenService = getProperty(Config.AUTH_TOKEN_SERVICE);
-        myAccessService = getProperty(Config.AUTH_ACCESS_SERVICE);
+        try {
+            myCookieService = new URL(getProperty(Config.AUTH_COOKIE_SERVICE));
+            myTokenService = new URL(getProperty(Config.AUTH_TOKEN_SERVICE));
+            myAccessService = new URL(getProperty(Config.AUTH_ACCESS_SERVICE));
+        } catch (final MalformedURLException details) {
+            throw new ConfigException(details.getMessage());
+        }
+
+        setScaleConstraint(getProperty(Config.TIERED_ACCESS_SCALE_CONSTRAINT));
     }
 
     /**
@@ -55,11 +77,15 @@ public final class Config {
      * @param aCookieService A cookie service URL
      * @param aTokenService A token service URL
      * @param aAccessService An access service URL
+     * @param aScaleConstraint A scale constraint for tiered access
      */
-    public Config(final URL aCookieService, final URL aTokenService, final URL aAccessService) {
+    public Config(final URL aCookieService, final URL aTokenService, final URL aAccessService,
+            final String aScaleConstraint) {
         myCookieService = aCookieService;
         myTokenService = aTokenService;
         myAccessService = aAccessService;
+
+        setScaleConstraint(aScaleConstraint);
     }
 
     /**
@@ -123,25 +149,52 @@ public final class Config {
     }
 
     /**
-     * Gets an environmental property and checks that its value is valid.
+     * Gets the configured scale constraint for tiered access.
+     *
+     * @return The configured scale constraint for tiered access
+     */
+    @SuppressWarnings({ "PMD.MethodReturnsInternalArray" })
+    public int[] getScaleConstraint() {
+        return myScaleConstraint;
+    }
+
+    /**
+     * Sets a scale constraint for tiered access.
+     *
+     * @param aScaleConstraint A scale constraint for tiered access
+     * @return This configuration
+     */
+    @SuppressWarnings({ "PMD.PreserveStackTrace" })
+    public Config setScaleConstraint(final String aScaleConstraint) {
+        try {
+            myScaleConstraint = Stream.of(aScaleConstraint.split(COLON)).mapToInt(Integer::parseInt).toArray();
+        } catch (final NumberFormatException details) {
+            throw new ConfigException(aScaleConstraint);
+        }
+
+        // Must be able to be mapped to an array of length 2, and numerator must be less than the denominator
+        if (myScaleConstraint.length != 2 || myScaleConstraint[0] >= myScaleConstraint[1]) {
+            throw new ConfigException(aScaleConstraint);
+        }
+
+        return this;
+    }
+
+    /**
+     * Gets an environmental property and checks that it exists.
      *
      * @param aEnvPropertyName An environmental property name
-     * @return A URL
-     * @throws ConfigException If the supplied property value isn't a URL
+     * @return The property value
+     * @throws ConfigException If the supplied property name doesn't exist in the environment
      */
-    static URL getProperty(final String aEnvPropertyName) {
+    static String getProperty(final String aEnvPropertyName) {
         final Map<String, String> envMap = System.getenv();
 
         // Does our ENV property exist?
         if (!envMap.containsKey(aEnvPropertyName)) {
             throw new ConfigException(aEnvPropertyName);
-        }
-
-        // Is our ENV property a URL?
-        try {
-            return new URL(envMap.get(aEnvPropertyName));
-        } catch (final MalformedURLException details) {
-            throw new ConfigException(details, aEnvPropertyName);
+        } else {
+            return envMap.get(aEnvPropertyName);
         }
     }
 }

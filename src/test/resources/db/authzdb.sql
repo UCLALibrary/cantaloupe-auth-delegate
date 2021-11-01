@@ -80,8 +80,8 @@ COMMENT ON COLUMN public.origins.degraded_allowed IS 'Whether this origin allows
 --
 
 COPY public.items (uid, access_level) FROM stdin WITH DELIMITER ',';
-test-1.tif,1
-test-2.tif,0
+test-open.tif,0
+test-restricted.tif,1
 \.
 
 --

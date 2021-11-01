@@ -26,7 +26,7 @@ public class ConfigTest {
      */
     @Before
     public final void setUp() {
-        myConfig = new Config(getFakeServiceURL(), getFakeServiceURL(), getFakeServiceURL());
+        myConfig = new Config(getFakeServiceURL(), getFakeServiceURL(), getFakeServiceURL(), getFakeScaleConstraint());
     }
 
     /**
@@ -34,14 +34,15 @@ public class ConfigTest {
      */
     @Test
     public final void testConfig() {
-        final URL cookieService = Config.getProperty(Config.AUTH_COOKIE_SERVICE);
-        final URL tokenService = Config.getProperty(Config.AUTH_TOKEN_SERVICE);
-        final URL accessService = Config.getProperty(Config.AUTH_ACCESS_SERVICE);
+        final String cookieService = Config.getProperty(Config.AUTH_COOKIE_SERVICE);
+        final String tokenService = Config.getProperty(Config.AUTH_TOKEN_SERVICE);
+        final String accessService = Config.getProperty(Config.AUTH_ACCESS_SERVICE);
         final Config config = new Config();
 
-        assertEquals(accessService.toString(), config.getAccessService());
-        assertEquals(tokenService.toString(), config.getTokenService());
-        assertEquals(cookieService.toString(), config.getCookieService());
+        assertEquals(accessService, config.getAccessService());
+        assertEquals(tokenService, config.getTokenService());
+        assertEquals(cookieService, config.getCookieService());
+        assertEquals(2, config.getScaleConstraint().length);
     }
 
     /**
@@ -50,42 +51,68 @@ public class ConfigTest {
      * @throws ConfigException If the configuration wasn't able to be successfully constructed.
      */
     @Test
-    public final void testConfigURLURLURL() throws ConfigException {
-        final URL cookieService = Config.getProperty(Config.AUTH_COOKIE_SERVICE);
-        final URL tokenService = Config.getProperty(Config.AUTH_TOKEN_SERVICE);
-        final URL accessService = Config.getProperty(Config.AUTH_ACCESS_SERVICE);
-        final Config config = new Config(cookieService, tokenService, accessService);
+    public final void testConfigURLURLURLString() throws ConfigException, MalformedURLException {
+        final String cookieService = Config.getProperty(Config.AUTH_COOKIE_SERVICE);
+        final String tokenService = Config.getProperty(Config.AUTH_TOKEN_SERVICE);
+        final String accessService = Config.getProperty(Config.AUTH_ACCESS_SERVICE);
+        final String scaleConstraint = Config.getProperty(Config.TIERED_ACCESS_SCALE_CONSTRAINT);
+        final Config config =
+                new Config(new URL(cookieService), new URL(tokenService), new URL(accessService), scaleConstraint);
 
-        assertEquals(accessService.toString(), config.getAccessService());
-        assertEquals(tokenService.toString(), config.getTokenService());
-        assertEquals(cookieService.toString(), config.getCookieService());
+        assertEquals(accessService, config.getAccessService());
+        assertEquals(tokenService, config.getTokenService());
+        assertEquals(cookieService, config.getCookieService());
+        assertEquals(2, config.getScaleConstraint().length);
     }
 
     /**
      * Tests getting/setting the cookie service configuration.
+     *
+     * @throws MalformedURLException If the service URL is malformed
      */
     @Test
-    public final void testSetCookieService() {
-        final URL cookieService = Config.getProperty(Config.AUTH_COOKIE_SERVICE);
-        assertEquals(cookieService.toString(), myConfig.setCookieService(cookieService).getCookieService());
+    public final void testSetCookieService() throws MalformedURLException {
+        final String cookieService = Config.getProperty(Config.AUTH_COOKIE_SERVICE);
+        assertEquals(cookieService, myConfig.setCookieService(new URL(cookieService)).getCookieService());
     }
 
     /**
      * Tests getting/setting the token service configuration.
+     *
+     * @throws MalformedURLException If the service URL is malformed
      */
     @Test
-    public final void testSetTokenService() {
-        final URL tokenService = Config.getProperty(Config.AUTH_TOKEN_SERVICE);
-        assertEquals(tokenService.toString(), myConfig.setTokenService(tokenService).getTokenService());
+    public final void testSetTokenService() throws MalformedURLException {
+        final String tokenService = Config.getProperty(Config.AUTH_TOKEN_SERVICE);
+        assertEquals(tokenService, myConfig.setTokenService(new URL(tokenService)).getTokenService());
     }
 
     /**
      * Tests getting/setting the access service configuration.
+     *
+     * @throws MalformedURLException If the service URL is malformed
      */
     @Test
-    public final void testSetAccessService() {
-        final URL accessService = Config.getProperty(Config.AUTH_ACCESS_SERVICE);
-        assertEquals(accessService.toString(), myConfig.setAccessService(accessService).getAccessService());
+    public final void testSetAccessService() throws MalformedURLException {
+        final String accessService = Config.getProperty(Config.AUTH_ACCESS_SERVICE);
+        assertEquals(accessService, myConfig.setAccessService(new URL(accessService)).getAccessService());
+    }
+
+    /**
+     * Tests getting/setting the scale constraint configuration.
+     */
+    @Test
+    public final void testSetScaleConstraint() {
+        final String scaleConstraint = Config.getProperty(Config.TIERED_ACCESS_SCALE_CONSTRAINT);
+        assertEquals(2, myConfig.setScaleConstraint(scaleConstraint).getScaleConstraint().length);
+    }
+
+    /**
+     * Tests setting the scale constraint configuration with an invalid value.
+     */
+    @Test(expected = ConfigException.class)
+    public final void testSetScaleConstraintInvalid() {
+        myConfig.setScaleConstraint("4:3");
     }
 
     /**
@@ -96,7 +123,7 @@ public class ConfigTest {
      */
     @Test
     public final void testGetProperty() throws MalformedURLException {
-        final URL expectedURL = new URL(System.getenv(Config.AUTH_ACCESS_SERVICE));
+        final String expectedURL = System.getenv(Config.AUTH_ACCESS_SERVICE);
         assertEquals(expectedURL, Config.getProperty(Config.AUTH_ACCESS_SERVICE));
     }
 
@@ -111,5 +138,14 @@ public class ConfigTest {
         } catch (final MalformedURLException details) {
             throw new I18nRuntimeException(details);
         }
+    }
+
+    /**
+     * Gets a scale constraint for no-op parts of our testing.
+     *
+     * @return A fake scale constraint
+     */
+    private String getFakeScaleConstraint() {
+        return "1:2";
     }
 }

@@ -2,8 +2,8 @@
   "@context": "http://iiif.io/api/image/2/context.json",
   "@id": "{}",
   "protocol": "http://iiif.io/api/image",
-  "width": 2000,
-  "height": 2000,
+  "width": 1000,
+  "height": 1000,
   "sizes": [
     {
       "width": 125,
@@ -20,22 +20,17 @@
     {
       "width": 1000,
       "height": 1000
-    },
-    {
-      "width": 2000,
-      "height": 2000
     }
   ],
   "tiles": [
     {
-      "width": 512,
-      "height": 512,
+      "width": 1000,
+      "height": 1000,
       "scaleFactors": [
         1,
         2,
         4,
-        8,
-        16
+        8
       ]
     }
   ],
@@ -48,7 +43,7 @@
         "gif",
         "png"
       ],
-      "maxArea": 4000000,
+      "maxArea": 1000000,
       "qualities": [
         "bitonal",
         "default",

@@ -30,7 +30,7 @@ There are unit and integration tests. The integration tests spin up Docker conta
 
 An alternative to running the test containers as a part of the integration test suite is to run them directly. To do this, one would type:
 
-    mvn initialize docker:build docker:run
+    mvn package docker:build docker:run -Dmaven.test.skip
 
 To find out which host ports the containers are running on, look for output in the Maven console logs that looks like:
 
@@ -44,7 +44,7 @@ Those port numbers can be used, in conjunction with the localhost host name, to 
 
 It's also possible to override one (or more) of these values from the command line (if you don't want to look the port number of a particular service each time you restart). To do this, you'd type:
 
-    mvn initialize docker:build docker:run -Dtest.iiif.images.port=8888
+    mvn package docker:build docker:run -Dtest.iiif.images.port=8888
 
 Once all manual testing is completed, the containers can be stopped by typing: [ctrl]-C.
 
@@ -52,8 +52,10 @@ Once all manual testing is completed, the containers can be stopped by typing: [
 
 There are some environmental properties that are supplied automatically for the tests, but which need to be explicitly set on a production (test, dev, etc.) system. These include:
 
+    AUTH_ACCESS_SERVICE="https://example.com/access/{}"
     AUTH_COOKIE_SERVICE="https://example.com/cookie"
     AUTH_TOKEN_SERVICE="https://example.com/token"
+    TIERED_ACCESS_SCALE_CONSTRAINT="1:2"
 
 ### Deploying the Delegate
 

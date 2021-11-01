@@ -11,9 +11,11 @@ public class HauthToken {
 
     /**
      * An authorization header.
+     * <p>
+     * N.B.: Cantaloupe's request context uses a map with lowercase keys.
      */
     @JsonIgnore
-    public static final String HEADER = "Authorization";
+    public static final String HEADER = "authorization";
 
     /**
      * The type of authorization token this is.

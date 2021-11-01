@@ -218,9 +218,10 @@
           <argLine>${jacoco.agent.arg}</argLine>
           <!-- IPs outside the containers use the host's default IP address -->
           <environmentVariables>
+            <AUTH_ACCESS_SERVICE>http://0.0.0.0:${test.hauth.port}/access/{}</AUTH_ACCESS_SERVICE>
             <AUTH_COOKIE_SERVICE>http://0.0.0.0:${test.hauth.port}/cookie</AUTH_COOKIE_SERVICE>
             <AUTH_TOKEN_SERVICE>http://0.0.0.0:${test.hauth.port}/token</AUTH_TOKEN_SERVICE>
-            <AUTH_ACCESS_SERVICE>http://0.0.0.0:${test.hauth.port}/access/{}</AUTH_ACCESS_SERVICE>
+            <TIERED_ACCESS_SCALE_CONSTRAINT>1:2</TIERED_ACCESS_SCALE_CONSTRAINT>
           </environmentVariables>
         </configuration>
       </plugin>
@@ -232,8 +233,10 @@
           <useModulePath>false</useModulePath>
           <!-- IPs inside the containers use the Docker bridge IP address -->
           <environmentVariables>
-            <HAUTH_URL>http://172.17.0.1:${test.hauth.port}</HAUTH_URL>
-            <IIIF_IMAGE_URL>http://172.17.0.1:${test.iiif.images.port}/iiif</IIIF_IMAGE_URL>
+            <AUTH_COOKIE_SERVICE>http://172.17.0.1:${test.hauth.port}/cookie</AUTH_COOKIE_SERVICE>
+            <AUTH_TOKEN_SERVICE>http://172.17.0.1:${test.hauth.port}/token</AUTH_TOKEN_SERVICE>
+            <TIERED_ACCESS_SCALE_CONSTRAINT>1:2</TIERED_ACCESS_SCALE_CONSTRAINT>
+            <IIIF_IMAGE_URL>http://172.17.0.1:${test.iiif.images.port}</IIIF_IMAGE_URL>
           </environmentVariables>
         </configuration>
       </plugin>
@@ -355,14 +358,15 @@
                 </volumes>
                 <env>
                   <!-- IPs inside the containers use the Docker bridge IP address -->
+                  <AUTH_ACCESS_SERVICE>http://172.17.0.1:${test.hauth.port}/access/{}</AUTH_ACCESS_SERVICE>
                   <AUTH_COOKIE_SERVICE>http://172.17.0.1:${test.hauth.port}/cookie</AUTH_COOKIE_SERVICE>
                   <AUTH_TOKEN_SERVICE>http://172.17.0.1:${test.hauth.port}/token</AUTH_TOKEN_SERVICE>
-                  <AUTH_ACCESS_SERVICE>http://172.17.0.1:${test.hauth.port}/access/{}</AUTH_ACCESS_SERVICE>
                   <CANTALOUPE_LOG_APPLICATION_LEVEL>debug</CANTALOUPE_LOG_APPLICATION_LEVEL>
                   <CANTALOUPE_ENDPOINT_ADMIN_SECRET>secret</CANTALOUPE_ENDPOINT_ADMIN_SECRET>
                   <CANTALOUPE_ENDPOINT_ADMIN_ENABLED>true</CANTALOUPE_ENDPOINT_ADMIN_ENABLED>
                   <CANTALOUPE_DELEGATE_SCRIPT_ENABLED>true</CANTALOUPE_DELEGATE_SCRIPT_ENABLED>
                   <CANTALOUPE_DELEGATE_SCRIPT_PATHNAME>/usr/local/cantaloupe/delegate.jar</CANTALOUPE_DELEGATE_SCRIPT_PATHNAME>
+                  <TIERED_ACCESS_SCALE_CONSTRAINT>1:2</TIERED_ACCESS_SCALE_CONSTRAINT>
                 </env>
                 <dependsOn>
                   <container>delegate_hauth</container>
