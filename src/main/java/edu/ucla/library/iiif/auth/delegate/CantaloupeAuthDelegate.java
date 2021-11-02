@@ -43,24 +43,9 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
     private static final TypeReference<Map<String, Object>> MAP_TYPE_REFERENCE = new TypeReference<>() {};
 
     /**
-     * The access service this delegate uses.
+     * The configuration for this delegate.
      */
-    private final String myAccessService;
-
-    /**
-     * The cookie service this delegate uses.
-     */
-    private final String myCookieService;
-
-    /**
-     * The token service this delegate uses.
-     */
-    private final String myTokenService;
-
-    /**
-     * The scale constraint this delegate allows for tiered access.
-     */
-    private final int[] myScaleConstraint;
+    private final Config myConfig;
 
     /**
      * Whether or not access to the requested item is restricted.
@@ -76,12 +61,7 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
      * Creates a new Cantaloupe authorization delegate.
      */
     public CantaloupeAuthDelegate() {
-        final Config config = new Config();
-
-        myAccessService = config.getAccessService();
-        myCookieService = config.getCookieService();
-        myTokenService = config.getTokenService();
-        myScaleConstraint = config.getScaleConstraint();
+        myConfig = new Config();
     }
 
     /**
@@ -92,25 +72,29 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
     public Object preAuthorize() {
         final Optional<HauthToken> token = getToken(getContext().getRequestHeaders().get(HauthToken.HEADER));
         final boolean hasValidIP = token.isPresent() && token.get().isValidIP();
+        final int[] configuredScaleConstraint = myConfig.getScaleConstraint();
         // For full image requests, this array value is equal to { 1, 1 }
         final int[] scaleConstraint = getContext().getScaleConstraint();
 
         // Cache the result of the access level HTTP request
-        isItemRestricted = new HauthItem(myAccessService, getContext().getIdentifier()).isRestricted();
+        isItemRestricted = new HauthItem(myConfig.getAccessService(), getContext().getIdentifier()).isRestricted();
+
         // Cache the result of detecting if the scale constraint is one we allow
-        isValidTieredAccessRequest = Arrays.equals(myScaleConstraint, scaleConstraint);
+        isValidTieredAccessRequest = Arrays.equals(configuredScaleConstraint, scaleConstraint);
 
         if (scaleConstraint[0] != scaleConstraint[1]) {
             // This request is for the resource at the degraded access tier, usually via an earlier HTTP 302 redirect
             return isValidTieredAccessRequest;
-        } else if (isItemRestricted && !hasValidIP) {
-            // The long types make a difference here, apparently; JRuby?
-            return Map.of("status_code", Long.valueOf(HTTP.FOUND), "scale_numerator", (long) myScaleConstraint[0],
-                    "scale_denominator", (long) myScaleConstraint[1]);
-        } else {
-            // Client is authorized to view full resource
-            return true;
         }
+
+        if (isItemRestricted && !hasValidIP) {
+            // The long types make a difference here, apparently
+            return Map.of("status_code", Long.valueOf(HTTP.FOUND), "scale_numerator",
+                    (long) configuredScaleConstraint[0], "scale_denominator", (long) configuredScaleConstraint[1]);
+        }
+
+        // Client is authorized to view full resource
+        return true;
     }
 
     /**
@@ -147,8 +131,8 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
      * @return A map of authorization services
      */
     private Map<String, Object> getAuthServices() {
-        final AuthCookieService1 cookieService = new AuthCookieService1(Profile.KIOSK, myCookieService);
-        final AuthTokenService1 tokenService = new AuthTokenService1(myTokenService);
+        final AuthCookieService1 cookieService = new AuthCookieService1(Profile.KIOSK, myConfig.getCookieService());
+        final AuthTokenService1 tokenService = new AuthTokenService1(myConfig.getTokenService());
         final Map<String, Object> service = JSON.convertValue(cookieService, MAP_TYPE_REFERENCE);
         final List<Map<String, Object>> relatedServices = new ArrayList<>();
         final List<Map<String, Object>> services = new ArrayList<>();

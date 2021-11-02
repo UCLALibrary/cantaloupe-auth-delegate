@@ -5,19 +5,23 @@ import static edu.ucla.library.iiif.auth.delegate.hauth.HauthResponse.ACCESS_KEY
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+
+import org.apache.http.client.utils.URIBuilder;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
-import info.freelibrary.util.StringUtils;
 
+import edu.ucla.library.iiif.auth.delegate.ConfigException;
 import edu.ucla.library.iiif.auth.delegate.MessageCodes;
 
 /**
@@ -41,9 +45,9 @@ public class HauthItem {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     /**
-     * The access URL of the Hauth service.
+     * The access URI of the Hauth service.
      */
-    private final String myAccessService;
+    private final URI myAccessService;
 
     /**
      * The ID of the item in question.
@@ -53,10 +57,10 @@ public class HauthItem {
     /**
      * Creates a new Hauth client.
      *
-     * @param aService The URL of the authorization access service
+     * @param aService The URI of the authorization access service
      * @param aID The ID of the item
      */
-    public HauthItem(final String aService, final String aID) {
+    public HauthItem(final URI aService, final String aID) {
         myAccessService = aService;
         myID = aID;
     }
@@ -76,10 +80,9 @@ public class HauthItem {
      * @return Whether access to the object with the supplied ID is restricted
      */
     public boolean isRestricted() {
-        final URI uri = URI.create(StringUtils.format(myAccessService, myID));
-        final HttpRequest request = HttpRequest.newBuilder().uri(uri).build();
+        final HttpRequest request = HttpRequest.newBuilder().uri(getURI()).build();
 
-        LOGGER.debug(MessageCodes.CAD_005, request.method(), uri);
+        LOGGER.debug(MessageCodes.CAD_005, request.method(), request.uri());
 
         try {
             final HttpResponse<String> response = HTTP.send(request, BodyHandlers.ofString());
@@ -102,5 +105,25 @@ public class HauthItem {
         }
 
         return true; // We treat authorization lookup errors as restricted
+    }
+
+    /**
+     * Constructs the Access Service URI by appending the requested ID onto the end of the service URI's path.
+     *
+     * @return A URI for the access service with the requested ID included
+     */
+    private URI getURI() {
+        final URIBuilder uriBuilder = new URIBuilder(myAccessService);
+        final List<String> paths = uriBuilder.getPathSegments();
+
+        // Add our requested ID onto the end of the service URI
+        paths.add(myID);
+
+        // The base should already be valid at this point, but we have to check the ID
+        try {
+            return uriBuilder.setPathSegments(paths).build();
+        } catch (final URISyntaxException details) {
+            throw new ConfigException(details, uriBuilder.toString());
+        }
     }
 }
