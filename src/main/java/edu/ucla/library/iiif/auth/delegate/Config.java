@@ -3,9 +3,9 @@ package edu.ucla.library.iiif.auth.delegate;
 
 import static info.freelibrary.util.Constants.COLON;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Map;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
@@ -14,17 +14,17 @@ import java.util.stream.Stream;
 public final class Config {
 
     /**
-     * An environmental property for the URL of a IIIF authorization cookie service.
+     * An environmental property for the URI of a IIIF authorization cookie service.
      */
     public static final String AUTH_COOKIE_SERVICE = "AUTH_COOKIE_SERVICE";
 
     /**
-     * An environmental property for the URL of a IIIF authorization token service.
+     * An environmental property for the URI of a IIIF authorization token service.
      */
     public static final String AUTH_TOKEN_SERVICE = "AUTH_TOKEN_SERVICE";
 
     /**
-     * An environmental property for the URL of an item access service.
+     * An environmental property for the URI of an item access service.
      */
     public static final String AUTH_ACCESS_SERVICE = "AUTH_ACCESS_SERVICE";
 
@@ -38,17 +38,17 @@ public final class Config {
     /**
      * A configured cookie service.
      */
-    private URL myCookieService;
+    private URI myCookieService;
 
     /**
      * A configured token service.
      */
-    private URL myTokenService;
+    private URI myTokenService;
 
     /**
      * A configured access service.
      */
-    private URL myAccessService;
+    private URI myAccessService;
 
     /**
      * A configured tiered access scale constraint.
@@ -58,92 +58,87 @@ public final class Config {
     /**
      * Creates a new configuration.
      */
-    @SuppressWarnings({ "PMD.PreserveStackTrace" })
     public Config() {
-        try {
-            myCookieService = new URL(getProperty(Config.AUTH_COOKIE_SERVICE));
-            myTokenService = new URL(getProperty(Config.AUTH_TOKEN_SERVICE));
-            myAccessService = new URL(getProperty(Config.AUTH_ACCESS_SERVICE));
-        } catch (final MalformedURLException details) {
-            throw new ConfigException(details.getMessage());
-        }
+        setScaleConstraint(getString(Config.TIERED_ACCESS_SCALE_CONSTRAINT));
 
-        setScaleConstraint(getProperty(Config.TIERED_ACCESS_SCALE_CONSTRAINT));
+        myCookieService = getURI(Config.AUTH_COOKIE_SERVICE);
+        myTokenService = getURI(Config.AUTH_TOKEN_SERVICE);
+        myAccessService = getURI(Config.AUTH_ACCESS_SERVICE);
     }
 
     /**
      * Creates a new configuration.
      *
-     * @param aCookieService A cookie service URL
-     * @param aTokenService A token service URL
-     * @param aAccessService An access service URL
+     * @param aCookieService A cookie service URI
+     * @param aTokenService A token service URI
+     * @param aAccessService An access service URI
      * @param aScaleConstraint A scale constraint for tiered access
      */
-    public Config(final URL aCookieService, final URL aTokenService, final URL aAccessService,
+    public Config(final URI aCookieService, final URI aTokenService, final URI aAccessService,
             final String aScaleConstraint) {
+        setScaleConstraint(aScaleConstraint);
+
         myCookieService = aCookieService;
         myTokenService = aTokenService;
         myAccessService = aAccessService;
-
-        setScaleConstraint(aScaleConstraint);
     }
 
     /**
-     * Gets the configured cookie service URL.
+     * Gets the configured cookie service URI.
      *
-     * @return The configured cookie service URL
+     * @return The configured cookie service URI
      */
-    public String getCookieService() {
-        return myCookieService.toString();
+    public URI getCookieService() {
+        return myCookieService;
     }
 
     /**
-     * Sets the cookie service URL.
+     * Sets the cookie service URI.
      *
      * @param aCookieService A cookie service
      * @return This configuration
      */
-    public Config setCookieService(final URL aCookieService) {
+    public Config setCookieService(final URI aCookieService) {
         myCookieService = aCookieService;
         return this;
     }
 
     /**
-     * Gets the configured token service URL.
+     * Gets the configured token service URI.
      *
-     * @return The configured token service URL
+     * @return The configured token service URI
      */
-    public String getTokenService() {
-        return myTokenService.toString();
+    public URI getTokenService() {
+        return myTokenService;
     }
 
     /**
-     * Sets the token service URL.
+     * Sets the token service URI.
      *
      * @param aTokenService A token service
      * @return This configuration
      */
-    public Config setTokenService(final URL aTokenService) {
+    public Config setTokenService(final URI aTokenService) {
         myTokenService = aTokenService;
         return this;
     }
 
     /**
-     * Gets the configured access service URL.
+     * Gets the configured access service URI.
      *
-     * @return The configured access service URL
+     * @return The configured access service URI
      */
-    public String getAccessService() {
-        return myAccessService.toString();
+    public URI getAccessService() {
+        return myAccessService;
     }
 
     /**
-     * Sets an access service URL.
+     * Sets an access service URI.
      *
      * @param aAccessService An access service
      * @return This configuration
      */
-    public Config setAccessService(final URL aAccessService) {
+    public Config setAccessService(final URI aAccessService) {
         myAccessService = aAccessService;
         return this;
     }
@@ -153,9 +148,8 @@ public final class Config {
      *
      * @return The configured scale constraint for tiered access
      */
-    @SuppressWarnings({ "PMD.MethodReturnsInternalArray" })
     public int[] getScaleConstraint() {
-        return myScaleConstraint;
+        return myScaleConstraint.clone();
     }
 
     /**
@@ -164,12 +158,11 @@ public final class Config {
      * @param aScaleConstraint A scale constraint for tiered access
      * @return This configuration
      */
-    @SuppressWarnings({ "PMD.PreserveStackTrace" })
     public Config setScaleConstraint(final String aScaleConstraint) {
         try {
             myScaleConstraint = Stream.of(aScaleConstraint.split(COLON)).mapToInt(Integer::parseInt).toArray();
         } catch (final NumberFormatException details) {
-            throw new ConfigException(aScaleConstraint);
+            throw new ConfigException(details, aScaleConstraint);
         }
 
         // Must be able to be mapped to an array of length 2, and numerator must be less than the denominator
@@ -181,20 +174,29 @@ public final class Config {
     }
 
     /**
-     * Gets an environmental property and checks that it exists.
+     * Gets an environmental property as a URI, checking that it exists and is valid.
      *
-     * @param aEnvPropertyName An environmental property name
+     * @param aPropertyName An environmental property name
+     * @return The property value
+     * @throws ConfigException If the supplied property name doesn't exist in the environment or is invalid
+     */
+    static URI getURI(final String aPropertyName) {
+        try {
+            return new URI(Optional.ofNullable(System.getenv(aPropertyName))
+                    .orElseThrow(() -> new ConfigException(aPropertyName)));
+        } catch (final URISyntaxException details) {
+            throw new ConfigException(details, aPropertyName);
+        }
+    }
+
+    /**
+     * Gets an environmental property, checking that it exists.
+     *
+     * @param aPropertyName An environmental property name
      * @return The property value
      * @throws ConfigException If the supplied property name doesn't exist in the environment
      */
-    static String getProperty(final String aEnvPropertyName) {
-        final Map<String, String> envMap = System.getenv();
-
-        // Does our ENV property exist?
-        if (!envMap.containsKey(aEnvPropertyName)) {
-            throw new ConfigException(aEnvPropertyName);
-        } else {
-            return envMap.get(aEnvPropertyName);
-        }
+    static String getString(final String aPropertyName) {
+        return Optional.ofNullable(System.getenv(aPropertyName)).orElseThrow(() -> new ConfigException(aPropertyName));
     }
 }

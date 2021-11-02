@@ -14,7 +14,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import info.freelibrary.util.HTTP;
@@ -87,24 +86,6 @@ public class CantaloupeAuthDelegateIT {
      * The key of the "Location" HTTP response header.
      */
     private static final String LOCATION = "Location";
-
-    /**
-     * Tests pre-authorizing a request.
-     */
-    @Ignore
-    @Test
-    public final void testPreAuthorize() {
-        // TODO
-    }
-
-    /**
-     * Tests authorizing a request.
-     */
-    @Ignore
-    @Test
-    public final void testAuthorize() {
-        // TODO
-    }
 
     /******
      * v2 *

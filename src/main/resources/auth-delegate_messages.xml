@@ -6,12 +6,12 @@
   <entry key="message-class-name">edu.ucla.library.iiif.auth.delegate.MessageCodes</entry>
 
   <entry key="CAD-000">{}</entry>
-  <entry key="CAD-001">Required environmental property is either missing or malformed: {}</entry>
-  <entry key="CAD-002"></entry><!-- This can be used for a new message -->
+  <entry key="CAD-001">Required environmental property is missing: {}</entry>
+  <entry key="CAD-002">Supplied environmental property isn't a valid URI: {}</entry>
   <entry key="CAD-003">Requested item '{}' was not found in the authorization service's database</entry>
   <entry key="CAD-004">Unexpected error while checking item '{}' in authorization database: [{}] {}</entry>
   <entry key="CAD-005">Making {} request: {}</entry>
-  <entry key="CAD-006"></entry><!-- This can be used for a new message -->
+  <entry key="CAD-006">Supplied scale constraint isn't a valid numeric value: {}</entry>
   <entry key="CAD-007">ID returned by authorization lookup doesn't match requested: {} != {}</entry>
   <entry key="CAD-008"></entry><!-- This can be used for a new message -->
   <entry key="CAD-009">The code to indicate whether access is allowed was not expected: {} [{}]</entry>
