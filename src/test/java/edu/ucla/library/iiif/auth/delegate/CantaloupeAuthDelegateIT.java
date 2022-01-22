@@ -88,24 +88,44 @@ public class CantaloupeAuthDelegateIT {
     private static final String ALL_OR_NOTHING_ACCESS_IMAGE = "test-all-or-nothing.tif";
 
     /**
-     * The info.json template for images that the client has full access to (e.g., either the image is open access, or
-     * the client has an access token that grants access to either a tiered access image or an all-or-nothing access
-     * image).
+     * The info.json template (Image API 2) for images that the client has full access to (e.g., either the image is
+     * open access, or the client has an access token that grants access to either a tiered access image or an
+     * all-or-nothing access image).
      */
-    private static final File FULL_ACCESS_RESPONSE_TEMPLATE = new File("src/test/resources/test-full-access-info.json");
+    private static final File FULL_ACCESS_RESPONSE_TEMPLATE_V2 =
+            new File("src/test/resources/json/test-full-access-v2-info.json");
 
     /**
-     * The info.json template for images that the client has degraded access to (e.g., a client does not have an access
-     * token that grants access to a tiered access image).
+     * The info.json template (Image API 3) for images that the client has full access to.
      */
-    private static final File DEGRADED_ACCESS_RESPONSE_TEMPLATE =
-            new File("src/test/resources/test-degraded-access-info.json");
+    private static final File FULL_ACCESS_RESPONSE_TEMPLATE_V3 =
+            new File("src/test/resources/json/test-full-access-v3-info.json");
 
     /**
-     * The info.json template form images that the client has no access to (e.g., a client does not have an access token
-     * that grants access to an all-or-nothing access image).
+     * The info.json template (Image API 2) for images that the client has degraded access to (e.g., a client does not
+     * have an access token that grants access to a tiered access image).
      */
-    private static final File NO_ACCESS_RESPONSE_TEMPLATE = new File("src/test/resources/test-no-access-info.json");
+    private static final File DEGRADED_ACCESS_RESPONSE_TEMPLATE_V2 =
+            new File("src/test/resources/json/test-degraded-access-v2-info.json");
+
+    /**
+     * The info.json template (Image API 3) for images that the client has degraded access to.
+     */
+    private static final File DEGRADED_ACCESS_RESPONSE_TEMPLATE_V3 =
+            new File("src/test/resources/json/test-degraded-access-v3-info.json");
+
+    /**
+     * The info.json template (Image API 2) for images that the client has no access to (e.g., a client does not have an
+     * access token that grants access to an all-or-nothing access image).
+     */
+    private static final File NO_ACCESS_RESPONSE_TEMPLATE_V2 =
+            new File("src/test/resources/json/test-no-access-v2-info.json");
+
+    /**
+     * The info.json template (Image API 3) for images that the client has no access to.
+     */
+    private static final File NO_ACCESS_RESPONSE_TEMPLATE_V3 =
+            new File("src/test/resources/json/test-no-access-v3-info.json");
 
     /**
      * An internal HTTP client.
@@ -125,9 +145,9 @@ public class CantaloupeAuthDelegateIT {
      */
     @Test
     public final void testFullAccessResponseOpenNoTokenV2() throws IOException, InterruptedException {
-        final HttpResponse<String> response = sendImageInfoRequest(OPEN_ACCESS_IMAGE, null);
+        final HttpResponse<String> response = sendImageInfoRequest(OPEN_ACCESS_IMAGE, null, 2);
         final String expectedResponse =
-                getExpectedDescriptionResource(OPEN_ACCESS_IMAGE, FULL_ACCESS_RESPONSE_TEMPLATE);
+                getExpectedDescriptionResource(OPEN_ACCESS_IMAGE, FULL_ACCESS_RESPONSE_TEMPLATE_V2, 2);
 
         Assert.assertEquals(HTTP.OK, response.statusCode());
         TestUtils.assertEquals(expectedResponse, response.body());
@@ -142,9 +162,9 @@ public class CantaloupeAuthDelegateIT {
      */
     @Test
     public final void testFullResponseTieredWithTokenV2() throws IOException, InterruptedException {
-        final HttpResponse<String> response = sendImageInfoRequest(TIERED_ACCESS_IMAGE, ACCESS_TOKEN);
+        final HttpResponse<String> response = sendImageInfoRequest(TIERED_ACCESS_IMAGE, ACCESS_TOKEN, 2);
         final String expectedResponse =
-                getExpectedDescriptionResource(TIERED_ACCESS_IMAGE, FULL_ACCESS_RESPONSE_TEMPLATE);
+                getExpectedDescriptionResource(TIERED_ACCESS_IMAGE, FULL_ACCESS_RESPONSE_TEMPLATE_V2, 2);
 
         Assert.assertEquals(HTTP.OK, response.statusCode());
         TestUtils.assertEquals(expectedResponse, response.body());
@@ -159,9 +179,9 @@ public class CantaloupeAuthDelegateIT {
      */
     @Test
     public final void testDegradedAccessResponseTieredNoTokenV2() throws IOException, InterruptedException {
-        final HttpResponse<String> response = sendImageInfoRequest(TIERED_ACCESS_IMAGE, null);
-        final String expectedResponse =
-                getExpectedDescriptionResource(TIERED_ACCESS_IMAGE_DEGRADED_VALID, DEGRADED_ACCESS_RESPONSE_TEMPLATE);
+        final HttpResponse<String> response = sendImageInfoRequest(TIERED_ACCESS_IMAGE, null, 2);
+        final String expectedResponse = getExpectedDescriptionResource(TIERED_ACCESS_IMAGE_DEGRADED_VALID,
+                DEGRADED_ACCESS_RESPONSE_TEMPLATE_V2, 2);
 
         Assert.assertEquals(HTTP.OK, response.statusCode());
         TestUtils.assertEquals(expectedResponse, response.body());
@@ -176,7 +196,7 @@ public class CantaloupeAuthDelegateIT {
      */
     @Test
     public final void testErrorResponseTieredDisallowedScaleV2() throws IOException, InterruptedException {
-        final HttpResponse<String> response = sendImageInfoRequest(TIERED_ACCESS_IMAGE_DEGRADED_UNAVAILABLE, null);
+        final HttpResponse<String> response = sendImageInfoRequest(TIERED_ACCESS_IMAGE_DEGRADED_UNAVAILABLE, null, 2);
 
         Assert.assertEquals(HTTP.FORBIDDEN, response.statusCode());
     }
@@ -190,9 +210,9 @@ public class CantaloupeAuthDelegateIT {
      */
     @Test
     public final void testFullAccessResponseAllOrNothingWithTokenV2() throws IOException, InterruptedException {
-        final HttpResponse<String> response = sendImageInfoRequest(ALL_OR_NOTHING_ACCESS_IMAGE, SINAI_ACCESS_TOKEN);
+        final HttpResponse<String> response = sendImageInfoRequest(ALL_OR_NOTHING_ACCESS_IMAGE, SINAI_ACCESS_TOKEN, 2);
         final String expectedResponse =
-                getExpectedDescriptionResource(ALL_OR_NOTHING_ACCESS_IMAGE, FULL_ACCESS_RESPONSE_TEMPLATE);
+                getExpectedDescriptionResource(ALL_OR_NOTHING_ACCESS_IMAGE, FULL_ACCESS_RESPONSE_TEMPLATE_V2, 2);
 
         Assert.assertEquals(HTTP.OK, response.statusCode());
         TestUtils.assertEquals(expectedResponse, response.body());
@@ -208,9 +228,9 @@ public class CantaloupeAuthDelegateIT {
     @Test
     @Ignore
     public final void testNoAccessResponseAllOrNothingNoTokenV2() throws IOException, InterruptedException {
-        final HttpResponse<String> response = sendImageInfoRequest(ALL_OR_NOTHING_ACCESS_IMAGE, null);
+        final HttpResponse<String> response = sendImageInfoRequest(ALL_OR_NOTHING_ACCESS_IMAGE, null, 2);
         final String expectedResponse =
-                getExpectedDescriptionResource(ALL_OR_NOTHING_ACCESS_IMAGE, NO_ACCESS_RESPONSE_TEMPLATE);
+                getExpectedDescriptionResource(ALL_OR_NOTHING_ACCESS_IMAGE, NO_ACCESS_RESPONSE_TEMPLATE_V2, 2);
 
         Assert.assertEquals(HTTP.UNAUTHORIZED, response.statusCode());
         TestUtils.assertEquals(expectedResponse, response.body());
@@ -228,9 +248,9 @@ public class CantaloupeAuthDelegateIT {
      */
     @Test
     public final void testFullAccessResponseOpenNoTokenV3() throws IOException, InterruptedException {
-        final HttpResponse<String> response = sendImageInfoRequest(OPEN_ACCESS_IMAGE, null);
+        final HttpResponse<String> response = sendImageInfoRequest(OPEN_ACCESS_IMAGE, null, 3);
         final String expectedResponse =
-                getExpectedDescriptionResource(OPEN_ACCESS_IMAGE, FULL_ACCESS_RESPONSE_TEMPLATE);
+                getExpectedDescriptionResource(OPEN_ACCESS_IMAGE, FULL_ACCESS_RESPONSE_TEMPLATE_V3, 3);
 
         Assert.assertEquals(HTTP.OK, response.statusCode());
         TestUtils.assertEquals(expectedResponse, response.body());
@@ -245,9 +265,9 @@ public class CantaloupeAuthDelegateIT {
      */
     @Test
     public final void testFullResponseTieredWithTokenV3() throws IOException, InterruptedException {
-        final HttpResponse<String> response = sendImageInfoRequest(TIERED_ACCESS_IMAGE, ACCESS_TOKEN);
+        final HttpResponse<String> response = sendImageInfoRequest(TIERED_ACCESS_IMAGE, ACCESS_TOKEN, 3);
         final String expectedResponse =
-                getExpectedDescriptionResource(TIERED_ACCESS_IMAGE, FULL_ACCESS_RESPONSE_TEMPLATE);
+                getExpectedDescriptionResource(TIERED_ACCESS_IMAGE, FULL_ACCESS_RESPONSE_TEMPLATE_V3, 3);
 
         Assert.assertEquals(HTTP.OK, response.statusCode());
         TestUtils.assertEquals(expectedResponse, response.body());
@@ -262,9 +282,9 @@ public class CantaloupeAuthDelegateIT {
      */
     @Test
     public final void testDegradedAccessResponseTieredNoTokenV3() throws IOException, InterruptedException {
-        final HttpResponse<String> response = sendImageInfoRequest(TIERED_ACCESS_IMAGE, null);
-        final String expectedResponse =
-                getExpectedDescriptionResource(TIERED_ACCESS_IMAGE_DEGRADED_VALID, DEGRADED_ACCESS_RESPONSE_TEMPLATE);
+        final HttpResponse<String> response = sendImageInfoRequest(TIERED_ACCESS_IMAGE, null, 3);
+        final String expectedResponse = getExpectedDescriptionResource(TIERED_ACCESS_IMAGE_DEGRADED_VALID,
+                DEGRADED_ACCESS_RESPONSE_TEMPLATE_V3, 3);
 
         Assert.assertEquals(HTTP.OK, response.statusCode());
         TestUtils.assertEquals(expectedResponse, response.body());
@@ -279,7 +299,7 @@ public class CantaloupeAuthDelegateIT {
      */
     @Test
     public final void testErrorResponseTieredDisallowedScaleV3() throws IOException, InterruptedException {
-        final HttpResponse<String> response = sendImageInfoRequest(TIERED_ACCESS_IMAGE_DEGRADED_UNAVAILABLE, null);
+        final HttpResponse<String> response = sendImageInfoRequest(TIERED_ACCESS_IMAGE_DEGRADED_UNAVAILABLE, null, 3);
 
         Assert.assertEquals(HTTP.FORBIDDEN, response.statusCode());
     }
@@ -293,9 +313,9 @@ public class CantaloupeAuthDelegateIT {
      */
     @Test
     public final void testFullAccessResponseAllOrNothingWithTokenV3() throws IOException, InterruptedException {
-        final HttpResponse<String> response = sendImageInfoRequest(ALL_OR_NOTHING_ACCESS_IMAGE, SINAI_ACCESS_TOKEN);
+        final HttpResponse<String> response = sendImageInfoRequest(ALL_OR_NOTHING_ACCESS_IMAGE, SINAI_ACCESS_TOKEN, 3);
         final String expectedResponse =
-                getExpectedDescriptionResource(ALL_OR_NOTHING_ACCESS_IMAGE, FULL_ACCESS_RESPONSE_TEMPLATE);
+                getExpectedDescriptionResource(ALL_OR_NOTHING_ACCESS_IMAGE, FULL_ACCESS_RESPONSE_TEMPLATE_V3, 3);
 
         Assert.assertEquals(HTTP.OK, response.statusCode());
         TestUtils.assertEquals(expectedResponse, response.body());
@@ -311,9 +331,9 @@ public class CantaloupeAuthDelegateIT {
     @Test
     @Ignore
     public final void testNoAccessResponseAllOrNothingNoTokenV3() throws IOException, InterruptedException {
-        final HttpResponse<String> response = sendImageInfoRequest(ALL_OR_NOTHING_ACCESS_IMAGE, null);
+        final HttpResponse<String> response = sendImageInfoRequest(ALL_OR_NOTHING_ACCESS_IMAGE, null, 3);
         final String expectedResponse =
-                getExpectedDescriptionResource(ALL_OR_NOTHING_ACCESS_IMAGE, NO_ACCESS_RESPONSE_TEMPLATE);
+                getExpectedDescriptionResource(ALL_OR_NOTHING_ACCESS_IMAGE, NO_ACCESS_RESPONSE_TEMPLATE_V3, 3);
 
         Assert.assertEquals(HTTP.UNAUTHORIZED, response.statusCode());
         TestUtils.assertEquals(expectedResponse, response.body());
@@ -328,14 +348,15 @@ public class CantaloupeAuthDelegateIT {
      *
      * @param aImageID The identifier of the image whose info we're requesting
      * @param aToken A bearer token for authorization
+     * @param aImageApiVersion The IIIF Image API endpoint to use
      * @return The HTTP response
      * @throws IOException If there is trouble sending the HTTP request
      * @throws InterruptedException If there is trouble sending the HTTP request
      */
-    private static HttpResponse<String> sendImageInfoRequest(final String aImageID, final String aToken)
-            throws IOException, InterruptedException {
+    private static HttpResponse<String> sendImageInfoRequest(final String aImageID, final String aToken,
+            final int aImageApiVersion) throws IOException, InterruptedException {
         final String imageURL =
-                getDescriptionResourceID(System.getenv().get(TestConfig.IIIF_URL_PROPERTY), 2, aImageID);
+                getDescriptionResourceID(System.getenv().get(TestConfig.IIIF_URL_PROPERTY), aImageApiVersion, aImageID);
         final HttpRequest.Builder requestBuilder = HttpRequest.newBuilder(URI.create(imageURL + "/info.json"));
 
         if (aToken != null) {
@@ -350,23 +371,27 @@ public class CantaloupeAuthDelegateIT {
      *
      * @param aImageID The identifier of the image whose info we're requesting
      * @param aResponseTemplate The response template that we should use to render the response
+     * @param aImageApiVersion The IIIF Image API endpoint to use
      * @return The expected info.json response for the image
      * @throws IOException If there is trouble reading the test file
      */
-    private static String getExpectedDescriptionResource(final String aImageID, final File aResponseTemplate)
-            throws IOException {
+    private static String getExpectedDescriptionResource(final String aImageID, final File aResponseTemplate,
+            final int aImageApiVersion)
+                    throws IOException {
         final Map<String, String> envProperties = System.getenv();
         final String descriptionResourceID =
-                getDescriptionResourceID(envProperties.get(TestConfig.IIIF_URL_PROPERTY), 2, aImageID);
+                getDescriptionResourceID(envProperties.get(TestConfig.IIIF_URL_PROPERTY), aImageApiVersion, aImageID);
         final List<String> responseTemplateURLs = new ArrayList<>();
 
         responseTemplateURLs.add(descriptionResourceID);
 
-        if (aResponseTemplate.equals(DEGRADED_ACCESS_RESPONSE_TEMPLATE)) {
+        if (aResponseTemplate.equals(DEGRADED_ACCESS_RESPONSE_TEMPLATE_V2) ||
+                aResponseTemplate.equals(DEGRADED_ACCESS_RESPONSE_TEMPLATE_V3)) {
             // The Hauth service URLs need to be added to the info.json
             responseTemplateURLs.add(envProperties.get(Config.AUTH_COOKIE_SERVICE));
             responseTemplateURLs.add(envProperties.get(Config.AUTH_TOKEN_SERVICE));
-        } else if (aResponseTemplate.equals(NO_ACCESS_RESPONSE_TEMPLATE)) {
+        } else if (aResponseTemplate.equals(NO_ACCESS_RESPONSE_TEMPLATE_V2) ||
+                aResponseTemplate.equals(NO_ACCESS_RESPONSE_TEMPLATE_V3)) {
             responseTemplateURLs.add(envProperties.get(Config.SINAI_AUTH_TOKEN_SERVICE));
         }
 
