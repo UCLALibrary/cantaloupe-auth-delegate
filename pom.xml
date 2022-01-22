@@ -70,7 +70,7 @@
     <docker.maven.plugin.version>0.37.0</docker.maven.plugin.version>
 
     <!-- Docker images versions used in testing -->
-    <hauth.container.version>0.0.2</hauth.container.version>
+    <hauth.container.version>0.0.4</hauth.container.version>
     <psql.container.version>12.7-alpine</psql.container.version>
     <redis.container.version>6.2.5-alpine</redis.container.version>
     <cantaloupe.container.version>5.0.4-0</cantaloupe.container.version>
