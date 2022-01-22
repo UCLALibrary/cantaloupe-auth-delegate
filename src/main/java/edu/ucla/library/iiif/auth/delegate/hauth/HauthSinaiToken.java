@@ -5,9 +5,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSetter;
 
 /**
- * An authorization token created by the Hauth service.
+ * An authorization token created by the Sinai application.
  */
-public class HauthToken {
+public class HauthSinaiToken {
 
     /**
      * An authorization header.
@@ -29,9 +29,9 @@ public class HauthToken {
     private static final String HAUTH_VERSION_KEY = "version";
 
     /**
-     * A JSON key for the campus network information.
+     * A JSON key for the Sinai affiliate information.
      */
-    private static final String CAMPUS_NETWORK_KEY = "campusNetwork";
+    private static final String SINAI_AFFILIATE_KEY = "sinaiAffiliate";
 
     /**
      * The version of Hauth that sent this token.
@@ -39,15 +39,15 @@ public class HauthToken {
     private String myVersion;
 
     /**
-     * Whether the IP is valid for the campus network.
+     * Whether the bearer is affiliated with Sinai.
      */
-    private boolean isNetworkIP;
+    private boolean isSinaiAffiliate;
 
     /**
      * Provides a default constructor for Jackson to use in (de)serialization.
      */
     @SuppressWarnings("unused")
-    private HauthToken() {
+    private HauthSinaiToken() {
         // This is intentionally left empty
     }
 
@@ -55,11 +55,11 @@ public class HauthToken {
      * Creates a new Hauth token.
      *
      * @param aHauthVersion The version of Hauth that sent the token
-     * @param aValidIP Whether the IP was a campus network IP
+     * @param aSinaiAffiliate Whether the bearer is affiliated with Sinai
      */
-    public HauthToken(final String aHauthVersion, final boolean aValidIP) {
+    public HauthSinaiToken(final String aHauthVersion, final boolean aSinaiAffiliate) {
         myVersion = aHauthVersion;
-        isNetworkIP = aValidIP;
+        isSinaiAffiliate = aSinaiAffiliate;
     }
 
     /**
@@ -69,7 +69,7 @@ public class HauthToken {
      * @return The authorization token
      */
     @JsonSetter(HAUTH_VERSION_KEY)
-    public HauthToken setVersion(final String aVersion) {
+    public HauthSinaiToken setVersion(final String aVersion) {
         myVersion = aVersion;
         return this;
     }
@@ -85,25 +85,25 @@ public class HauthToken {
     }
 
     /**
-     * Sets whether the token comes from a valid IP.
+     * Sets whether the bearer is affiliated with Sinai.
      *
-     * @param aValidIP Whether the token comes from a valid IP
+     * @param aSinaiAffiliate Whether the bearer is affiliated with Sinai
      * @return The authorization token
      */
-    @JsonSetter(CAMPUS_NETWORK_KEY)
-    public HauthToken setValidIP(final boolean aValidIP) {
-        isNetworkIP = aValidIP;
+    @JsonSetter(SINAI_AFFILIATE_KEY)
+    public HauthSinaiToken setSinaiAffiliate(final boolean aSinaiAffiliate) {
+        isSinaiAffiliate = aSinaiAffiliate;
         return this;
     }
 
     /**
-     * Gets whether the token comes from a valid IP.
+     * Gets whether the bearer is affiliated with Sinai.
      *
-     * @return True if the token comes from a valid IP; else, false
+     * @return True if the bearer is affiliated with Sinai; else, false
      */
-    @JsonGetter(CAMPUS_NETWORK_KEY)
-    public boolean isValidIP() {
-        return isNetworkIP;
+    @JsonGetter(SINAI_AFFILIATE_KEY)
+    public boolean hasSinaiAffiliate() {
+        return isSinaiAffiliate;
     }
 
 }

@@ -1,8 +1,6 @@
 
 package edu.ucla.library.iiif.auth.delegate.hauth;
 
-import static edu.ucla.library.iiif.auth.delegate.hauth.HauthResponse.ACCESS_KEY;
-
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -35,6 +33,11 @@ public class HauthItem {
     private static final Logger LOGGER = LoggerFactory.getLogger(HauthItem.class, MessageCodes.BUNDLE);
 
     /**
+     * The JSON key for the response's access mode.
+     */
+    private static final String ACCESS_MODE_KEY = "accessMode";
+
+    /**
      * An internal HTTP client.
      */
     private static final HttpClient HTTP = HttpClient.newHttpClient();
@@ -45,9 +48,9 @@ public class HauthItem {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     /**
-     * The access URI of the Hauth service.
+     * The access mode URI of the Hauth service.
      */
-    private final URI myAccessService;
+    private final URI myAccessModeService;
 
     /**
      * The ID of the item in question.
@@ -57,11 +60,11 @@ public class HauthItem {
     /**
      * Creates a new Hauth client.
      *
-     * @param aService The URI of the authorization access service
+     * @param aService The URI of the authorization access mode service
      * @param aID The ID of the item
      */
     public HauthItem(final URI aService, final String aID) {
-        myAccessService = aService;
+        myAccessModeService = aService;
         myID = aID;
     }
 
@@ -79,7 +82,7 @@ public class HauthItem {
      *
      * @return Whether access to the object with the supplied ID is restricted
      */
-    public boolean isRestricted() {
+    public AccessMode getAccessMode() {
         final HttpRequest request = HttpRequest.newBuilder().uri(getURI()).build();
 
         LOGGER.debug(MessageCodes.CAD_005, request.method(), request.uri());
@@ -89,13 +92,14 @@ public class HauthItem {
 
             switch (response.statusCode()) {
                 case 200:
-                    // This will default to 'false' if value is unexpected, throw NoSuchElementException if missing
-                    return Optional.of(MAPPER.readTree(response.body()).get(ACCESS_KEY)).orElseThrow().asBoolean();
+                    // Throws NoSuchElementException if missing
+                    return AccessMode.valueOf(
+                            Optional.of(MAPPER.readTree(response.body()).get(ACCESS_MODE_KEY)).orElseThrow().asText());
                 case 404:
                     LOGGER.debug(MessageCodes.CAD_003, myID);
                     // Q: Do we want to limit access to info.json if auth service is configured and an item isn't found
                     // in it?
-                    return false; // The default for unknowns is that access is not restricted
+                    return AccessMode.OPEN; // The default for unknowns is that access is not restricted
                 default:
                     LOGGER.error(MessageCodes.CAD_004, myID, response.statusCode(), response.body());
                     break;
@@ -104,16 +108,16 @@ public class HauthItem {
             LOGGER.error(details.getMessage(), details);
         }
 
-        return true; // We treat authorization lookup errors as restricted
+        return AccessMode.ALL_OR_NOTHING; // We treat authorization lookup errors as restricted
     }
 
     /**
-     * Constructs the Access Service URI by appending the requested ID onto the end of the service URI's path.
+     * Constructs the Access Mode Service URI by appending the requested ID onto the end of the service URI's path.
      *
-     * @return A URI for the access service with the requested ID included
+     * @return A URI for the access mode service with the requested ID included
      */
     private URI getURI() {
-        final URIBuilder uriBuilder = new URIBuilder(myAccessService);
+        final URIBuilder uriBuilder = new URIBuilder(myAccessModeService);
         final List<String> paths = uriBuilder.getPathSegments();
 
         // Add our requested ID onto the end of the service URI

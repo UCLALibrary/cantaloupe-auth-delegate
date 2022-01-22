@@ -218,10 +218,11 @@
           <argLine>${jacoco.agent.arg}</argLine>
           <environmentVariables>
             <!-- Test service IPs outside the containers use the host's default IP address -->
+            <!-- The Auth Access Mode Service URI will have the ID to be checked appended onto the end -->
+            <AUTH_ACCESS_MODE_SERVICE>http://0.0.0.0:${test.hauth.port}/access</AUTH_ACCESS_MODE_SERVICE>
             <AUTH_COOKIE_SERVICE>http://0.0.0.0:${test.hauth.port}/cookie</AUTH_COOKIE_SERVICE>
             <AUTH_TOKEN_SERVICE>http://0.0.0.0:${test.hauth.port}/token</AUTH_TOKEN_SERVICE>
-            <!-- The Auth Access Service URI will have the ID to be checked appended onto the end -->
-            <AUTH_ACCESS_SERVICE>http://0.0.0.0:${test.hauth.port}/access</AUTH_ACCESS_SERVICE>
+            <SINAI_AUTH_TOKEN_SERVICE>http://0.0.0.0:${test.hauth.port}/token/sinai</SINAI_AUTH_TOKEN_SERVICE>
             <TIERED_ACCESS_SCALE_CONSTRAINT>1:2</TIERED_ACCESS_SCALE_CONSTRAINT>
           </environmentVariables>
         </configuration>
@@ -236,8 +237,9 @@
             <!-- Test service IPs inside the containers use the Docker bridge IP address -->
             <AUTH_COOKIE_SERVICE>http://172.17.0.1:${test.hauth.port}/cookie</AUTH_COOKIE_SERVICE>
             <AUTH_TOKEN_SERVICE>http://172.17.0.1:${test.hauth.port}/token</AUTH_TOKEN_SERVICE>
-            <TIERED_ACCESS_SCALE_CONSTRAINT>1:2</TIERED_ACCESS_SCALE_CONSTRAINT>
             <IIIF_IMAGE_URL>http://172.17.0.1:${test.iiif.images.port}</IIIF_IMAGE_URL>
+            <SINAI_AUTH_TOKEN_SERVICE>http://172.17.0.1:${test.hauth.port}/token/sinai</SINAI_AUTH_TOKEN_SERVICE>
+            <TIERED_ACCESS_SCALE_CONSTRAINT>1:2</TIERED_ACCESS_SCALE_CONSTRAINT>
           </environmentVariables>
         </configuration>
       </plugin>
@@ -327,6 +329,8 @@
                   <CAMPUS_NETWORK_SUBNETS>172.17.0.0/24,192.168.0.0/24</CAMPUS_NETWORK_SUBNETS>
                   <SECRET_KEY_GENERATION_PASSWORD>${test.secretkey.password}</SECRET_KEY_GENERATION_PASSWORD>
                   <SECRET_KEY_GENERATION_SALT>${test.secretkey.salt}</SECRET_KEY_GENERATION_SALT>
+                  <SINAI_COOKIE_SECRET_KEY_GENERATION_PASSWORD>ThisPasswordIsReallyHardToGuess!</SINAI_COOKIE_SECRET_KEY_GENERATION_PASSWORD>
+                  <SINAI_COOKIE_VALID_PREFIX>Authenticated</SINAI_COOKIE_VALID_PREFIX>
                 </env>
                 <dependsOn>
                   <container>delegate_hauth_pgsql</container>
@@ -358,16 +362,19 @@
                   </bind>
                 </volumes>
                 <env>
-                  <!-- Test service IPs inside the containers use the Docker bridge IP address -->
-                  <AUTH_COOKIE_SERVICE>http://172.17.0.1:${test.hauth.port}/cookie</AUTH_COOKIE_SERVICE>
-                  <AUTH_TOKEN_SERVICE>http://172.17.0.1:${test.hauth.port}/token</AUTH_TOKEN_SERVICE>
-                  <!-- The Auth Access Service URI will have the ID to be checked appended onto the end -->
-                  <AUTH_ACCESS_SERVICE>http://172.17.0.1:${test.hauth.port}/access</AUTH_ACCESS_SERVICE>
+                  <!-- Cantaloupe configuration -->
                   <CANTALOUPE_LOG_APPLICATION_LEVEL>debug</CANTALOUPE_LOG_APPLICATION_LEVEL>
                   <CANTALOUPE_ENDPOINT_ADMIN_SECRET>secret</CANTALOUPE_ENDPOINT_ADMIN_SECRET>
                   <CANTALOUPE_ENDPOINT_ADMIN_ENABLED>true</CANTALOUPE_ENDPOINT_ADMIN_ENABLED>
                   <CANTALOUPE_DELEGATE_SCRIPT_ENABLED>true</CANTALOUPE_DELEGATE_SCRIPT_ENABLED>
                   <CANTALOUPE_DELEGATE_SCRIPT_PATHNAME>/usr/local/cantaloupe/delegate.jar</CANTALOUPE_DELEGATE_SCRIPT_PATHNAME>
+                  <!-- Delegate configuration -->
+                  <!-- Test service IPs inside the containers use the Docker bridge IP address -->
+                  <!-- The Auth Access Mode Service URI will have the ID to be checked appended onto the end -->
+                  <AUTH_ACCESS_MODE_SERVICE>http://172.17.0.1:${test.hauth.port}/access</AUTH_ACCESS_MODE_SERVICE>
+                  <AUTH_COOKIE_SERVICE>http://172.17.0.1:${test.hauth.port}/cookie</AUTH_COOKIE_SERVICE>
+                  <AUTH_TOKEN_SERVICE>http://172.17.0.1:${test.hauth.port}/token</AUTH_TOKEN_SERVICE>
+                  <SINAI_AUTH_TOKEN_SERVICE>http://172.17.0.1:${test.hauth.port}/token/sinai</SINAI_AUTH_TOKEN_SERVICE>
                   <TIERED_ACCESS_SCALE_CONSTRAINT>1:2</TIERED_ACCESS_SCALE_CONSTRAINT>
                 </env>
                 <dependsOn>

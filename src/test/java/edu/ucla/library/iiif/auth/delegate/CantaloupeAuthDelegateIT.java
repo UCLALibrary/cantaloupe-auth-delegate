@@ -5,15 +5,16 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
+import java.net.http.HttpClient.Redirect;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import info.freelibrary.util.HTTP;
@@ -39,126 +40,180 @@ public class CantaloupeAuthDelegateIT {
     /**
      * An access token generated using the following shell command:
      * <p>
-     * <code> $ base64 <<< '{"version": "0.0.0-SNAPSHOT", "campus-network": true}'
+     * <code> $ base64 <<< '{"version": "0.0.0-SNAPSHOT", "campusNetwork": true}'
      * </code>
      * <p>
      * This would be the value of the "accessToken" key shown
      * <a href="https://iiif.io/api/auth/1.0/#the-json-access-token-response">here</a>.
      */
     private static final String ACCESS_TOKEN =
-            "eyJ2ZXJzaW9uIjogIjAuMC4wLVNOQVBTSE9UIiwiY2FtcHVzLW5ldHdvcmsiOiB0cnVlfQo=";
+            "eyJ2ZXJzaW9uIjogIjAuMC4wLVNOQVBTSE9UIiwgImNhbXB1c05ldHdvcmsiOiB0cnVlfQo=";
 
     /**
-     * The id of the restricted image.
+     * An access token generated using the following shell command:
+     * <p>
+     * <code> $ base64 <<< '{"version": "0.0.0-SNAPSHOT", "sinaiAffiliate": true}'
+     * </code>
+     * <p>
+     * This would be the value of the "accessToken" key shown
+     * <a href="https://iiif.io/api/auth/1.0/#the-json-access-token-response">here</a>.
      */
-    private static final String RESTRICTED_IMAGE = "test-restricted.tif";
-
-    /**
-     * The id of the restricted image at the allowed degraded access tier.
-     */
-    private static final String RESTRICTED_IMAGE_VALID_TIER =
-            StringUtils.format("test-restricted.tif;{}", System.getenv().get(Config.TIERED_ACCESS_SCALE_CONSTRAINT));
-
-    /**
-     * The id of the restricted image at a degraded access tier that is not allowed.
-     */
-    private static final String RESTRICTED_IMAGE_INVALID_TIER = "test-restricted.tif;3:4";
+    private static final String SINAI_ACCESS_TOKEN =
+            "eyJ2ZXJzaW9uIjogIjAuMC4wLVNOQVBTSE9UIiwgInNpbmFpQWZmaWxpYXRlIjogdHJ1ZX0K";
 
     /**
      * The id of the non-restricted image.
      */
-    private static final String OPEN_IMAGE_ID = "test-open.tif";
+    private static final String OPEN_ACCESS_IMAGE = "test-open.tif";
 
     /**
-     * The file paths of the info.json templates.
+     * The id of the restricted image.
      */
-    private static final Map<String, File> RESPONSE_TEMPLATES =
-            Map.of(RESTRICTED_IMAGE, new File("src/test/resources/services-info-restricted.json"),
-                    RESTRICTED_IMAGE_VALID_TIER, new File("src/test/resources/services-info-restricted;1:2.json"),
-                    OPEN_IMAGE_ID, new File("src/test/resources/services-info-open.json"));
+    private static final String TIERED_ACCESS_IMAGE = "test-tiered.tif";
+
+    /**
+     * The id of the restricted image at the allowed degraded access tier.
+     */
+    private static final String TIERED_ACCESS_IMAGE_DEGRADED_VALID =
+            StringUtils.format("test-tiered.tif;{}", System.getenv().get(Config.TIERED_ACCESS_SCALE_CONSTRAINT));
+
+    /**
+     * The id of the restricted image at a degraded access tier that is not allowed.
+     */
+    private static final String TIERED_ACCESS_IMAGE_DEGRADED_UNAVAILABLE = "test-tiered.tif;3:4";
+
+    /**
+     * The id of the image with all-or-nothing access.
+     */
+    private static final String ALL_OR_NOTHING_ACCESS_IMAGE = "test-all-or-nothing.tif";
+
+    /**
+     * The info.json template for images that the client has full access to (e.g., either the image is open access, or
+     * the client has an access token that grants access to either a tiered access image or an all-or-nothing access
+     * image).
+     */
+    private static final File FULL_ACCESS_RESPONSE_TEMPLATE = new File("src/test/resources/test-full-access-info.json");
+
+    /**
+     * The info.json template for images that the client has degraded access to (e.g., a client does not have an access
+     * token that grants access to a tiered access image).
+     */
+    private static final File DEGRADED_ACCESS_RESPONSE_TEMPLATE =
+            new File("src/test/resources/test-degraded-access-info.json");
+
+    /**
+     * The info.json template form images that the client has no access to (e.g., a client does not have an access token
+     * that grants access to an all-or-nothing access image).
+     */
+    private static final File NO_ACCESS_RESPONSE_TEMPLATE = new File("src/test/resources/test-no-access-info.json");
 
     /**
      * An internal HTTP client.
      */
-    private static final HttpClient HTTP_CLIENT = HttpClient.newHttpClient();
-
-    /**
-     * The key of the "Location" HTTP response header.
-     */
-    private static final String LOCATION = "Location";
+    private static final HttpClient HTTP_CLIENT =
+            HttpClient.newBuilder().followRedirects(Redirect.NORMAL).version(HttpClient.Version.HTTP_1_1).build();
 
     /******
      * v2 *
      ******/
 
     /**
-     * Tests the HTTP response of a request for a non-restricted image using Image API 2.
+     * Tests that the HTTP response to a request for an open access info.json, via Image API 2, indicates full access.
      *
      * @throws IOException If there is trouble sending the HTTP request(s) or getting the expected info.json response
      * @throws InterruptedException If there is trouble sending the HTTP request(s)
      */
     @Test
-    public final void testResponseOpenV2() throws IOException, InterruptedException {
-        final HttpResponse<String> response = sendImageInfoRequest(OPEN_IMAGE_ID, null);
-        final String expectedResponse = getExpectedDescriptionResource(OPEN_IMAGE_ID);
+    public final void testFullAccessResponseOpenNoTokenV2() throws IOException, InterruptedException {
+        final HttpResponse<String> response = sendImageInfoRequest(OPEN_ACCESS_IMAGE, null);
+        final String expectedResponse =
+                getExpectedDescriptionResource(OPEN_ACCESS_IMAGE, FULL_ACCESS_RESPONSE_TEMPLATE);
 
+        Assert.assertEquals(HTTP.OK, response.statusCode());
         TestUtils.assertEquals(expectedResponse, response.body());
     }
 
     /**
-     * Tests the HTTP response of a request with an Authorization header for a restricted image using Image API 2.
+     * Tests that the HTTP response to a properly authorized request for a tiered access info.json, via Image API 2,
+     * indicates full access.
      *
      * @throws IOException If there is trouble sending the HTTP request(s) or getting the expected info.json response
      * @throws InterruptedException If there is trouble sending the HTTP request(s)
      */
     @Test
-    public final void testResponseRestrictedWithTokenV2() throws IOException, InterruptedException {
-        final HttpResponse<String> response = sendImageInfoRequest(RESTRICTED_IMAGE, ACCESS_TOKEN);
-        final String expectedResponse = getExpectedDescriptionResource(RESTRICTED_IMAGE);
+    public final void testFullResponseTieredWithTokenV2() throws IOException, InterruptedException {
+        final HttpResponse<String> response = sendImageInfoRequest(TIERED_ACCESS_IMAGE, ACCESS_TOKEN);
+        final String expectedResponse =
+                getExpectedDescriptionResource(TIERED_ACCESS_IMAGE, FULL_ACCESS_RESPONSE_TEMPLATE);
 
+        Assert.assertEquals(HTTP.OK, response.statusCode());
         TestUtils.assertEquals(expectedResponse, response.body());
     }
 
     /**
-     * Tests the HTTP response of a request without an Authorization header for a restricted image using Image API 2.
+     * Tests that the HTTP response to an unauthorized request for a tiered access info.json, via Image API 2, indicates
+     * degraded access.
      *
      * @throws IOException If there is trouble sending the HTTP request(s) or getting the expected info.json response
      * @throws InterruptedException If there is trouble sending the HTTP request(s)
      */
     @Test
-    public final void testResponseRestrictedNoTokenV2() throws IOException, InterruptedException {
-        final HttpResponse<String> firstResponse;
-        final HttpResponse<String> secondResponse;
-        final Optional<String> firstResponseLocation;
-        final String expectedSecondResponse;
+    public final void testDegradedAccessResponseTieredNoTokenV2() throws IOException, InterruptedException {
+        final HttpResponse<String> response = sendImageInfoRequest(TIERED_ACCESS_IMAGE, null);
+        final String expectedResponse =
+                getExpectedDescriptionResource(TIERED_ACCESS_IMAGE_DEGRADED_VALID, DEGRADED_ACCESS_RESPONSE_TEMPLATE);
 
-        firstResponse = sendImageInfoRequest(RESTRICTED_IMAGE, null);
-
-        // Check first response
-        firstResponseLocation = firstResponse.headers().firstValue(LOCATION);
-        Assert.assertEquals(HTTP.FOUND, firstResponse.statusCode());
-        Assert.assertTrue(firstResponseLocation.isPresent() &&
-                firstResponseLocation.get().contains(RESTRICTED_IMAGE_VALID_TIER));
-
-        // Now do the redirect
-        secondResponse = sendImageInfoRequest(RESTRICTED_IMAGE_VALID_TIER, null);
-
-        expectedSecondResponse = getExpectedDescriptionResource(RESTRICTED_IMAGE_VALID_TIER);
-        TestUtils.assertEquals(expectedSecondResponse, secondResponse.body());
+        Assert.assertEquals(HTTP.OK, response.statusCode());
+        TestUtils.assertEquals(expectedResponse, response.body());
     }
 
     /**
-     * Tests the HTTP response of a request without an Authorization header for a restricted image at a disallowed scale
-     * using Image API 2.
+     * Tests that the HTTP response to a request for a tiered access info.json, via Image API 2 and at a disallowed
+     * scale, indicates no access.
      *
      * @throws IOException If there is trouble sending the HTTP request(s) or getting the expected info.json response
      * @throws InterruptedException If there is trouble sending the HTTP request(s)
      */
     @Test
-    public final void testResponseRestrictedNoTokenDisallowedScaleV2() throws IOException, InterruptedException {
-        final HttpResponse<String> response = sendImageInfoRequest(RESTRICTED_IMAGE_INVALID_TIER, null);
+    public final void testErrorResponseTieredDisallowedScaleV2() throws IOException, InterruptedException {
+        final HttpResponse<String> response = sendImageInfoRequest(TIERED_ACCESS_IMAGE_DEGRADED_UNAVAILABLE, null);
 
         Assert.assertEquals(HTTP.FORBIDDEN, response.statusCode());
+    }
+
+    /**
+     * Tests that the HTTP response to a properly authorized request for an all-or-nothing access info.json, via Image
+     * API 2, indicates full access.
+     *
+     * @throws IOException If there is trouble sending the HTTP request(s) or getting the expected info.json response
+     * @throws InterruptedException If there is trouble sending the HTTP request(s)
+     */
+    @Test
+    public final void testFullAccessResponseAllOrNothingWithTokenV2() throws IOException, InterruptedException {
+        final HttpResponse<String> response = sendImageInfoRequest(ALL_OR_NOTHING_ACCESS_IMAGE, SINAI_ACCESS_TOKEN);
+        final String expectedResponse =
+                getExpectedDescriptionResource(ALL_OR_NOTHING_ACCESS_IMAGE, FULL_ACCESS_RESPONSE_TEMPLATE);
+
+        Assert.assertEquals(HTTP.OK, response.statusCode());
+        TestUtils.assertEquals(expectedResponse, response.body());
+    }
+
+    /**
+     * Tests that the HTTP response to an unauthorized request for an all-or-nothing access info.json, via Image API 2,
+     * indicates no access.
+     *
+     * @throws IOException If there is trouble sending the HTTP request(s) or getting the expected info.json response
+     * @throws InterruptedException If there is trouble sending the HTTP request(s)
+     */
+    @Test
+    @Ignore
+    public final void testNoAccessResponseAllOrNothingNoTokenV2() throws IOException, InterruptedException {
+        final HttpResponse<String> response = sendImageInfoRequest(ALL_OR_NOTHING_ACCESS_IMAGE, null);
+        final String expectedResponse =
+                getExpectedDescriptionResource(ALL_OR_NOTHING_ACCESS_IMAGE, NO_ACCESS_RESPONSE_TEMPLATE);
+
+        Assert.assertEquals(HTTP.UNAUTHORIZED, response.statusCode());
+        TestUtils.assertEquals(expectedResponse, response.body());
     }
 
     /******
@@ -166,73 +221,102 @@ public class CantaloupeAuthDelegateIT {
      ******/
 
     /**
-     * Tests the HTTP response of a request for a non-restricted image using Image API 3.
+     * Tests that the HTTP response to a request for an open access info.json, via Image API 3, indicates full access.
      *
      * @throws IOException If there is trouble sending the HTTP request(s) or getting the expected info.json response
      * @throws InterruptedException If there is trouble sending the HTTP request(s)
      */
     @Test
-    public final void testResponseOpenV3() throws IOException, InterruptedException {
-        final HttpResponse<String> response = sendImageInfoRequest(OPEN_IMAGE_ID, null);
-        final String expectedResponse = getExpectedDescriptionResource(OPEN_IMAGE_ID);
+    public final void testFullAccessResponseOpenNoTokenV3() throws IOException, InterruptedException {
+        final HttpResponse<String> response = sendImageInfoRequest(OPEN_ACCESS_IMAGE, null);
+        final String expectedResponse =
+                getExpectedDescriptionResource(OPEN_ACCESS_IMAGE, FULL_ACCESS_RESPONSE_TEMPLATE);
 
+        Assert.assertEquals(HTTP.OK, response.statusCode());
         TestUtils.assertEquals(expectedResponse, response.body());
     }
 
     /**
-     * Tests the HTTP response of a request with an Authorization header for a restricted image using Image API 3.
+     * Tests that the HTTP response to a properly authorized request for a tiered access info.json, via Image API 3,
+     * indicates full access.
      *
      * @throws IOException If there is trouble sending the HTTP request(s) or getting the expected info.json response
      * @throws InterruptedException If there is trouble sending the HTTP request(s)
      */
     @Test
-    public final void testResponseRestrictedWithTokenV3() throws IOException, InterruptedException {
-        final HttpResponse<String> response = sendImageInfoRequest(RESTRICTED_IMAGE, ACCESS_TOKEN);
-        final String expectedResponse = getExpectedDescriptionResource(RESTRICTED_IMAGE);
+    public final void testFullResponseTieredWithTokenV3() throws IOException, InterruptedException {
+        final HttpResponse<String> response = sendImageInfoRequest(TIERED_ACCESS_IMAGE, ACCESS_TOKEN);
+        final String expectedResponse =
+                getExpectedDescriptionResource(TIERED_ACCESS_IMAGE, FULL_ACCESS_RESPONSE_TEMPLATE);
 
+        Assert.assertEquals(HTTP.OK, response.statusCode());
         TestUtils.assertEquals(expectedResponse, response.body());
     }
 
     /**
-     * Tests the HTTP response of a request without an Authorization header for a restricted image using Image API 3.
+     * Tests that the HTTP response to an unauthorized request for a tiered access info.json, via Image API 3, indicates
+     * degraded access.
      *
      * @throws IOException If there is trouble sending the HTTP request(s) or getting the expected info.json response
      * @throws InterruptedException If there is trouble sending the HTTP request(s)
      */
     @Test
-    public final void testResponseRestrictedNoTokenV3() throws IOException, InterruptedException {
-        final HttpResponse<String> firstResponse;
-        final HttpResponse<String> secondResponse;
-        final Optional<String> firstResponseLocation;
-        final String expectedSecondResponse;
+    public final void testDegradedAccessResponseTieredNoTokenV3() throws IOException, InterruptedException {
+        final HttpResponse<String> response = sendImageInfoRequest(TIERED_ACCESS_IMAGE, null);
+        final String expectedResponse =
+                getExpectedDescriptionResource(TIERED_ACCESS_IMAGE_DEGRADED_VALID, DEGRADED_ACCESS_RESPONSE_TEMPLATE);
 
-        firstResponse = sendImageInfoRequest(RESTRICTED_IMAGE, null);
-
-        // Check first response
-        firstResponseLocation = firstResponse.headers().firstValue(LOCATION);
-        Assert.assertEquals(HTTP.FOUND, firstResponse.statusCode());
-        Assert.assertTrue(firstResponseLocation.isPresent() &&
-                firstResponseLocation.get().contains(RESTRICTED_IMAGE_VALID_TIER));
-
-        // Now do the redirect
-        secondResponse = sendImageInfoRequest(RESTRICTED_IMAGE_VALID_TIER, null);
-
-        expectedSecondResponse = getExpectedDescriptionResource(RESTRICTED_IMAGE_VALID_TIER);
-        TestUtils.assertEquals(expectedSecondResponse, secondResponse.body());
+        Assert.assertEquals(HTTP.OK, response.statusCode());
+        TestUtils.assertEquals(expectedResponse, response.body());
     }
 
     /**
-     * Tests the HTTP response of a request without an Authorization header for a restricted image at a disallowed scale
-     * using Image API 3.
+     * Tests that the HTTP response to a request for a tiered access info.json, via Image API 3 and at a disallowed
+     * scale, indicates no access.
      *
      * @throws IOException If there is trouble sending the HTTP request(s) or getting the expected info.json response
      * @throws InterruptedException If there is trouble sending the HTTP request(s)
      */
     @Test
-    public final void testResponseRestrictedNoTokenDisallowedScaleV3() throws IOException, InterruptedException {
-        final HttpResponse<String> response = sendImageInfoRequest(RESTRICTED_IMAGE_INVALID_TIER, null);
+    public final void testErrorResponseTieredDisallowedScaleV3() throws IOException, InterruptedException {
+        final HttpResponse<String> response = sendImageInfoRequest(TIERED_ACCESS_IMAGE_DEGRADED_UNAVAILABLE, null);
 
         Assert.assertEquals(HTTP.FORBIDDEN, response.statusCode());
+    }
+
+    /**
+     * Tests that the HTTP response to a properly authorized request for an all-or-nothing access info.json, via Image
+     * API 3, indicates full access.
+     *
+     * @throws IOException If there is trouble sending the HTTP request(s) or getting the expected info.json response
+     * @throws InterruptedException If there is trouble sending the HTTP request(s)
+     */
+    @Test
+    public final void testFullAccessResponseAllOrNothingWithTokenV3() throws IOException, InterruptedException {
+        final HttpResponse<String> response = sendImageInfoRequest(ALL_OR_NOTHING_ACCESS_IMAGE, SINAI_ACCESS_TOKEN);
+        final String expectedResponse =
+                getExpectedDescriptionResource(ALL_OR_NOTHING_ACCESS_IMAGE, FULL_ACCESS_RESPONSE_TEMPLATE);
+
+        Assert.assertEquals(HTTP.OK, response.statusCode());
+        TestUtils.assertEquals(expectedResponse, response.body());
+    }
+
+    /**
+     * Tests that the HTTP response to an unauthorized request for an all-or-nothing access info.json, via Image API 3,
+     * indicates no access.
+     *
+     * @throws IOException If there is trouble sending the HTTP request(s) or getting the expected info.json response
+     * @throws InterruptedException If there is trouble sending the HTTP request(s)
+     */
+    @Test
+    @Ignore
+    public final void testNoAccessResponseAllOrNothingNoTokenV3() throws IOException, InterruptedException {
+        final HttpResponse<String> response = sendImageInfoRequest(ALL_OR_NOTHING_ACCESS_IMAGE, null);
+        final String expectedResponse =
+                getExpectedDescriptionResource(ALL_OR_NOTHING_ACCESS_IMAGE, NO_ACCESS_RESPONSE_TEMPLATE);
+
+        Assert.assertEquals(HTTP.UNAUTHORIZED, response.statusCode());
+        TestUtils.assertEquals(expectedResponse, response.body());
     }
 
     /******************
@@ -265,25 +349,28 @@ public class CantaloupeAuthDelegateIT {
      * Generates the expected info.json for a given image.
      *
      * @param aImageID The identifier of the image whose info we're requesting
+     * @param aResponseTemplate The response template that we should use to render the response
      * @return The expected info.json response for the image
      * @throws IOException If there is trouble reading the test file
      */
-    private static String getExpectedDescriptionResource(final String aImageID) throws IOException {
+    private static String getExpectedDescriptionResource(final String aImageID, final File aResponseTemplate)
+            throws IOException {
         final Map<String, String> envProperties = System.getenv();
         final String descriptionResourceID =
                 getDescriptionResourceID(envProperties.get(TestConfig.IIIF_URL_PROPERTY), 2, aImageID);
-        final File responseTemplate = RESPONSE_TEMPLATES.get(aImageID);
         final List<String> responseTemplateURLs = new ArrayList<>();
 
         responseTemplateURLs.add(descriptionResourceID);
 
-        if (aImageID.equals(RESTRICTED_IMAGE)) {
+        if (aResponseTemplate.equals(DEGRADED_ACCESS_RESPONSE_TEMPLATE)) {
             // The Hauth service URLs need to be added to the info.json
             responseTemplateURLs.add(envProperties.get(Config.AUTH_COOKIE_SERVICE));
             responseTemplateURLs.add(envProperties.get(Config.AUTH_TOKEN_SERVICE));
+        } else if (aResponseTemplate.equals(NO_ACCESS_RESPONSE_TEMPLATE)) {
+            responseTemplateURLs.add(envProperties.get(Config.SINAI_AUTH_TOKEN_SERVICE));
         }
 
-        return StringUtils.format(StringUtils.read(responseTemplate), responseTemplateURLs.toArray());
+        return StringUtils.format(StringUtils.read(aResponseTemplate), responseTemplateURLs.toArray());
     }
 
     /**

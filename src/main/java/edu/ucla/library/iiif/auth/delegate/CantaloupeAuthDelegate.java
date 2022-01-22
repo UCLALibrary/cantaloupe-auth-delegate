@@ -1,7 +1,6 @@
 
 package edu.ucla.library.iiif.auth.delegate;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
@@ -22,7 +21,9 @@ import info.freelibrary.iiif.presentation.v3.services.auth.AuthTokenService1;
 import info.freelibrary.iiif.presentation.v3.utils.JSON;
 import info.freelibrary.iiif.presentation.v3.utils.JsonKeys;
 
+import edu.ucla.library.iiif.auth.delegate.hauth.AccessMode;
 import edu.ucla.library.iiif.auth.delegate.hauth.HauthItem;
+import edu.ucla.library.iiif.auth.delegate.hauth.HauthSinaiToken;
 import edu.ucla.library.iiif.auth.delegate.hauth.HauthToken;
 
 import edu.illinois.library.cantaloupe.delegate.JavaDelegate;
@@ -43,6 +44,16 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
     private static final TypeReference<Map<String, Object>> MAP_TYPE_REFERENCE = new TypeReference<>() {};
 
     /**
+     * The status code key for {@link #preAuthorize} responses.
+     */
+    private static final String STATUS_CODE = "status_code";
+
+    /**
+     * The regex pattern for a single whitespace character.
+     */
+    private static final String SINGLE_SPACE_PATTERN = "\\s";
+
+    /**
      * The configuration for this delegate.
      */
     private final Config myConfig;
@@ -50,12 +61,12 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
     /**
      * Whether or not access to the requested item is restricted.
      */
-    private boolean isItemRestricted;
+    private AccessMode myAccessMode;
 
     /**
-     * Whether or not the request is valid for tiered access.
+     * Whether or not it is unnecessary to include IIIF authentication services in the info.json response.
      */
-    private boolean isValidTieredAccessRequest;
+    private boolean myClientAlreadyHasFullAccess = true;
 
     /**
      * Creates a new Cantaloupe authorization delegate.
@@ -69,32 +80,56 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
      * point in time.
      */
     @Override
+    @SuppressWarnings("PMD.CyclomaticComplexity")
     public Object preAuthorize() {
-        final Optional<HauthToken> token = getToken(getContext().getRequestHeaders().get(HauthToken.HEADER));
-        final boolean hasValidIP = token.isPresent() && token.get().isValidIP();
+        final String authorizationHeader = getContext().getRequestHeaders().get(HauthToken.HEADER);
         final int[] configuredScaleConstraint = myConfig.getScaleConstraint();
         // For full image requests, this array value is equal to { 1, 1 }
         final int[] scaleConstraint = getContext().getScaleConstraint();
 
         // Cache the result of the access level HTTP request
-        isItemRestricted = new HauthItem(myConfig.getAccessService(), getContext().getIdentifier()).isRestricted();
+        myAccessMode = new HauthItem(myConfig.getAccessModeService(), getContext().getIdentifier()).getAccessMode();
 
-        // Cache the result of detecting if the scale constraint is one we allow
-        isValidTieredAccessRequest = Arrays.equals(configuredScaleConstraint, scaleConstraint);
+        switch (myAccessMode) {
+            case OPEN:
+                return true;
+            case TIERED:
+                final Optional<HauthToken> token = getToken(authorizationHeader);
 
-        if (scaleConstraint[0] != scaleConstraint[1]) {
-            // This request is for the resource at the degraded access tier, usually via an earlier HTTP 302 redirect
-            return isValidTieredAccessRequest;
+                if (token.isPresent() && token.get().isValidIP()) {
+                    // Full access
+                    return true;
+                } else if (Arrays.equals(configuredScaleConstraint, scaleConstraint)) {
+                    // Degraded image request for the size we allow access to
+                    // (Probably via an earlier HTTP 302 redirect)
+                    myClientAlreadyHasFullAccess = false;
+
+                    return true;
+                } else if (scaleConstraint[0] != scaleConstraint[1]) {
+                    // Degraded image request for a size we don't allow access to; return HTTP 403
+                    return false;
+                } else {
+                    // Full image request, but non-campus IP
+                    // (The long types make a difference here, apparently)
+                    return Map.of(STATUS_CODE, Long.valueOf(HTTP.FOUND), //
+                            "scale_numerator", (long) configuredScaleConstraint[0], //
+                            "scale_denominator", (long) configuredScaleConstraint[1]);
+                }
+            case ALL_OR_NOTHING:
+            default:
+                final Optional<HauthSinaiToken> sinaiToken = getSinaiToken(authorizationHeader);
+
+                if (sinaiToken.isPresent() && sinaiToken.get().hasSinaiAffiliate()) {
+                    // Full access
+                    return true;
+                } else {
+                    // No access
+                    myClientAlreadyHasFullAccess = false;
+
+                    return Map.of(STATUS_CODE, Long.valueOf(HTTP.UNAUTHORIZED), //
+                            "challenge", "Bearer charset=\"UTF-8\"");
+                }
         }
-
-        if (isItemRestricted && !hasValidIP) {
-            // The long types make a difference here, apparently
-            return Map.of("status_code", Long.valueOf(HTTP.FOUND), "scale_numerator",
-                    (long) configuredScaleConstraint[0], "scale_denominator", (long) configuredScaleConstraint[1]);
-        }
-
-        // Client is authorized to view full resource
-        return true;
     }
 
     /**
@@ -121,27 +156,39 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
      * @return A map of additional response keys
      */
     private Map<String, Object> getExtraInformationResponseKeys() {
-        // No auth services are necessary for images that are either open access or at the degraded access tier
-        return isItemRestricted && !isValidTieredAccessRequest ? getAuthServices() : Collections.emptyMap();
+        if (myClientAlreadyHasFullAccess) {
+            return Collections.emptyMap();
+        } else {
+            return Collections.singletonMap(JsonKeys.SERVICE, List.of(getAuthServices()));
+        }
     }
 
     /**
-     * Gets the authentication services available.
+     * Gets the item's authentication service description.
      *
-     * @return A map of authorization services
+     * @return An auth service description
      */
     private Map<String, Object> getAuthServices() {
-        final AuthCookieService1 cookieService = new AuthCookieService1(Profile.KIOSK, myConfig.getCookieService());
-        final AuthTokenService1 tokenService = new AuthTokenService1(myConfig.getTokenService());
-        final Map<String, Object> service = JSON.convertValue(cookieService, MAP_TYPE_REFERENCE);
-        final List<Map<String, Object>> relatedServices = new ArrayList<>();
-        final List<Map<String, Object>> services = new ArrayList<>();
+        final AuthCookieService1 cookieService;
+        final AuthTokenService1 tokenService;
 
-        relatedServices.add(JSON.convertValue(tokenService, MAP_TYPE_REFERENCE));
-        service.put(JsonKeys.SERVICE, relatedServices);
-        services.add(service);
+        switch (myAccessMode) {
+            case TIERED:
+                tokenService = new AuthTokenService1(myConfig.getTokenService());
+                cookieService = new AuthCookieService1(Profile.KIOSK, myConfig.getCookieService(), null, tokenService);
+                break;
+            case ALL_OR_NOTHING:
+                tokenService = new AuthTokenService1(myConfig.getSinaiTokenService());
+                // https://github.com/ksclarke/jiiify-presentation/issues/155
+                cookieService = new AuthCookieService1(Profile.EXTERNAL, "http://example.com", null, tokenService);
+                break;
+            case OPEN:
+            default:
+                // This branch should never be reached, but just in case
+                return Collections.emptyMap();
+        }
 
-        return Collections.singletonMap(JsonKeys.SERVICE, services);
+        return JSON.convertValue(cookieService, MAP_TYPE_REFERENCE);
     }
 
     /**
@@ -152,14 +199,16 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
      */
     private Optional<HauthToken> getToken(final String aHeaderValue) {
         if (aHeaderValue != null) {
-            final String[] tokenParts = aHeaderValue.split("\\s");
+            final String[] tokenParts = aHeaderValue.split(SINGLE_SPACE_PATTERN);
 
             if (tokenParts.length == 2 && HauthToken.TYPE.equalsIgnoreCase(tokenParts[0])) {
-                final String value = new String(Base64.getDecoder().decode(tokenParts[1]));
-
                 try {
+                    final String value = new String(Base64.getDecoder().decode(tokenParts[1]));
+
+                    LOGGER.debug(value);
+
                     return Optional.ofNullable(JSON.getReader(HauthToken.class).readValue(value));
-                } catch (final JsonProcessingException details) {
+                } catch (final IllegalArgumentException | JsonProcessingException details) {
                     LOGGER.trace(details.getMessage(), details);
                 }
             }
@@ -168,4 +217,29 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
         return Optional.empty();
     }
 
+    /**
+     * Gets a Sinai token from the supplied header value.
+     *
+     * @param aHeaderValue An authorization header value
+     * @return An optional Sinai authorization token
+     */
+    private Optional<HauthSinaiToken> getSinaiToken(final String aHeaderValue) {
+        if (aHeaderValue != null) {
+            final String[] tokenParts = aHeaderValue.split(SINGLE_SPACE_PATTERN);
+
+            if (tokenParts.length == 2 && HauthToken.TYPE.equalsIgnoreCase(tokenParts[0])) {
+                try {
+                    final String value = new String(Base64.getDecoder().decode(tokenParts[1]));
+
+                    LOGGER.debug(value);
+
+                    return Optional.ofNullable(JSON.getReader(HauthSinaiToken.class).readValue(value));
+                } catch (final IllegalArgumentException | JsonProcessingException details) {
+                    LOGGER.trace(details.getMessage(), details);
+                }
+            }
+        }
+
+        return Optional.empty();
+    }
 }

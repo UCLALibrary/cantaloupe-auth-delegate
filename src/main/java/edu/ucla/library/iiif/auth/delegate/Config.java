@@ -14,19 +14,24 @@ import java.util.stream.Stream;
 public final class Config {
 
     /**
-     * An environmental property for the URI of a IIIF authorization cookie service.
+     * An environmental property for the URI of the access cookie service.
      */
     public static final String AUTH_COOKIE_SERVICE = "AUTH_COOKIE_SERVICE";
 
     /**
-     * An environmental property for the URI of a IIIF authorization token service.
+     * An environmental property for the URI of the access token service.
      */
     public static final String AUTH_TOKEN_SERVICE = "AUTH_TOKEN_SERVICE";
 
     /**
-     * An environmental property for the URI of an item access service.
+     * An environmental property for the URI of the Sinai access token service.
      */
-    public static final String AUTH_ACCESS_SERVICE = "AUTH_ACCESS_SERVICE";
+    public static final String SINAI_AUTH_TOKEN_SERVICE = "SINAI_AUTH_TOKEN_SERVICE";
+
+    /**
+     * An environmental property for the URI of an item access mode service.
+     */
+    public static final String AUTH_ACCESS_MODE_SERVICE = "AUTH_ACCESS_MODE_SERVICE";
 
     /**
      * An environmental property for the scale constraint to use for tiered access.
@@ -46,9 +51,14 @@ public final class Config {
     private URI myTokenService;
 
     /**
-     * A configured access service.
+     * A configured Sinai token service.
      */
-    private URI myAccessService;
+    private URI mySinaiTokenService;
+
+    /**
+     * A configured access mode service.
+     */
+    private URI myAccessModeService;
 
     /**
      * A configured tiered access scale constraint.
@@ -63,7 +73,8 @@ public final class Config {
 
         myCookieService = getURI(Config.AUTH_COOKIE_SERVICE);
         myTokenService = getURI(Config.AUTH_TOKEN_SERVICE);
-        myAccessService = getURI(Config.AUTH_ACCESS_SERVICE);
+        mySinaiTokenService = getURI(Config.SINAI_AUTH_TOKEN_SERVICE);
+        myAccessModeService = getURI(Config.AUTH_ACCESS_MODE_SERVICE);
     }
 
     /**
@@ -71,16 +82,18 @@ public final class Config {
      *
      * @param aCookieService A cookie service URI
      * @param aTokenService A token service URI
-     * @param aAccessService An access service URI
+     * @param aSinaiTokenService A Sinai token service URI
+     * @param aAccessModeService An access mode service URI
      * @param aScaleConstraint A scale constraint for tiered access
      */
-    public Config(final URI aCookieService, final URI aTokenService, final URI aAccessService,
-            final String aScaleConstraint) {
+    public Config(final URI aCookieService, final URI aTokenService, final URI aSinaiTokenService,
+            final URI aAccessModeService, final String aScaleConstraint) {
         setScaleConstraint(aScaleConstraint);
 
         myCookieService = aCookieService;
         myTokenService = aTokenService;
-        myAccessService = aAccessService;
+        mySinaiTokenService = aSinaiTokenService;
+        myAccessModeService = aAccessModeService;
     }
 
     /**
@@ -124,22 +137,42 @@ public final class Config {
     }
 
     /**
-     * Gets the configured access service URI.
+     * Gets the configured Sinai token service URI.
      *
-     * @return The configured access service URI
+     * @return The configured Sinai token service URI
      */
-    public URI getAccessService() {
-        return myAccessService;
+    public URI getSinaiTokenService() {
+        return mySinaiTokenService;
     }
 
     /**
-     * Sets an access service URI.
+     * Sets the Sinai token service URI.
      *
-     * @param aAccessService An access service
+     * @param aSinaiTokenService A Sinai token service
      * @return This configuration
      */
-    public Config setAccessService(final URI aAccessService) {
-        myAccessService = aAccessService;
+    public Config setSinaiTokenService(final URI aSinaiTokenService) {
+        mySinaiTokenService = aSinaiTokenService;
+        return this;
+    }
+
+    /**
+     * Gets the configured access mode service URI.
+     *
+     * @return The configured access mode service URI
+     */
+    public URI getAccessModeService() {
+        return myAccessModeService;
+    }
+
+    /**
+     * Sets an access mode service URI.
+     *
+     * @param aAccessModeService An access mode service
+     * @return This configuration
+     */
+    public Config setAccessModeService(final URI aAccessModeService) {
+        myAccessModeService = aAccessModeService;
         return this;
     }
 
