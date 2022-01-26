@@ -72,7 +72,7 @@ For instance, on a Linux machine:
       -e "AUTH_ACCESS_SERVICE=https://example.com/access" \
       -e "AUTH_COOKIE_SERVICE=https://example.com/cookie" \
       -e "AUTH_TOKEN_SERVICE=https://example.com/token" \
-      -e "SINAI_AUTH_TOKEN_SERVICE=http://example.com/token/sinai" \
+      -e "SINAI_AUTH_TOKEN_SERVICE=https://example.com/token/sinai" \
       -e "TIERED_ACCESS_SCALE_CONSTRAINT=1:2" \
       -e "DELEGATE_URL=https://repo1.maven.org/maven2/edu/ucla/library/cantaloupe-auth-delegate/0.0.1/cantaloupe-auth-delegate-0.0.1.jar" \
       --name melon -v "$PWD/src/test/resources/images:/imageroot" uclalibrary/cantaloupe:5.0.4-0
