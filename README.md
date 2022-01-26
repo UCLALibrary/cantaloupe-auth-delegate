@@ -52,7 +52,7 @@ Once all manual testing is completed, the containers can be stopped by typing: [
 
 There are some environmental properties that are supplied automatically for the tests, but which need to be explicitly set on a production (test, dev, etc.) system. These include:
 
-    AUTH_ACCESS_MODE_SERVICE="https://example.com/access"
+    AUTH_ACCESS_SERVICE="https://example.com/access"
     AUTH_COOKIE_SERVICE="https://example.com/cookie"
     AUTH_TOKEN_SERVICE="https://example.com/token"
     SINAI_AUTH_TOKEN_SERVICE="http://example.com/token/sinai"
@@ -69,7 +69,7 @@ To use the deployed Jar file with a [docker-cantaloupe](https://github.com/uclal
 For instance, on a Linux machine:
 
     docker run -p 8182:8182 -e "CANTALOUPE_ENDPOINT_ADMIN_SECRET=secret" -e "CANTALOUPE_ENDPOINT_ADMIN_ENABLED=true" \
-      -e "AUTH_ACCESS_MODE_SERVICE=https://example.com/access" \
+      -e "AUTH_ACCESS_SERVICE=https://example.com/access" \
       -e "AUTH_COOKIE_SERVICE=https://example.com/cookie" \
       -e "AUTH_TOKEN_SERVICE=https://example.com/token" \
       -e "SINAI_AUTH_TOKEN_SERVICE=http://example.com/token/sinai" \

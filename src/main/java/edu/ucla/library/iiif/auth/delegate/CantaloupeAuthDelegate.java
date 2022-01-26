@@ -88,7 +88,7 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
         final int[] scaleConstraint = getContext().getScaleConstraint();
 
         // Cache the result of the access level HTTP request
-        myAccessMode = new HauthItem(myConfig.getAccessModeService(), getContext().getIdentifier()).getAccessMode();
+        myAccessMode = new HauthItem(myConfig.getAccessService(), getContext().getIdentifier()).getAccessMode();
 
         switch (myAccessMode) {
             case OPEN:

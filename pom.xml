@@ -219,7 +219,7 @@
           <environmentVariables>
             <!-- Test service IPs outside the containers use the host's default IP address -->
             <!-- The Auth Access Mode Service URI will have the ID to be checked appended onto the end -->
-            <AUTH_ACCESS_MODE_SERVICE>http://0.0.0.0:${test.hauth.port}/access</AUTH_ACCESS_MODE_SERVICE>
+            <AUTH_ACCESS_SERVICE>http://0.0.0.0:${test.hauth.port}/access</AUTH_ACCESS_SERVICE>
             <AUTH_COOKIE_SERVICE>http://0.0.0.0:${test.hauth.port}/cookie</AUTH_COOKIE_SERVICE>
             <AUTH_TOKEN_SERVICE>http://0.0.0.0:${test.hauth.port}/token</AUTH_TOKEN_SERVICE>
             <SINAI_AUTH_TOKEN_SERVICE>http://0.0.0.0:${test.hauth.port}/token/sinai</SINAI_AUTH_TOKEN_SERVICE>
@@ -371,7 +371,7 @@
                   <!-- Delegate configuration -->
                   <!-- Test service IPs inside the containers use the Docker bridge IP address -->
                   <!-- The Auth Access Mode Service URI will have the ID to be checked appended onto the end -->
-                  <AUTH_ACCESS_MODE_SERVICE>http://172.17.0.1:${test.hauth.port}/access</AUTH_ACCESS_MODE_SERVICE>
+                  <AUTH_ACCESS_SERVICE>http://172.17.0.1:${test.hauth.port}/access</AUTH_ACCESS_SERVICE>
                   <AUTH_COOKIE_SERVICE>http://172.17.0.1:${test.hauth.port}/cookie</AUTH_COOKIE_SERVICE>
                   <AUTH_TOKEN_SERVICE>http://172.17.0.1:${test.hauth.port}/token</AUTH_TOKEN_SERVICE>
                   <SINAI_AUTH_TOKEN_SERVICE>http://172.17.0.1:${test.hauth.port}/token/sinai</SINAI_AUTH_TOKEN_SERVICE>

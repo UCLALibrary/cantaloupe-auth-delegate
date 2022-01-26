@@ -44,13 +44,13 @@ public class ConfigTest {
         final URI cookieService = Config.getURI(Config.AUTH_COOKIE_SERVICE);
         final URI tokenService = Config.getURI(Config.AUTH_TOKEN_SERVICE);
         final URI sinaiTokenService = Config.getURI(Config.SINAI_AUTH_TOKEN_SERVICE);
-        final URI accessService = Config.getURI(Config.AUTH_ACCESS_MODE_SERVICE);
+        final URI accessService = Config.getURI(Config.AUTH_ACCESS_SERVICE);
         final Config config = new Config();
 
         assertEquals(cookieService, config.getCookieService());
         assertEquals(tokenService, config.getTokenService());
         assertEquals(sinaiTokenService, config.getSinaiTokenService());
-        assertEquals(accessService, config.getAccessModeService());
+        assertEquals(accessService, config.getAccessService());
         assertEquals(2, config.getScaleConstraint().length);
     }
 
@@ -64,7 +64,7 @@ public class ConfigTest {
         final URI cookieService = Config.getURI(Config.AUTH_COOKIE_SERVICE);
         final URI tokenService = Config.getURI(Config.AUTH_TOKEN_SERVICE);
         final URI sinaiTokenService = Config.getURI(Config.SINAI_AUTH_TOKEN_SERVICE);
-        final URI accessService = Config.getURI(Config.AUTH_ACCESS_MODE_SERVICE);
+        final URI accessService = Config.getURI(Config.AUTH_ACCESS_SERVICE);
         final String scaleConstraint = Config.getString(Config.TIERED_ACCESS_SCALE_CONSTRAINT);
         final Config config =
                 new Config(cookieService, tokenService, sinaiTokenService, accessService, scaleConstraint);
@@ -73,7 +73,7 @@ public class ConfigTest {
         assertEquals(cookieService, config.getCookieService());
         assertEquals(tokenService, config.getTokenService());
         assertEquals(sinaiTokenService, config.getSinaiTokenService());
-        assertEquals(accessService, config.getAccessModeService());
+        assertEquals(accessService, config.getAccessService());
         assertEquals(2, scaleConstraints.length);
         assertEquals(1, scaleConstraints[0]);
         assertEquals(2, scaleConstraints[1]);
@@ -118,9 +118,9 @@ public class ConfigTest {
      * @throws URISyntaxException If the service URI is invalid
      */
     @Test
-    public final void testSetAccessModeService() {
-        final URI accessModeService = Config.getURI(Config.AUTH_ACCESS_MODE_SERVICE);
-        assertEquals(accessModeService, myConfig.setAccessModeService(accessModeService).getAccessModeService());
+    public final void testSetAccessService() {
+        final URI accessService = Config.getURI(Config.AUTH_ACCESS_SERVICE);
+        assertEquals(accessService, myConfig.setAccessService(accessService).getAccessService());
     }
 
     /**
@@ -163,8 +163,8 @@ public class ConfigTest {
      */
     @Test
     public final void testGetURI() {
-        final String expectedURI = System.getenv(Config.AUTH_ACCESS_MODE_SERVICE);
-        assertEquals(expectedURI, Config.getURI(Config.AUTH_ACCESS_MODE_SERVICE).toString());
+        final String expectedURI = System.getenv(Config.AUTH_ACCESS_SERVICE);
+        assertEquals(expectedURI, Config.getURI(Config.AUTH_ACCESS_SERVICE).toString());
     }
 
 }
