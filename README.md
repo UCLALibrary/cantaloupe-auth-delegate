@@ -55,7 +55,7 @@ There are some environmental properties that are supplied automatically for the 
     AUTH_ACCESS_SERVICE="https://example.com/access"
     AUTH_COOKIE_SERVICE="https://example.com/cookie"
     AUTH_TOKEN_SERVICE="https://example.com/token"
-    SINAI_AUTH_TOKEN_SERVICE="http://example.com/token/sinai"
+    SINAI_AUTH_TOKEN_SERVICE="https://example.com/token/sinai"
     TIERED_ACCESS_SCALE_CONSTRAINT="1:2"
 
 ### Deploying the Delegate
