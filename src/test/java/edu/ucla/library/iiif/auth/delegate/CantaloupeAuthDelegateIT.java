@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import info.freelibrary.util.HTTP;
@@ -226,7 +225,6 @@ public class CantaloupeAuthDelegateIT {
      * @throws InterruptedException If there is trouble sending the HTTP request(s)
      */
     @Test
-    @Ignore
     public final void testNoAccessResponseAllOrNothingNoTokenV2() throws IOException, InterruptedException {
         final HttpResponse<String> response = sendImageInfoRequest(ALL_OR_NOTHING_ACCESS_IMAGE, null, 2);
         final String expectedResponse =
@@ -329,7 +327,6 @@ public class CantaloupeAuthDelegateIT {
      * @throws InterruptedException If there is trouble sending the HTTP request(s)
      */
     @Test
-    @Ignore
     public final void testNoAccessResponseAllOrNothingNoTokenV3() throws IOException, InterruptedException {
         final HttpResponse<String> response = sendImageInfoRequest(ALL_OR_NOTHING_ACCESS_IMAGE, null, 3);
         final String expectedResponse =
