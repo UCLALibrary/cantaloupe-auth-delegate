@@ -322,6 +322,7 @@ public class CantaloupeAuthDelegateIT {
          * @throws IOException If there is trouble sending the HTTP request(s) or getting the expected response
          * @throws InterruptedException If there is trouble sending the HTTP request(s)
          */
+        @Test
         public abstract void testFullAccessResponseOpenUnauthorized() throws IOException, InterruptedException;
 
         /**
@@ -330,6 +331,7 @@ public class CantaloupeAuthDelegateIT {
          * @throws IOException If there is trouble sending the HTTP request(s) or getting the expected response response
          * @throws InterruptedException If there is trouble sending the HTTP request(s)
          */
+        @Test
         public abstract void testFullAccessResponseTieredAuthorized() throws IOException, InterruptedException;
 
         /**
@@ -338,6 +340,7 @@ public class CantaloupeAuthDelegateIT {
          * @throws IOException If there is trouble sending the HTTP request(s) or getting the expected response response
          * @throws InterruptedException If there is trouble sending the HTTP request(s)
          */
+        @Test
         public abstract void testDegradedAccessResponseTieredUnauthorized() throws IOException, InterruptedException;
 
         /**
@@ -348,6 +351,7 @@ public class CantaloupeAuthDelegateIT {
          *         response
          * @throws InterruptedException If there is trouble sending the HTTP request(s)
          */
+        @Test
         public abstract void testErrorResponseTieredDisallowedScale() throws IOException, InterruptedException;
 
         /**
@@ -357,6 +361,7 @@ public class CantaloupeAuthDelegateIT {
          * @throws IOException If there is trouble sending the HTTP request(s) or getting the expected response response
          * @throws InterruptedException If there is trouble sending the HTTP request(s)
          */
+        @Test
         public abstract void testFullAccessResponseAllOrNothingAuthorized() throws IOException, InterruptedException;
 
         /**
@@ -366,6 +371,7 @@ public class CantaloupeAuthDelegateIT {
          * @throws IOException If there is trouble sending the HTTP request(s) or getting the expected response response
          * @throws InterruptedException If there is trouble sending the HTTP request(s)
          */
+        @Test
         public abstract void testNoAccessResponseAllOrNothingUnauthorized() throws IOException, InterruptedException;
     }
 
@@ -375,7 +381,6 @@ public class CantaloupeAuthDelegateIT {
     public static class InformationRequestV2IT extends AbstractRequestIT {
 
         @Override
-        @Test
         public final void testFullAccessResponseOpenUnauthorized() throws IOException, InterruptedException {
             final HttpResponse<String> response = sendImageInfoRequest(OPEN_ACCESS_IMAGE, null, 2);
             final String expectedResponse =
@@ -386,7 +391,6 @@ public class CantaloupeAuthDelegateIT {
         }
 
         @Override
-        @Test
         public final void testFullAccessResponseTieredAuthorized() throws IOException, InterruptedException {
             final HttpResponse<String> response = sendImageInfoRequest(TIERED_ACCESS_IMAGE, ACCESS_TOKEN, 2);
             final String expectedResponse =
@@ -397,7 +401,6 @@ public class CantaloupeAuthDelegateIT {
         }
 
         @Override
-        @Test
         public final void testDegradedAccessResponseTieredUnauthorized() throws IOException, InterruptedException {
             final HttpResponse<String> response = sendImageInfoRequest(TIERED_ACCESS_IMAGE, null, 2);
             final String expectedResponse =
@@ -408,7 +411,6 @@ public class CantaloupeAuthDelegateIT {
         }
 
         @Override
-        @Test
         public final void testErrorResponseTieredDisallowedScale() throws IOException, InterruptedException {
             final HttpResponse<String> response =
                     sendImageInfoRequest(TIERED_ACCESS_IMAGE_DEGRADED_UNAVAILABLE, null, 2);
@@ -417,7 +419,6 @@ public class CantaloupeAuthDelegateIT {
         }
 
         @Override
-        @Test
         public final void testFullAccessResponseAllOrNothingAuthorized() throws IOException, InterruptedException {
             final HttpResponse<String> response =
                     sendImageInfoRequest(ALL_OR_NOTHING_ACCESS_IMAGE, SINAI_ACCESS_TOKEN, 2);
@@ -429,7 +430,6 @@ public class CantaloupeAuthDelegateIT {
         }
 
         @Override
-        @Test
         public final void testNoAccessResponseAllOrNothingUnauthorized() throws IOException, InterruptedException {
             final HttpResponse<String> response = sendImageInfoRequest(ALL_OR_NOTHING_ACCESS_IMAGE, null, 2);
             final String expectedResponse =
@@ -446,7 +446,6 @@ public class CantaloupeAuthDelegateIT {
     public static class InformationRequestV3IT extends AbstractRequestIT {
 
         @Override
-        @Test
         public final void testFullAccessResponseOpenUnauthorized() throws IOException, InterruptedException {
             final HttpResponse<String> response = sendImageInfoRequest(OPEN_ACCESS_IMAGE, null, 3);
             final String expectedResponse =
@@ -457,7 +456,6 @@ public class CantaloupeAuthDelegateIT {
         }
 
         @Override
-        @Test
         public final void testFullAccessResponseTieredAuthorized() throws IOException, InterruptedException {
             final HttpResponse<String> response = sendImageInfoRequest(TIERED_ACCESS_IMAGE, ACCESS_TOKEN, 3);
             final String expectedResponse =
@@ -468,7 +466,6 @@ public class CantaloupeAuthDelegateIT {
         }
 
         @Override
-        @Test
         public final void testDegradedAccessResponseTieredUnauthorized() throws IOException, InterruptedException {
             final HttpResponse<String> response = sendImageInfoRequest(TIERED_ACCESS_IMAGE, null, 3);
             final String expectedResponse =
@@ -479,7 +476,6 @@ public class CantaloupeAuthDelegateIT {
         }
 
         @Override
-        @Test
         public final void testErrorResponseTieredDisallowedScale() throws IOException, InterruptedException {
             final HttpResponse<String> response =
                     sendImageInfoRequest(TIERED_ACCESS_IMAGE_DEGRADED_UNAVAILABLE, null, 3);
@@ -488,7 +484,6 @@ public class CantaloupeAuthDelegateIT {
         }
 
         @Override
-        @Test
         public final void testFullAccessResponseAllOrNothingAuthorized() throws IOException, InterruptedException {
             final HttpResponse<String> response =
                     sendImageInfoRequest(ALL_OR_NOTHING_ACCESS_IMAGE, SINAI_ACCESS_TOKEN, 3);
@@ -500,7 +495,6 @@ public class CantaloupeAuthDelegateIT {
         }
 
         @Override
-        @Test
         public final void testNoAccessResponseAllOrNothingUnauthorized() throws IOException, InterruptedException {
             final HttpResponse<String> response = sendImageInfoRequest(ALL_OR_NOTHING_ACCESS_IMAGE, null, 3);
             final String expectedResponse =
@@ -517,7 +511,6 @@ public class CantaloupeAuthDelegateIT {
     public static class ImageRequestV2IT extends AbstractRequestIT {
 
         @Override
-        @Test
         public void testFullAccessResponseOpenUnauthorized() throws IOException, InterruptedException {
             final HttpResponse<byte[]> response = sendImageRequest(OPEN_ACCESS_IMAGE, null, 2);
             final byte[] expectedResponse = getExpectedImage(OPEN_ACCESS_IMAGE);
@@ -548,7 +541,6 @@ public class CantaloupeAuthDelegateIT {
         }
 
         @Override
-        @Test
         public void testFullAccessResponseAllOrNothingAuthorized() throws IOException, InterruptedException {
             final String cookieHeader = StringUtils.format(SINAI_COOKIE_REQUEST_HEADER_TEMPLATE,
                     TEST_SINAI_AUTHENTICATED_3DAY, TEST_INITIALIZATION_VECTOR);
@@ -560,7 +552,6 @@ public class CantaloupeAuthDelegateIT {
         }
 
         @Override
-        @Test
         public void testNoAccessResponseAllOrNothingUnauthorized() throws IOException, InterruptedException {
             final HttpResponse<byte[]> response = sendImageRequest(ALL_OR_NOTHING_ACCESS_IMAGE, null, 2);
 
@@ -574,7 +565,6 @@ public class CantaloupeAuthDelegateIT {
     public static class ImageRequestV3IT extends AbstractRequestIT {
 
         @Override
-        @Test
         public void testFullAccessResponseOpenUnauthorized() throws IOException, InterruptedException {
             final HttpResponse<byte[]> response = sendImageRequest(OPEN_ACCESS_IMAGE, null, 3);
             final byte[] expectedResponse = getExpectedImage(OPEN_ACCESS_IMAGE);
@@ -605,7 +595,6 @@ public class CantaloupeAuthDelegateIT {
         }
 
         @Override
-        @Test
         public void testFullAccessResponseAllOrNothingAuthorized() throws IOException, InterruptedException {
             final String cookieHeader = StringUtils.format(SINAI_COOKIE_REQUEST_HEADER_TEMPLATE,
                     TEST_SINAI_AUTHENTICATED_3DAY, TEST_INITIALIZATION_VECTOR);
@@ -617,7 +606,6 @@ public class CantaloupeAuthDelegateIT {
         }
 
         @Override
-        @Test
         public void testNoAccessResponseAllOrNothingUnauthorized() throws IOException, InterruptedException {
             final HttpResponse<byte[]> response = sendImageRequest(ALL_OR_NOTHING_ACCESS_IMAGE, null, 3);
 
