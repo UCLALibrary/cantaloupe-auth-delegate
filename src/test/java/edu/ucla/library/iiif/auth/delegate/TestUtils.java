@@ -4,11 +4,15 @@ package edu.ucla.library.iiif.auth.delegate;
 import static info.freelibrary.util.Constants.EMPTY;
 
 import java.io.IOException;
+import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.TreeMap;
+import java.util.stream.Stream;
+
+import org.apache.http.HttpHeaders;
 
 import org.junit.Assert;
 
@@ -19,6 +23,8 @@ import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import info.freelibrary.iiif.presentation.v3.MediaType;
 
 /**
  * Utilities to assist with testing.
@@ -35,6 +41,19 @@ public final class TestUtils {
      */
     private TestUtils() {
         // This is intentionally left empty
+    }
+
+    /**
+     * Checks whether the response has at least one of the given content types.
+     *
+     * @param aResponse The HTTP response to test
+     * @param aMediaTypes The array of content types that the response is checked for
+     * @return Whether or not at least one of the content types is included in the response's Content-Type header
+     */
+    public static boolean responseHasContentType(final HttpResponse<?> aResponse, final MediaType... aMediaTypes) {
+        final String contentTypeHeader = aResponse.headers().firstValue(HttpHeaders.CONTENT_TYPE).get();
+
+        return Stream.of(aMediaTypes).map(String::valueOf).anyMatch(contentTypeHeader::contains);
     }
 
     /**

@@ -23,6 +23,8 @@ import org.junit.Test;
 import info.freelibrary.util.HTTP;
 import info.freelibrary.util.StringUtils;
 
+import info.freelibrary.iiif.presentation.v3.MediaType;
+
 import edu.ucla.library.iiif.auth.delegate.hauth.HauthToken;
 
 /**
@@ -387,6 +389,8 @@ public class CantaloupeAuthDelegateIT {
                     getExpectedImageInfo(OPEN_ACCESS_IMAGE, FULL_ACCESS_RESPONSE_TEMPLATE_V2, 2);
 
             Assert.assertEquals(HTTP.OK, response.statusCode());
+            Assert.assertTrue(TestUtils.responseHasContentType(response, MediaType.APPLICATION_JSON,
+                    MediaType.APPLICATION_LD_PLUS_JSON));
             TestUtils.assertEquals(expectedResponse, response.body());
         }
 
@@ -397,6 +401,8 @@ public class CantaloupeAuthDelegateIT {
                     getExpectedImageInfo(TIERED_ACCESS_IMAGE, FULL_ACCESS_RESPONSE_TEMPLATE_V2, 2);
 
             Assert.assertEquals(HTTP.OK, response.statusCode());
+            Assert.assertTrue(TestUtils.responseHasContentType(response, MediaType.APPLICATION_JSON,
+                    MediaType.APPLICATION_LD_PLUS_JSON));
             TestUtils.assertEquals(expectedResponse, response.body());
         }
 
@@ -407,6 +413,8 @@ public class CantaloupeAuthDelegateIT {
                     getExpectedImageInfo(TIERED_ACCESS_IMAGE_DEGRADED_VALID, DEGRADED_ACCESS_RESPONSE_TEMPLATE_V2, 2);
 
             Assert.assertEquals(HTTP.OK, response.statusCode());
+            Assert.assertTrue(TestUtils.responseHasContentType(response, MediaType.APPLICATION_JSON,
+                    MediaType.APPLICATION_LD_PLUS_JSON));
             TestUtils.assertEquals(expectedResponse, response.body());
         }
 
@@ -416,6 +424,8 @@ public class CantaloupeAuthDelegateIT {
                     sendImageInfoRequest(TIERED_ACCESS_IMAGE_DEGRADED_UNAVAILABLE, null, 2);
 
             Assert.assertEquals(HTTP.FORBIDDEN, response.statusCode());
+            Assert.assertFalse(TestUtils.responseHasContentType(response, MediaType.APPLICATION_JSON,
+                    MediaType.APPLICATION_LD_PLUS_JSON));
         }
 
         @Override
@@ -426,6 +436,8 @@ public class CantaloupeAuthDelegateIT {
                     getExpectedImageInfo(ALL_OR_NOTHING_ACCESS_IMAGE, FULL_ACCESS_RESPONSE_TEMPLATE_V2, 2);
 
             Assert.assertEquals(HTTP.OK, response.statusCode());
+            Assert.assertTrue(TestUtils.responseHasContentType(response, MediaType.APPLICATION_JSON,
+                    MediaType.APPLICATION_LD_PLUS_JSON));
             TestUtils.assertEquals(expectedResponse, response.body());
         }
 
@@ -436,6 +448,8 @@ public class CantaloupeAuthDelegateIT {
                     getExpectedImageInfo(ALL_OR_NOTHING_ACCESS_IMAGE, NO_ACCESS_RESPONSE_TEMPLATE_V2, 2);
 
             Assert.assertEquals(HTTP.UNAUTHORIZED, response.statusCode());
+            Assert.assertTrue(TestUtils.responseHasContentType(response, MediaType.APPLICATION_JSON,
+                    MediaType.APPLICATION_LD_PLUS_JSON));
             TestUtils.assertEquals(expectedResponse, response.body());
         }
     }
@@ -452,6 +466,8 @@ public class CantaloupeAuthDelegateIT {
                     getExpectedImageInfo(OPEN_ACCESS_IMAGE, FULL_ACCESS_RESPONSE_TEMPLATE_V3, 3);
 
             Assert.assertEquals(HTTP.OK, response.statusCode());
+            Assert.assertTrue(TestUtils.responseHasContentType(response, MediaType.APPLICATION_JSON,
+                    MediaType.APPLICATION_LD_PLUS_JSON));
             TestUtils.assertEquals(expectedResponse, response.body());
         }
 
@@ -462,6 +478,8 @@ public class CantaloupeAuthDelegateIT {
                     getExpectedImageInfo(TIERED_ACCESS_IMAGE, FULL_ACCESS_RESPONSE_TEMPLATE_V3, 3);
 
             Assert.assertEquals(HTTP.OK, response.statusCode());
+            Assert.assertTrue(TestUtils.responseHasContentType(response, MediaType.APPLICATION_JSON,
+                    MediaType.APPLICATION_LD_PLUS_JSON));
             TestUtils.assertEquals(expectedResponse, response.body());
         }
 
@@ -472,6 +490,8 @@ public class CantaloupeAuthDelegateIT {
                     getExpectedImageInfo(TIERED_ACCESS_IMAGE_DEGRADED_VALID, DEGRADED_ACCESS_RESPONSE_TEMPLATE_V3, 3);
 
             Assert.assertEquals(HTTP.OK, response.statusCode());
+            Assert.assertTrue(TestUtils.responseHasContentType(response, MediaType.APPLICATION_JSON,
+                    MediaType.APPLICATION_LD_PLUS_JSON));
             TestUtils.assertEquals(expectedResponse, response.body());
         }
 
@@ -481,6 +501,8 @@ public class CantaloupeAuthDelegateIT {
                     sendImageInfoRequest(TIERED_ACCESS_IMAGE_DEGRADED_UNAVAILABLE, null, 3);
 
             Assert.assertEquals(HTTP.FORBIDDEN, response.statusCode());
+            Assert.assertFalse(TestUtils.responseHasContentType(response, MediaType.APPLICATION_JSON,
+                    MediaType.APPLICATION_LD_PLUS_JSON));
         }
 
         @Override
@@ -491,6 +513,8 @@ public class CantaloupeAuthDelegateIT {
                     getExpectedImageInfo(ALL_OR_NOTHING_ACCESS_IMAGE, FULL_ACCESS_RESPONSE_TEMPLATE_V3, 3);
 
             Assert.assertEquals(HTTP.OK, response.statusCode());
+            Assert.assertTrue(TestUtils.responseHasContentType(response, MediaType.APPLICATION_JSON,
+                    MediaType.APPLICATION_LD_PLUS_JSON));
             TestUtils.assertEquals(expectedResponse, response.body());
         }
 
@@ -501,6 +525,8 @@ public class CantaloupeAuthDelegateIT {
                     getExpectedImageInfo(ALL_OR_NOTHING_ACCESS_IMAGE, NO_ACCESS_RESPONSE_TEMPLATE_V3, 3);
 
             Assert.assertEquals(HTTP.UNAUTHORIZED, response.statusCode());
+            Assert.assertTrue(TestUtils.responseHasContentType(response, MediaType.APPLICATION_JSON,
+                    MediaType.APPLICATION_LD_PLUS_JSON));
             TestUtils.assertEquals(expectedResponse, response.body());
         }
     }
@@ -516,6 +542,7 @@ public class CantaloupeAuthDelegateIT {
             final byte[] expectedResponse = getExpectedImage(OPEN_ACCESS_IMAGE);
 
             Assert.assertEquals(HTTP.OK, response.statusCode());
+            Assert.assertTrue(TestUtils.responseHasContentType(response, MediaType.IMAGE_TIFF));
             Assert.assertTrue(Arrays.equals(expectedResponse, response.body()));
         }
 
@@ -548,6 +575,7 @@ public class CantaloupeAuthDelegateIT {
             final byte[] expectedResponse = getExpectedImage(ALL_OR_NOTHING_ACCESS_IMAGE);
 
             Assert.assertEquals(HTTP.OK, response.statusCode());
+            Assert.assertTrue(TestUtils.responseHasContentType(response, MediaType.IMAGE_TIFF));
             Assert.assertTrue(Arrays.equals(expectedResponse, response.body()));
         }
 
@@ -556,6 +584,7 @@ public class CantaloupeAuthDelegateIT {
             final HttpResponse<byte[]> response = sendImageRequest(ALL_OR_NOTHING_ACCESS_IMAGE, null, 2);
 
             Assert.assertEquals(HTTP.UNAUTHORIZED, response.statusCode());
+            Assert.assertFalse(TestUtils.responseHasContentType(response, MediaType.IMAGE_TIFF));
         }
     }
 
@@ -570,6 +599,7 @@ public class CantaloupeAuthDelegateIT {
             final byte[] expectedResponse = getExpectedImage(OPEN_ACCESS_IMAGE);
 
             Assert.assertEquals(HTTP.OK, response.statusCode());
+            Assert.assertTrue(TestUtils.responseHasContentType(response, MediaType.IMAGE_TIFF));
             Assert.assertTrue(Arrays.equals(expectedResponse, response.body()));
         }
 
@@ -602,6 +632,7 @@ public class CantaloupeAuthDelegateIT {
             final byte[] expectedResponse = getExpectedImage(ALL_OR_NOTHING_ACCESS_IMAGE);
 
             Assert.assertEquals(HTTP.OK, response.statusCode());
+            Assert.assertTrue(TestUtils.responseHasContentType(response, MediaType.IMAGE_TIFF));
             Assert.assertTrue(Arrays.equals(expectedResponse, response.body()));
         }
 
@@ -610,6 +641,7 @@ public class CantaloupeAuthDelegateIT {
             final HttpResponse<byte[]> response = sendImageRequest(ALL_OR_NOTHING_ACCESS_IMAGE, null, 3);
 
             Assert.assertEquals(HTTP.UNAUTHORIZED, response.statusCode());
+            Assert.assertFalse(TestUtils.responseHasContentType(response, MediaType.IMAGE_TIFF));
         }
     }
 }
