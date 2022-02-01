@@ -86,9 +86,10 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
     private AccessMode myAccessMode;
 
     /**
-     * Whether or not it is unnecessary to include IIIF authentication services in the info.json response.
+     * If the current request is for info.json, whether or not a IIIF authentication service description should be
+     * included in the response.
      */
-    private boolean myClientAlreadyHasFullAccess = true;
+    private boolean myInfoJsonShouldContainAuth;
 
     /**
      * Creates a new Cantaloupe authorization delegate.
@@ -124,7 +125,7 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
                 } else if (Arrays.equals(configuredScaleConstraint, scaleConstraint)) {
                     // Degraded image request for the size we allow access to
                     // (Probably via an earlier HTTP 302 redirect)
-                    myClientAlreadyHasFullAccess = false;
+                    myInfoJsonShouldContainAuth = true;
 
                     return true;
                 } else if (scaleConstraint[0] != scaleConstraint[1]) {
@@ -148,7 +149,7 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
                             return true;
                         } else {
                             // No access
-                            myClientAlreadyHasFullAccess = false;
+                            myInfoJsonShouldContainAuth = true;
 
                             return Map.of(STATUS_CODE, Long.valueOf(HTTP.UNAUTHORIZED), //
                                     CHALLENGE, WWW_AUTHENTICATE_HEADER_VALUE);
@@ -191,10 +192,10 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
      * @return A map of additional response keys
      */
     private Map<String, Object> getExtraInformationResponseKeys() {
-        if (myClientAlreadyHasFullAccess) {
-            return Collections.emptyMap();
-        } else {
+        if (myInfoJsonShouldContainAuth) {
             return Collections.singletonMap(JsonKeys.SERVICE, List.of(getAuthServices()));
+        } else {
+            return Collections.emptyMap();
         }
     }
 
