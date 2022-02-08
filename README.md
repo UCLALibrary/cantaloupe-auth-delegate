@@ -52,9 +52,10 @@ Once all manual testing is completed, the containers can be stopped by typing: [
 
 There are some environmental properties that are supplied automatically for the tests, but which need to be explicitly set on a production (test, dev, etc.) system. These include:
 
-    AUTH_ACCESS_SERVICE="https://example.com/access/{}"
+    AUTH_ACCESS_SERVICE="https://example.com/access"
     AUTH_COOKIE_SERVICE="https://example.com/cookie"
     AUTH_TOKEN_SERVICE="https://example.com/token"
+    SINAI_AUTH_TOKEN_SERVICE="https://example.com/token/sinai"
     TIERED_ACCESS_SCALE_CONSTRAINT="1:2"
 
 ### Deploying the Delegate
@@ -68,7 +69,11 @@ To use the deployed Jar file with a [docker-cantaloupe](https://github.com/uclal
 For instance, on a Linux machine:
 
     docker run -p 8182:8182 -e "CANTALOUPE_ENDPOINT_ADMIN_SECRET=secret" -e "CANTALOUPE_ENDPOINT_ADMIN_ENABLED=true" \
-      -e "AUTH_COOKIE_SERVICE=https://example.com/cookie" -e "AUTH_TOKEN_SERVICE=https://example.com/token"
+      -e "AUTH_ACCESS_SERVICE=https://example.com/access" \
+      -e "AUTH_COOKIE_SERVICE=https://example.com/cookie" \
+      -e "AUTH_TOKEN_SERVICE=https://example.com/token" \
+      -e "SINAI_AUTH_TOKEN_SERVICE=https://example.com/token/sinai" \
+      -e "TIERED_ACCESS_SCALE_CONSTRAINT=1:2" \
       -e "DELEGATE_URL=https://repo1.maven.org/maven2/edu/ucla/library/cantaloupe-auth-delegate/0.0.1/cantaloupe-auth-delegate-0.0.1.jar" \
       --name melon -v "$PWD/src/test/resources/images:/imageroot" uclalibrary/cantaloupe:5.0.4-0
 

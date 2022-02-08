@@ -33,7 +33,7 @@ public class ConfigTest {
             throw new ConfigException(details, fakeService);
         }
 
-        myConfig = new Config(fakeServiceURI, fakeServiceURI, fakeServiceURI, "1:2");
+        myConfig = new Config(fakeServiceURI, fakeServiceURI, fakeServiceURI, fakeServiceURI, "1:2");
     }
 
     /**
@@ -43,12 +43,14 @@ public class ConfigTest {
     public final void testConfig() {
         final URI cookieService = Config.getURI(Config.AUTH_COOKIE_SERVICE);
         final URI tokenService = Config.getURI(Config.AUTH_TOKEN_SERVICE);
+        final URI sinaiTokenService = Config.getURI(Config.SINAI_AUTH_TOKEN_SERVICE);
         final URI accessService = Config.getURI(Config.AUTH_ACCESS_SERVICE);
         final Config config = new Config();
 
-        assertEquals(accessService, config.getAccessService());
-        assertEquals(tokenService, config.getTokenService());
         assertEquals(cookieService, config.getCookieService());
+        assertEquals(tokenService, config.getTokenService());
+        assertEquals(sinaiTokenService, config.getSinaiTokenService());
+        assertEquals(accessService, config.getAccessService());
         assertEquals(2, config.getScaleConstraint().length);
     }
 
@@ -58,24 +60,27 @@ public class ConfigTest {
      * @throws ConfigException If the configuration wasn't able to be successfully constructed.
      */
     @Test
-    public final void testConfigURIURIURIString() {
+    public final void testConfigUriUriUriUriString() {
         final URI cookieService = Config.getURI(Config.AUTH_COOKIE_SERVICE);
         final URI tokenService = Config.getURI(Config.AUTH_TOKEN_SERVICE);
+        final URI sinaiTokenService = Config.getURI(Config.SINAI_AUTH_TOKEN_SERVICE);
         final URI accessService = Config.getURI(Config.AUTH_ACCESS_SERVICE);
         final String scaleConstraint = Config.getString(Config.TIERED_ACCESS_SCALE_CONSTRAINT);
-        final Config config = new Config(cookieService, tokenService, accessService, scaleConstraint);
+        final Config config =
+                new Config(cookieService, tokenService, sinaiTokenService, accessService, scaleConstraint);
         final int[] scaleConstraints = config.getScaleConstraint();
 
-        assertEquals(accessService, config.getAccessService());
-        assertEquals(tokenService, config.getTokenService());
         assertEquals(cookieService, config.getCookieService());
+        assertEquals(tokenService, config.getTokenService());
+        assertEquals(sinaiTokenService, config.getSinaiTokenService());
+        assertEquals(accessService, config.getAccessService());
         assertEquals(2, scaleConstraints.length);
         assertEquals(1, scaleConstraints[0]);
         assertEquals(2, scaleConstraints[1]);
     }
 
     /**
-     * Tests getting/setting the cookie service configuration.
+     * Tests getting/setting the cookie service configuration for items with all-or-nothing access.
      *
      * @throws URISyntaxException If the service URI is invalid
      */
@@ -97,7 +102,18 @@ public class ConfigTest {
     }
 
     /**
-     * Tests getting/setting the access service configuration.
+     * Tests getting/setting the Sinai token service configuration.
+     *
+     * @throws URISyntaxException If the service URI is invalid
+     */
+    @Test
+    public final void testSetSinaiTokenService() {
+        final URI sinaiTokenService = Config.getURI(Config.SINAI_AUTH_TOKEN_SERVICE);
+        assertEquals(sinaiTokenService, myConfig.setSinaiTokenService(sinaiTokenService).getSinaiTokenService());
+    }
+
+    /**
+     * Tests getting/setting the access mode service configuration.
      *
      * @throws URISyntaxException If the service URI is invalid
      */
@@ -131,7 +147,7 @@ public class ConfigTest {
     /**
      * Tests getting a configuration property from the package level <code>getString()</code> method.
      *
-     * @throws NullPointerException If the access string property has not been set properly
+     * @throws NullPointerException If the property has not been set properly
      */
     @Test
     public final void testGetString() {
@@ -142,7 +158,7 @@ public class ConfigTest {
     /**
      * Tests getting a configuration property from the package level <code>getURI()</code> method.
      *
-     * @throws URISyntaxException If the configured access service string isn't a valid URI
+     * @throws URISyntaxException If the configured access mode service string isn't a valid URI
      * @throws NullPointerException If the access string property has not been set properly
      */
     @Test

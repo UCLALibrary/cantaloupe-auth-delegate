@@ -1,0 +1,72 @@
+{
+  "@context": "http://iiif.io/api/image/3/context.json",
+  "id": "{}",
+  "type": "ImageService3",
+  "protocol": "http://iiif.io/api/image",
+  "profile": "level2",
+  "width": 2000,
+  "height": 2000,
+  "maxArea": 4000000,
+  "sizes": [
+    {
+      "width": 125,
+      "height": 125
+    },
+    {
+      "width": 250,
+      "height": 250
+    },
+    {
+      "width": 500,
+      "height": 500
+    },
+    {
+      "width": 1000,
+      "height": 1000
+    },
+    {
+      "width": 2000,
+      "height": 2000
+    }
+  ],
+  "tiles": [
+    {
+      "width": 512,
+      "height": 512,
+      "scaleFactors": [
+        1,
+        2,
+        4,
+        8,
+        16
+      ]
+    }
+  ],
+  "extraQualities": [
+    "bitonal",
+    "color",
+    "gray"
+  ],
+  "extraFormats": [
+    "tif",
+    "gif"
+  ],
+  "extraFeatures": [
+    "baseUriRedirect",
+    "canonicalLinkHeader",
+    "cors",
+    "jsonldMediaType",
+    "mirroring",
+    "profileLinkHeader",
+    "regionByPct",
+    "regionByPx",
+    "regionSquare",
+    "rotationArbitrary",
+    "rotationBy90s",
+    "sizeByConfinedWh",
+    "sizeByH",
+    "sizeByPct",
+    "sizeByW",
+    "sizeByWh"
+  ]
+}
