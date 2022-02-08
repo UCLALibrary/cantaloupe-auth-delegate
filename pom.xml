@@ -59,7 +59,7 @@
 
   <properties>
     <!-- Dependency versions -->
-    <jiiify.presentation.version>0.10.0</jiiify.presentation.version>
+    <jiiify.presentation.version>0.10.1</jiiify.presentation.version>
     <freelib.utils.version>3.0.1</freelib.utils.version>
     <cantaloupe.version>5.0.4</cantaloupe.version>
 
@@ -527,6 +527,6 @@
   <parent>
     <artifactId>freelib-parent</artifactId>
     <groupId>info.freelibrary</groupId>
-    <version>7.1.2</version>
+    <version>7.2.0</version>
   </parent>
 </project>
