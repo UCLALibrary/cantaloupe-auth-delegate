@@ -1,3 +1,4 @@
+
 package edu.ucla.library.iiif.auth.delegate.hauth;
 
 import com.fasterxml.jackson.annotation.JsonGetter;

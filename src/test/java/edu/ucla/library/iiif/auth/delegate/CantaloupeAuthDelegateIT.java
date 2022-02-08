@@ -373,8 +373,7 @@ public class CantaloupeAuthDelegateIT {
      * @throws IOException If there is trouble reading the test file
      */
     private static String getExpectedDescriptionResource(final String aImageID, final File aResponseTemplate,
-            final int aImageApiVersion)
-                    throws IOException {
+            final int aImageApiVersion) throws IOException {
         final Map<String, String> envProperties = System.getenv();
         final String descriptionResourceID =
                 getDescriptionResourceID(envProperties.get(TestConfig.IIIF_URL_PROPERTY), aImageApiVersion, aImageID);
