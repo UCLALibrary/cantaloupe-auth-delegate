@@ -1,6 +1,11 @@
 
 package edu.ucla.library.iiif.auth.delegate;
 
+import java.io.IOException;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.net.http.HttpResponse.BodyHandlers;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
@@ -10,6 +15,7 @@ import java.util.Optional;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import info.freelibrary.util.HTTP;
 import info.freelibrary.util.Logger;
@@ -44,6 +50,22 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
     private static final TypeReference<Map<String, Object>> MAP_TYPE_REFERENCE = new TypeReference<>() {};
 
     /**
+     * The name of the Cookie HTTP request header.
+     */
+    private static final String COOKIE = "Cookie";
+
+    /**
+     * The Map key, for a {@link #preAuthorize} return value, used to indicate that a WWW-Authenticate HTTP header
+     * should be included in the response.
+     */
+    private static final String CHALLENGE = "challenge";
+
+    /**
+     * The value of the WWW-Authenticate HTTP response header.
+     */
+    private static final String WWW_AUTHENTICATE_HEADER_VALUE = "Bearer charset=\"UTF-8\"";
+
+    /**
      * The status code key for {@link #preAuthorize} responses.
      */
     private static final String STATUS_CODE = "status_code";
@@ -64,9 +86,10 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
     private AccessMode myAccessMode;
 
     /**
-     * Whether or not it is unnecessary to include IIIF authentication services in the info.json response.
+     * If the current request is for info.json, whether or not a IIIF authentication service description should be
+     * included in the response.
      */
-    private boolean myClientAlreadyHasFullAccess = true;
+    private boolean myInfoJsonShouldContainAuth;
 
     /**
      * Creates a new Cantaloupe authorization delegate.
@@ -102,7 +125,7 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
                 } else if (Arrays.equals(configuredScaleConstraint, scaleConstraint)) {
                     // Degraded image request for the size we allow access to
                     // (Probably via an earlier HTTP 302 redirect)
-                    myClientAlreadyHasFullAccess = false;
+                    myInfoJsonShouldContainAuth = true;
 
                     return true;
                 } else if (scaleConstraint[0] != scaleConstraint[1]) {
@@ -117,17 +140,30 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
                 }
             case ALL_OR_NOTHING:
             default:
-                final Optional<HauthSinaiToken> sinaiToken = getSinaiToken(authorizationHeader);
+                switch (getRequestType()) {
+                    case INFORMATION:
+                        final Optional<HauthSinaiToken> sinaiToken = getSinaiToken(authorizationHeader);
 
-                if (sinaiToken.isPresent() && sinaiToken.get().hasSinaiAffiliate()) {
-                    // Full access
-                    return true;
-                } else {
-                    // No access
-                    myClientAlreadyHasFullAccess = false;
+                        if (sinaiToken.isPresent() && sinaiToken.get().hasSinaiAffiliate()) {
+                            // Full access
+                            return true;
+                        } else {
+                            // No access
+                            myInfoJsonShouldContainAuth = true;
 
-                    return Map.of(STATUS_CODE, Long.valueOf(HTTP.UNAUTHORIZED), //
-                            "challenge", "Bearer charset=\"UTF-8\"");
+                            return Map.of(STATUS_CODE, Long.valueOf(HTTP.UNAUTHORIZED), //
+                                    CHALLENGE, WWW_AUTHENTICATE_HEADER_VALUE);
+                        }
+                    case IMAGE:
+                    default:
+                        final String cookieHeader = getContext().getRequestHeaders().get(COOKIE);
+
+                        if (cookieHeader != null && hasSinaiAffiliateCookies(cookieHeader)) {
+                            return true;
+                        } else {
+                            return Map.of(STATUS_CODE, Long.valueOf(HTTP.UNAUTHORIZED), //
+                                    CHALLENGE, WWW_AUTHENTICATE_HEADER_VALUE);
+                        }
                 }
         }
     }
@@ -156,10 +192,10 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
      * @return A map of additional response keys
      */
     private Map<String, Object> getExtraInformationResponseKeys() {
-        if (myClientAlreadyHasFullAccess) {
-            return Collections.emptyMap();
-        } else {
+        if (myInfoJsonShouldContainAuth) {
             return Collections.singletonMap(JsonKeys.SERVICE, List.of(getAuthServices()));
+        } else {
+            return Collections.emptyMap();
         }
     }
 
@@ -189,6 +225,29 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
         }
 
         return JSON.convertValue(cookieService, MAP_TYPE_REFERENCE);
+    }
+
+    /**
+     * Determines whether or not the client can prove Sinai affiliation.
+     *
+     * @param aCookieHeader The Cookie HTTP request header
+     * @return Whether or not the cookies prove Sinai affiliation
+     */
+    private boolean hasSinaiAffiliateCookies(final String aCookieHeader) {
+        final HttpRequest request =
+                HttpRequest.newBuilder().uri(myConfig.getSinaiTokenService()).header(COOKIE, aCookieHeader).build();
+        final ObjectMapper mapper = new ObjectMapper();
+
+        try {
+            final HttpResponse<String> response = HttpClient.newHttpClient().send(request, BodyHandlers.ofString());
+            final String encodedAccessToken = mapper.readTree(response.body()).get("accessToken").asText();
+            final String innerToken = new String(Base64.getDecoder().decode(encodedAccessToken));
+
+            return mapper.readTree(innerToken).get("sinaiAffiliate").asBoolean();
+        } catch (final InterruptedException | IOException details) {
+            // Should we retry?
+            return false;
+        }
     }
 
     /**
@@ -241,5 +300,25 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
         }
 
         return Optional.empty();
+    }
+
+    /**
+     * The different types of requests that this delegate may process.
+     */
+    private enum RequestType {
+        INFORMATION, IMAGE;
+    }
+
+    /**
+     * Gets the request type of the current request.
+     *
+     * @return Whether this request is for an info.json or an image
+     */
+    private RequestType getRequestType() {
+        if (getContext().getRequestURI().endsWith("info.json")) {
+            return RequestType.INFORMATION;
+        } else {
+            return RequestType.IMAGE;
+        }
     }
 }
