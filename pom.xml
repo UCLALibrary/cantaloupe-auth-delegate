@@ -73,7 +73,7 @@
     <hauth.container.version>0.0.4</hauth.container.version>
     <psql.container.version>12.7-alpine</psql.container.version>
     <redis.container.version>6.2.5-alpine</redis.container.version>
-    <cantaloupe.container.version>nightly</cantaloupe.container.version>
+    <cantaloupe.container.version>5.0.4-1</cantaloupe.container.version>
 
     <!-- Build-time options -->
     <update.sql>false</update.sql>
