@@ -134,22 +134,18 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
         }
     }
 
-    /**
-     * Authorizes a request after having read an image.
-     */
-    @Override
-    public Object authorize() {
-        return true;
-    }
-
     @Override
     public Map<String, Object> getExtraIIIF2InformationResponseKeys() {
-        return getExtraInformationResponseKeys();
+        return getExtraIIIF3InformationResponseKeys();
     }
 
     @Override
     public Map<String, Object> getExtraIIIF3InformationResponseKeys() {
-        return getExtraInformationResponseKeys();
+        if (myInfoJsonShouldContainAuth) {
+            return Collections.singletonMap(JsonKeys.SERVICE, List.of(getAuthServices()));
+        }
+
+        return Collections.emptyMap();
     }
 
     /**
@@ -251,19 +247,6 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
 
         // No access
         return Map.of(STATUS_CODE, Long.valueOf(HTTP.UNAUTHORIZED), CHALLENGE, WWW_AUTHENTICATE_HEADER_VALUE);
-    }
-
-    /**
-     * Gets additional image information response keys to add to the response.
-     *
-     * @return A map of additional response keys
-     */
-    private Map<String, Object> getExtraInformationResponseKeys() {
-        if (myInfoJsonShouldContainAuth) {
-            return Collections.singletonMap(JsonKeys.SERVICE, List.of(getAuthServices()));
-        }
-
-        return Collections.emptyMap();
     }
 
     /**

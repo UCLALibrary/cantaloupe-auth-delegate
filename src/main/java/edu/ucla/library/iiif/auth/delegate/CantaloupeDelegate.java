@@ -16,7 +16,7 @@ public class CantaloupeDelegate extends AbstractJavaDelegate implements JavaDele
 
     @Override
     public Object authorize() {
-        return null;
+        return true;
     }
 
     @Override
