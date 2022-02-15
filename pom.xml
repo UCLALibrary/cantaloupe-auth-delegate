@@ -437,6 +437,7 @@
             <goals>
               <goal>shade</goal>
             </goals>
+            <!-- Cf. https://issues.apache.org/jira/browse/MSHADE-366 re: target/classes warnings -->
             <configuration>
               <dependencyReducedPomLocation>${basedir}/.dependency-reduced-pom.xml</dependencyReducedPomLocation>
               <minimizeJar>true</minimizeJar>

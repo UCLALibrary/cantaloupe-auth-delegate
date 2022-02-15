@@ -19,6 +19,11 @@ public class HauthToken {
     public static final String HEADER = "Authorization";
 
     /**
+     * A JSON key for the campus network information.
+     */
+    public static final String CAMPUS_NETWORK_KEY = "campusNetwork";
+
+    /**
      * The type of authorization token this is.
      */
     @JsonIgnore
@@ -28,11 +33,6 @@ public class HauthToken {
      * A JSON key for the Hauth version.
      */
     private static final String HAUTH_VERSION_KEY = "version";
-
-    /**
-     * A JSON key for the campus network information.
-     */
-    private static final String CAMPUS_NETWORK_KEY = "campusNetwork";
 
     /**
      * The version of Hauth that sent this token.

@@ -2,6 +2,7 @@
 package edu.ucla.library.iiif.auth.delegate;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -15,6 +16,7 @@ import java.util.Optional;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import info.freelibrary.util.HTTP;
@@ -99,16 +101,12 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
     }
 
     /**
-     * Authorizes a request for image information. Not all image information will necessarily be calculated at this
-     * point in time.
+     * Authorizes a request before having read an image. Not all image information will necessarily be calculated at
+     * this point in time.
      */
     @Override
-    @SuppressWarnings("PMD.CyclomaticComplexity")
     public Object preAuthorize() {
         final String authorizationHeader = getContext().getRequestHeaders().get(HauthToken.HEADER);
-        final int[] configuredScaleConstraint = myConfig.getScaleConstraint();
-        // For full image requests, this array value is equal to { 1, 1 }
-        final int[] scaleConstraint = getContext().getScaleConstraint();
 
         // Cache the result of the access level HTTP request
         myAccessMode = new HauthItem(myConfig.getAccessService(), getContext().getIdentifier()).getAccessMode();
@@ -117,59 +115,27 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
             case OPEN:
                 return true;
             case TIERED:
-                final Optional<HauthToken> token = getToken(authorizationHeader);
-
-                if (token.isPresent() && token.get().isValidIP()) {
-                    // Full access
-                    return true;
-                } else if (Arrays.equals(configuredScaleConstraint, scaleConstraint)) {
-                    // Degraded image request for the size we allow access to
-                    // (Probably via an earlier HTTP 302 redirect)
-                    myInfoJsonShouldContainAuth = true;
-
-                    return true;
-                } else if (scaleConstraint[0] != scaleConstraint[1]) {
-                    // Degraded image request for a size we don't allow access to; return HTTP 403
-                    return false;
-                } else {
-                    // Full image request, but non-campus IP
-                    // (The long types make a difference here, apparently)
-                    return Map.of(STATUS_CODE, Long.valueOf(HTTP.FOUND), //
-                            "scale_numerator", (long) configuredScaleConstraint[0], //
-                            "scale_denominator", (long) configuredScaleConstraint[1]);
+                switch (getRequestType()) {
+                    case INFORMATION:
+                        return getTieredInfo(authorizationHeader);
+                    case IMAGE:
+                    default:
+                        return getTieredImage();
                 }
             case ALL_OR_NOTHING:
             default:
                 switch (getRequestType()) {
                     case INFORMATION:
-                        final Optional<HauthSinaiToken> sinaiToken = getSinaiToken(authorizationHeader);
-
-                        if (sinaiToken.isPresent() && sinaiToken.get().hasSinaiAffiliate()) {
-                            // Full access
-                            return true;
-                        } else {
-                            // No access
-                            myInfoJsonShouldContainAuth = true;
-
-                            return Map.of(STATUS_CODE, Long.valueOf(HTTP.UNAUTHORIZED), //
-                                    CHALLENGE, WWW_AUTHENTICATE_HEADER_VALUE);
-                        }
+                        return getAllOrNothingInfo(authorizationHeader);
                     case IMAGE:
                     default:
-                        final String cookieHeader = getContext().getRequestHeaders().get(COOKIE);
-
-                        if (cookieHeader != null && hasSinaiAffiliateCookies(cookieHeader)) {
-                            return true;
-                        } else {
-                            return Map.of(STATUS_CODE, Long.valueOf(HTTP.UNAUTHORIZED), //
-                                    CHALLENGE, WWW_AUTHENTICATE_HEADER_VALUE);
-                        }
+                        return getAllOrNothingImage();
                 }
         }
     }
 
     /**
-     * Authorizes a request for an image.
+     * Authorizes a request after having read an image.
      */
     @Override
     public Object authorize() {
@@ -187,6 +153,107 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
     }
 
     /**
+     * Gets the response for a tiered image information request.
+     *
+     * @param aAuthHeader An authorization header
+     * @return True, false, or a map with scaling information
+     */
+    private Object getTieredInfo(final String aAuthHeader) {
+        // For full image requests, this array value is equal to { 1, 1 }
+        final int[] scaleConstraint = getContext().getScaleConstraint();
+        final int[] configuredScaleConstraint = myConfig.getScaleConstraint();
+        final Optional<HauthToken> token = getToken(aAuthHeader);
+
+        // Full access from an on-campus IP
+        if (token.isPresent() && token.get().isValidIP()) {
+            return true;
+        }
+
+        // Degraded image request for the size we allow (probably via an earlier HTTP 302 redirect)
+        if (Arrays.equals(configuredScaleConstraint, scaleConstraint)) {
+            return myInfoJsonShouldContainAuth = true;
+        }
+
+        // Degraded image request for a size we don't allow access to; return HTTP 403
+        if (scaleConstraint[0] != scaleConstraint[1]) {
+            return false;
+        }
+
+        // Full image request, but non-campus IP (the long types make a difference here, apparently)
+        return Map.of(STATUS_CODE, Long.valueOf(HTTP.FOUND), //
+                "scale_numerator", (long) configuredScaleConstraint[0], //
+                "scale_denominator", (long) configuredScaleConstraint[1]);
+    }
+
+    /**
+     * Gets the response for a IIIF tiered image request.
+     *
+     * @return True or a map with an unauthorized status response
+     */
+    private Object getTieredImage() {
+        final String cookieHeader = getContext().getRequestHeaders().get(COOKIE);
+
+        if (cookieHeader != null) {
+            try {
+                final byte[] cookie = Base64.getDecoder().decode(cookieHeader);
+                final JsonNode cookieNode = new ObjectMapper().readTree(cookie);
+                final JsonNode accessAllowed = cookieNode.get(HauthToken.CAMPUS_NETWORK_KEY);
+
+                // Cookie found, access allowed
+                if (accessAllowed != null && accessAllowed.asBoolean()) {
+                    return true;
+                }
+
+                // Cookie found, but it's not what we were expecting
+                LOGGER.error(MessageCodes.CAD_008, cookie);
+            } catch (final IOException details) {
+                LOGGER.error(details, details.getMessage());
+            }
+        }
+
+        // No access without a cookie
+        return Map.of(STATUS_CODE, Long.valueOf(HTTP.UNAUTHORIZED), CHALLENGE, WWW_AUTHENTICATE_HEADER_VALUE);
+    }
+
+    /**
+     * Gets the response for a all-or-nothing image information request.
+     *
+     * @param aAuthHeader An authorization header
+     * @return True or a map with an unauthorized status response
+     */
+    private Object getAllOrNothingInfo(final String aAuthHeader) {
+        final Optional<HauthSinaiToken> sinaiToken = getSinaiToken(aAuthHeader);
+
+        // Full access is granted with a valid token
+        if (sinaiToken.isPresent() && sinaiToken.get().hasSinaiAffiliate()) {
+            return true;
+        }
+
+        // Auth services should be added to the info.json
+        myInfoJsonShouldContainAuth = true;
+
+        // No access without a token
+        return Map.of(STATUS_CODE, Long.valueOf(HTTP.UNAUTHORIZED), CHALLENGE, WWW_AUTHENTICATE_HEADER_VALUE);
+    }
+
+    /**
+     * Gets the response for an all-or-nothing image request.
+     *
+     * @return True or a map with an unauthorized status response
+     */
+    private Object getAllOrNothingImage() {
+        final String cookieHeader = getContext().getRequestHeaders().get(COOKIE);
+
+        // Full access
+        if (cookieHeader != null && hasSinaiAffiliateCookies(cookieHeader)) {
+            return true;
+        }
+
+        // No access
+        return Map.of(STATUS_CODE, Long.valueOf(HTTP.UNAUTHORIZED), CHALLENGE, WWW_AUTHENTICATE_HEADER_VALUE);
+    }
+
+    /**
      * Gets additional image information response keys to add to the response.
      *
      * @return A map of additional response keys
@@ -194,9 +261,9 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
     private Map<String, Object> getExtraInformationResponseKeys() {
         if (myInfoJsonShouldContainAuth) {
             return Collections.singletonMap(JsonKeys.SERVICE, List.of(getAuthServices()));
-        } else {
-            return Collections.emptyMap();
         }
+
+        return Collections.emptyMap();
     }
 
     /**
@@ -215,12 +282,12 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
                 break;
             case ALL_OR_NOTHING:
                 tokenService = new AuthTokenService1(myConfig.getSinaiTokenService());
-                // https://github.com/ksclarke/jiiify-presentation/issues/155
+                // Cf. https://github.com/ksclarke/jiiify-presentation/issues/155
                 cookieService = new AuthCookieService1(Profile.EXTERNAL, "http://example.com", null, tokenService);
                 break;
             case OPEN:
             default:
-                // This branch should never be reached, but just in case
+                // The OPEN and default branches should not be reachable, but are included here just in case
                 return Collections.emptyMap();
         }
 
@@ -234,8 +301,8 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
      * @return Whether or not the cookies prove Sinai affiliation
      */
     private boolean hasSinaiAffiliateCookies(final String aCookieHeader) {
-        final HttpRequest request =
-                HttpRequest.newBuilder().uri(myConfig.getSinaiTokenService()).header(COOKIE, aCookieHeader).build();
+        final URI tokenService = myConfig.getSinaiTokenService();
+        final HttpRequest request = HttpRequest.newBuilder().uri(tokenService).header(COOKIE, aCookieHeader).build();
         final ObjectMapper mapper = new ObjectMapper();
 
         try {
@@ -245,8 +312,8 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
 
             return mapper.readTree(innerToken).get("sinaiAffiliate").asBoolean();
         } catch (final InterruptedException | IOException details) {
-            // Should we retry?
-            return false;
+            LOGGER.error(details, details.getMessage());
+            return false; // QUESTION: Should we retry?
         }
     }
 
@@ -317,8 +384,8 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
     private RequestType getRequestType() {
         if (getContext().getRequestURI().endsWith("info.json")) {
             return RequestType.INFORMATION;
-        } else {
-            return RequestType.IMAGE;
         }
+
+        return RequestType.IMAGE;
     }
 }
