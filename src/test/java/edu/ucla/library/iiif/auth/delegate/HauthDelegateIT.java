@@ -29,9 +29,9 @@ import info.freelibrary.iiif.presentation.v3.MediaType;
 import edu.ucla.library.iiif.auth.delegate.hauth.HauthToken;
 
 /**
- * A test of CantaloupeAuthDelegate.
+ * A test of HauthDelegate.
  */
-public class CantaloupeAuthDelegateIT {
+public class HauthDelegateIT {
 
     /**
      * The template for image URLs. The slots are:

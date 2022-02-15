@@ -12,7 +12,7 @@ import edu.illinois.library.cantaloupe.delegate.JavaDelegate;
  * A generic class for a Cantaloupe authorization delegate. This is really just a no-op implementation so our real
  * delegate doesn't have to implement a bunch of methods it's not going to use.
  */
-public class GenericAuthDelegate extends AbstractJavaDelegate implements JavaDelegate {
+public class CantaloupeDelegate extends AbstractJavaDelegate implements JavaDelegate {
 
     @Override
     public Object authorize() {

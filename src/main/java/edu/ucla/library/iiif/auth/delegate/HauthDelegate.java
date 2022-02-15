@@ -39,12 +39,12 @@ import edu.illinois.library.cantaloupe.delegate.JavaDelegate;
 /**
  * A Cantaloupe delegate for handing IIIF Auth interactions.
  */
-public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaDelegate {
+public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
 
     /**
      * The authorization delegate's logger.
      */
-    private static final Logger LOGGER = LoggerFactory.getLogger(CantaloupeAuthDelegate.class, MessageCodes.BUNDLE);
+    private static final Logger LOGGER = LoggerFactory.getLogger(HauthDelegate.class, MessageCodes.BUNDLE);
 
     /**
      * A Jackson TypeReference for a Map.
@@ -96,7 +96,7 @@ public class CantaloupeAuthDelegate extends GenericAuthDelegate implements JavaD
     /**
      * Creates a new Cantaloupe authorization delegate.
      */
-    public CantaloupeAuthDelegate() {
+    public HauthDelegate() {
         myConfig = new Config();
     }
 
