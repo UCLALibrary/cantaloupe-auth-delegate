@@ -13,7 +13,7 @@
   <entry key="CAD-005">Making {} request: {}</entry>
   <entry key="CAD-006">Supplied scale constraint isn't a valid numeric value: {}</entry>
   <entry key="CAD-007">ID returned by authorization lookup doesn't match requested: {} != {}</entry>
-  <entry key="CAD-008"></entry><!-- This can be used for a new message -->
+  <entry key="CAD-008">Cookie found, but it didn't grant access: {}</entry>
   <entry key="CAD-009">The code to indicate whether access is allowed was not expected: {} [{}]</entry>
   <entry key="CAD-010"></entry><!-- This can be used for a new message -->
 

@@ -19,8 +19,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
-
-import org.junit.Ignore;
 import org.junit.Test;
 
 import info.freelibrary.util.HTTP;
@@ -31,9 +29,9 @@ import info.freelibrary.iiif.presentation.v3.MediaType;
 import edu.ucla.library.iiif.auth.delegate.hauth.HauthToken;
 
 /**
- * A test of CantaloupeAuthDelegate.
+ * A test of HauthDelegate.
  */
-public class CantaloupeAuthDelegateIT {
+public class HauthDelegateIT {
 
     /**
      * The template for image URLs. The slots are:
@@ -239,8 +237,8 @@ public class CantaloupeAuthDelegateIT {
     private static String getExpectedImageInfo(final String aImageID, final File aResponseTemplate,
             final int aImageApiVersion) throws IOException {
         final Map<String, String> envProperties = System.getenv();
-        final String descriptionResourceID =
-                getImageInfoURL(envProperties.get(TestConfig.IIIF_URL_PROPERTY), aImageApiVersion, aImageID);
+        final String baseURL = envProperties.get(TestConfig.IIIF_URL_PROPERTY);
+        final String descriptionResourceID = getImageInfoURL(baseURL, aImageApiVersion, aImageID);
         final List<String> responseTemplateURLs = new ArrayList<>();
 
         responseTemplateURLs.add(descriptionResourceID);
@@ -551,23 +549,31 @@ public class CantaloupeAuthDelegateIT {
 
         @Override
         @Test
-        @Ignore
         public void testFullAccessResponseTieredAuthorized() throws IOException, InterruptedException {
-            // TODO Auto-generated method stub
+            final HttpResponse<byte[]> response = sendImageRequest(TIERED_ACCESS_IMAGE, ACCESS_TOKEN, 2);
+            final byte[] expectedResponse = getExpectedImage(TIERED_ACCESS_IMAGE);
+
+            assertEquals(HTTP.OK, response.statusCode());
+            assertTrue(TestUtils.responseHasContentType(response, MediaType.IMAGE_TIFF));
+            assertTrue(Arrays.equals(expectedResponse, response.body()));
         }
 
         @Override
         @Test
-        @Ignore
         public void testDegradedAccessResponseTieredUnauthorized() throws IOException, InterruptedException {
-            // TODO Auto-generated method stub
+            final HttpResponse<byte[]> response = sendImageRequest(TIERED_ACCESS_IMAGE, null, 2);
+
+            assertEquals(HTTP.UNAUTHORIZED, response.statusCode());
+            assertFalse(TestUtils.responseHasContentType(response, MediaType.IMAGE_TIFF));
         }
 
         @Override
         @Test
-        @Ignore
         public void testErrorResponseTieredDisallowedScale() throws IOException, InterruptedException {
-            // TODO Auto-generated method stub
+            final HttpResponse<byte[]> response = sendImageRequest(TIERED_ACCESS_IMAGE_DEGRADED_UNAVAILABLE, null, 2);
+
+            assertEquals(HTTP.UNAUTHORIZED, response.statusCode());
+            assertFalse(TestUtils.responseHasContentType(response, MediaType.IMAGE_TIFF));
         }
 
         @Override
@@ -608,23 +614,31 @@ public class CantaloupeAuthDelegateIT {
 
         @Override
         @Test
-        @Ignore
         public void testFullAccessResponseTieredAuthorized() throws IOException, InterruptedException {
-            // TODO Auto-generated method stub
+            final HttpResponse<byte[]> response = sendImageRequest(TIERED_ACCESS_IMAGE, ACCESS_TOKEN, 3);
+            final byte[] expectedResponse = getExpectedImage(TIERED_ACCESS_IMAGE);
+
+            assertEquals(HTTP.OK, response.statusCode());
+            assertTrue(TestUtils.responseHasContentType(response, MediaType.IMAGE_TIFF));
+            assertTrue(Arrays.equals(expectedResponse, response.body()));
         }
 
         @Override
         @Test
-        @Ignore
         public void testDegradedAccessResponseTieredUnauthorized() throws IOException, InterruptedException {
-            // TODO Auto-generated method stub
+            final HttpResponse<byte[]> response = sendImageRequest(TIERED_ACCESS_IMAGE, null, 3);
+
+            assertEquals(HTTP.UNAUTHORIZED, response.statusCode());
+            assertFalse(TestUtils.responseHasContentType(response, MediaType.IMAGE_TIFF));
         }
 
         @Override
         @Test
-        @Ignore
         public void testErrorResponseTieredDisallowedScale() throws IOException, InterruptedException {
-            // TODO Auto-generated method stub
+            final HttpResponse<byte[]> response = sendImageRequest(TIERED_ACCESS_IMAGE_DEGRADED_UNAVAILABLE, null, 3);
+
+            assertEquals(HTTP.UNAUTHORIZED, response.statusCode());
+            assertFalse(TestUtils.responseHasContentType(response, MediaType.IMAGE_TIFF));
         }
 
         @Override

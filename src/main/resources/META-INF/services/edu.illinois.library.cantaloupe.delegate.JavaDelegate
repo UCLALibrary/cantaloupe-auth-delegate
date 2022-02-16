@@ -1,1 +1,1 @@
-edu.ucla.library.iiif.auth.delegate.CantaloupeAuthDelegate
+edu.ucla.library.iiif.auth.delegate.HauthDelegate
