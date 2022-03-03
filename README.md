@@ -54,7 +54,9 @@ There are some environmental properties that are supplied automatically for the 
 
     AUTH_ACCESS_SERVICE="https://example.com/access"
     AUTH_COOKIE_SERVICE="https://example.com/cookie"
+    AUTH_COOKIE_SERVICE_LABEL="UCLA Library"
     AUTH_TOKEN_SERVICE="https://example.com/token"
+    SINAI_AUTH_COOKIE_SERVICE_LABEL="Sinai Palimpsests at UCLA Library"
     SINAI_AUTH_TOKEN_SERVICE="https://example.com/token/sinai"
     TIERED_ACCESS_SCALE_CONSTRAINT="1:2"
 

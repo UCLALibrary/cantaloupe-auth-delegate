@@ -245,11 +245,13 @@ public class HauthDelegateIT {
 
         if (aResponseTemplate.equals(DEGRADED_ACCESS_RESPONSE_TEMPLATE_V2) ||
                 aResponseTemplate.equals(DEGRADED_ACCESS_RESPONSE_TEMPLATE_V3)) {
-            // The Hauth service URLs need to be added to the info.json
+            // The Hauth service URLs (and cookie service label) need to be added to the info.json
             responseTemplateURLs.add(envProperties.get(Config.AUTH_COOKIE_SERVICE));
+            responseTemplateURLs.add(envProperties.get(Config.AUTH_COOKIE_SERVICE_LABEL));
             responseTemplateURLs.add(envProperties.get(Config.AUTH_TOKEN_SERVICE));
         } else if (aResponseTemplate.equals(NO_ACCESS_RESPONSE_TEMPLATE_V2) ||
                 aResponseTemplate.equals(NO_ACCESS_RESPONSE_TEMPLATE_V3)) {
+            responseTemplateURLs.add(envProperties.get(Config.SINAI_AUTH_COOKIE_SERVICE_LABEL));
             responseTemplateURLs.add(envProperties.get(Config.SINAI_AUTH_TOKEN_SERVICE));
         }
 

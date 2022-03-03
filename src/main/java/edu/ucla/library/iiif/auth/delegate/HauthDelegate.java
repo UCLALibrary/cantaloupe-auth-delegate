@@ -261,12 +261,14 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
         switch (myAccessMode) {
             case TIERED:
                 tokenService = new AuthTokenService1(myConfig.getTokenService());
-                cookieService = new AuthCookieService1(Profile.KIOSK, myConfig.getCookieService(), null, tokenService);
+                cookieService = new AuthCookieService1(Profile.KIOSK, myConfig.getCookieService(),
+                        myConfig.getCookieServiceLabel(), tokenService);
                 break;
             case ALL_OR_NOTHING:
                 tokenService = new AuthTokenService1(myConfig.getSinaiTokenService());
                 // Cf. https://github.com/ksclarke/jiiify-presentation/issues/155
-                cookieService = new AuthCookieService1(Profile.EXTERNAL, "http://example.com", null, tokenService);
+                cookieService = new AuthCookieService1(Profile.EXTERNAL, "http://example.com",
+                        myConfig.getSinaiCookieServiceLabel(), tokenService);
                 break;
             case OPEN:
             default:
