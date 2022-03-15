@@ -550,7 +550,6 @@ public class HauthDelegateIT {
         }
 
         @Override
-        @Test
         public void testFullAccessResponseTieredAuthorized() throws IOException, InterruptedException {
             final HttpResponse<byte[]> response = sendImageRequest(TIERED_ACCESS_IMAGE, ACCESS_TOKEN, 2);
             final byte[] expectedResponse = getExpectedImage(TIERED_ACCESS_IMAGE);
@@ -561,7 +560,6 @@ public class HauthDelegateIT {
         }
 
         @Override
-        @Test
         public void testDegradedAccessResponseTieredUnauthorized() throws IOException, InterruptedException {
             final HttpResponse<byte[]> response = sendImageRequest(TIERED_ACCESS_IMAGE, null, 2);
 
@@ -570,7 +568,6 @@ public class HauthDelegateIT {
         }
 
         @Override
-        @Test
         public void testErrorResponseTieredDisallowedScale() throws IOException, InterruptedException {
             final HttpResponse<byte[]> response = sendImageRequest(TIERED_ACCESS_IMAGE_DEGRADED_UNAVAILABLE, null, 2);
 
@@ -615,7 +612,6 @@ public class HauthDelegateIT {
         }
 
         @Override
-        @Test
         public void testFullAccessResponseTieredAuthorized() throws IOException, InterruptedException {
             final HttpResponse<byte[]> response = sendImageRequest(TIERED_ACCESS_IMAGE, ACCESS_TOKEN, 3);
             final byte[] expectedResponse = getExpectedImage(TIERED_ACCESS_IMAGE);
@@ -626,7 +622,6 @@ public class HauthDelegateIT {
         }
 
         @Override
-        @Test
         public void testDegradedAccessResponseTieredUnauthorized() throws IOException, InterruptedException {
             final HttpResponse<byte[]> response = sendImageRequest(TIERED_ACCESS_IMAGE, null, 3);
 
@@ -635,7 +630,6 @@ public class HauthDelegateIT {
         }
 
         @Override
-        @Test
         public void testErrorResponseTieredDisallowedScale() throws IOException, InterruptedException {
             final HttpResponse<byte[]> response = sendImageRequest(TIERED_ACCESS_IMAGE_DEGRADED_UNAVAILABLE, null, 3);
 
