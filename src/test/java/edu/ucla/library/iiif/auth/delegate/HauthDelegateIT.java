@@ -98,12 +98,6 @@ public class HauthDelegateIT {
             "5AFF80488740353F8A11B99C7A493D871807521908500772B92E4F8FC919E305A607ADB714B22EF08D2C22FC08C8A6EC";
 
     /**
-     * The Cookie header template for Sinai image requests.
-     */
-    private static final String SINAI_COOKIE_REQUEST_HEADER_TEMPLATE =
-            "sinai_authenticated_3day={}; initialization_vector={}";
-
-    /**
      * The id of the non-restricted image.
      */
     private static final String OPEN_ACCESS_IMAGE = "test-open.tif";
@@ -170,6 +164,11 @@ public class HauthDelegateIT {
             new File("src/test/resources/json/test-no-access-v3-info.json");
 
     /**
+     * The value that we initialize Hauth's {@code origins} table with (via src/test/resources/db/authzdb.sql).
+     */
+    private static final String ORIGIN = "https://client.example.com";
+
+    /**
      * An internal HTTP client.
      */
     private static final HttpClient HTTP_CLIENT =
@@ -223,6 +222,32 @@ public class HauthDelegateIT {
         }
 
         return HTTP_CLIENT.send(requestBuilder.build(), BodyHandlers.ofByteArray());
+    }
+
+    /**
+     * Obtains an access cookie header to use in image requests for tiered access items.
+     *
+     * @return The access cookie header
+     * @throws IOException If there is trouble sending the HTTP request
+     * @throws InterruptedException If there is trouble sending the HTTP request
+     */
+    private static String getAccessCookieHeader() throws IOException, InterruptedException {
+        // Send a request to Hauth to obtain an access cookie
+        final String requestURL = System.getenv(Config.AUTH_COOKIE_SERVICE) + "?origin=" + ORIGIN;
+        final HttpRequest.Builder requestBuilder = HttpRequest.newBuilder(URI.create(requestURL));
+
+        return HTTP_CLIENT.send(requestBuilder.build(), BodyHandlers.ofString()) //
+                .headers().firstValue("Set-Cookie").get();
+    }
+
+    /**
+     * Obtains an access cookie header to use in image requests for all-or-nothing access items.
+     *
+     * @return The access cookie header
+     */
+    private static String getSinaiAccessCookieHeader() {
+        return StringUtils.format("sinai_authenticated_3day={}; initialization_vector={}",
+                TEST_SINAI_AUTHENTICATED_3DAY, TEST_INITIALIZATION_VECTOR);
     }
 
     /**
@@ -550,9 +575,8 @@ public class HauthDelegateIT {
         }
 
         @Override
-        @Test
         public void testFullAccessResponseTieredAuthorized() throws IOException, InterruptedException {
-            final HttpResponse<byte[]> response = sendImageRequest(TIERED_ACCESS_IMAGE, ACCESS_TOKEN, 2);
+            final HttpResponse<byte[]> response = sendImageRequest(TIERED_ACCESS_IMAGE, getAccessCookieHeader(), 2);
             final byte[] expectedResponse = getExpectedImage(TIERED_ACCESS_IMAGE);
 
             assertEquals(HTTP.OK, response.statusCode());
@@ -561,7 +585,6 @@ public class HauthDelegateIT {
         }
 
         @Override
-        @Test
         public void testDegradedAccessResponseTieredUnauthorized() throws IOException, InterruptedException {
             final HttpResponse<byte[]> response = sendImageRequest(TIERED_ACCESS_IMAGE, null, 2);
 
@@ -570,7 +593,6 @@ public class HauthDelegateIT {
         }
 
         @Override
-        @Test
         public void testErrorResponseTieredDisallowedScale() throws IOException, InterruptedException {
             final HttpResponse<byte[]> response = sendImageRequest(TIERED_ACCESS_IMAGE_DEGRADED_UNAVAILABLE, null, 2);
 
@@ -580,9 +602,8 @@ public class HauthDelegateIT {
 
         @Override
         public void testFullAccessResponseAllOrNothingAuthorized() throws IOException, InterruptedException {
-            final String cookieHeader = StringUtils.format(SINAI_COOKIE_REQUEST_HEADER_TEMPLATE,
-                    TEST_SINAI_AUTHENTICATED_3DAY, TEST_INITIALIZATION_VECTOR);
-            final HttpResponse<byte[]> response = sendImageRequest(ALL_OR_NOTHING_ACCESS_IMAGE, cookieHeader, 2);
+            final HttpResponse<byte[]> response =
+                    sendImageRequest(ALL_OR_NOTHING_ACCESS_IMAGE, getSinaiAccessCookieHeader(), 2);
             final byte[] expectedResponse = getExpectedImage(ALL_OR_NOTHING_ACCESS_IMAGE);
 
             assertEquals(HTTP.OK, response.statusCode());
@@ -615,9 +636,8 @@ public class HauthDelegateIT {
         }
 
         @Override
-        @Test
         public void testFullAccessResponseTieredAuthorized() throws IOException, InterruptedException {
-            final HttpResponse<byte[]> response = sendImageRequest(TIERED_ACCESS_IMAGE, ACCESS_TOKEN, 3);
+            final HttpResponse<byte[]> response = sendImageRequest(TIERED_ACCESS_IMAGE, getAccessCookieHeader(), 3);
             final byte[] expectedResponse = getExpectedImage(TIERED_ACCESS_IMAGE);
 
             assertEquals(HTTP.OK, response.statusCode());
@@ -626,7 +646,6 @@ public class HauthDelegateIT {
         }
 
         @Override
-        @Test
         public void testDegradedAccessResponseTieredUnauthorized() throws IOException, InterruptedException {
             final HttpResponse<byte[]> response = sendImageRequest(TIERED_ACCESS_IMAGE, null, 3);
 
@@ -635,7 +654,6 @@ public class HauthDelegateIT {
         }
 
         @Override
-        @Test
         public void testErrorResponseTieredDisallowedScale() throws IOException, InterruptedException {
             final HttpResponse<byte[]> response = sendImageRequest(TIERED_ACCESS_IMAGE_DEGRADED_UNAVAILABLE, null, 3);
 
@@ -645,9 +663,8 @@ public class HauthDelegateIT {
 
         @Override
         public void testFullAccessResponseAllOrNothingAuthorized() throws IOException, InterruptedException {
-            final String cookieHeader = StringUtils.format(SINAI_COOKIE_REQUEST_HEADER_TEMPLATE,
-                    TEST_SINAI_AUTHENTICATED_3DAY, TEST_INITIALIZATION_VECTOR);
-            final HttpResponse<byte[]> response = sendImageRequest(ALL_OR_NOTHING_ACCESS_IMAGE, cookieHeader, 3);
+            final HttpResponse<byte[]> response =
+                    sendImageRequest(ALL_OR_NOTHING_ACCESS_IMAGE, getSinaiAccessCookieHeader(), 3);
             final byte[] expectedResponse = getExpectedImage(ALL_OR_NOTHING_ACCESS_IMAGE);
 
             assertEquals(HTTP.OK, response.statusCode());

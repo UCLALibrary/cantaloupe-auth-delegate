@@ -78,6 +78,11 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
     private static final String SINGLE_SPACE_PATTERN = "\\s";
 
     /**
+     * The access token JSON key.
+     */
+    private static final String ACCESS_TOKEN = "accessToken";
+
+    /**
      * The configuration for this delegate.
      */
     private final Config myConfig;
@@ -189,22 +194,9 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
     private Object getTieredImage() {
         final String cookieHeader = getContext().getRequestHeaders().get(COOKIE);
 
-        if (cookieHeader != null) {
-            try {
-                final byte[] cookie = Base64.getDecoder().decode(cookieHeader);
-                final JsonNode cookieNode = new ObjectMapper().readTree(cookie);
-                final JsonNode accessAllowed = cookieNode.get(HauthToken.CAMPUS_NETWORK_KEY);
-
-                // Cookie found, access allowed
-                if (accessAllowed != null && accessAllowed.asBoolean()) {
-                    return true;
-                }
-
-                // Cookie found, but it's not what we were expecting
-                LOGGER.error(MessageCodes.CAD_008, cookie);
-            } catch (final IOException details) {
-                LOGGER.error(details, details.getMessage());
-            }
+        // Full access
+        if (cookieHeader != null && hasCampusNetworkCookie(cookieHeader)) {
+            return true;
         }
 
         // No access without a cookie
@@ -280,6 +272,39 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
     }
 
     /**
+     * Determines whether or not the client can prove campus network access.
+     *
+     * @param aCookieHeader The Cookie HTTP request header
+     * @return Whether or not the cookie proves campus network access
+     */
+    private boolean hasCampusNetworkCookie(final String aCookieHeader) {
+        final URI tokenService = myConfig.getTokenService();
+        final HttpRequest request = HttpRequest.newBuilder().uri(tokenService).header(COOKIE, aCookieHeader).build();
+        final ObjectMapper mapper = new ObjectMapper();
+
+        try {
+            final HttpResponse<String> response = HttpClient.newHttpClient().send(request, BodyHandlers.ofString());
+            final JsonNode body = mapper.readTree(response.body());
+
+            if (body.has(ACCESS_TOKEN)) {
+                final String encodedAccessToken = body.get(ACCESS_TOKEN).asText();
+                final String accessToken = new String(Base64.getDecoder().decode(encodedAccessToken));
+                final boolean accessAllowed = mapper.readTree(accessToken).get("campusNetwork").asBoolean();
+
+                if (!accessAllowed) {
+                    // Cookie found, but it's not what we were expecting
+                    LOGGER.error(MessageCodes.CAD_008, aCookieHeader);
+                }
+                return accessAllowed;
+            }
+            return false;
+        } catch (final InterruptedException | IOException details) {
+            LOGGER.error(details, details.getMessage());
+            return false; // QUESTION: Should we retry?
+        }
+    }
+
+    /**
      * Determines whether or not the client can prove Sinai affiliation.
      *
      * @param aCookieHeader The Cookie HTTP request header
@@ -292,10 +317,15 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
 
         try {
             final HttpResponse<String> response = HttpClient.newHttpClient().send(request, BodyHandlers.ofString());
-            final String encodedAccessToken = mapper.readTree(response.body()).get("accessToken").asText();
-            final String innerToken = new String(Base64.getDecoder().decode(encodedAccessToken));
+            final JsonNode body = mapper.readTree(response.body());
 
-            return mapper.readTree(innerToken).get("sinaiAffiliate").asBoolean();
+            if (body.has(ACCESS_TOKEN)) {
+                final String encodedAccessToken = body.get(ACCESS_TOKEN).asText();
+                final String accessToken = new String(Base64.getDecoder().decode(encodedAccessToken));
+
+                return mapper.readTree(accessToken).get("sinaiAffiliate").asBoolean();
+            }
+            return false;
         } catch (final InterruptedException | IOException details) {
             LOGGER.error(details, details.getMessage());
             return false; // QUESTION: Should we retry?
