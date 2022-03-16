@@ -98,12 +98,6 @@ public class HauthDelegateIT {
             "5AFF80488740353F8A11B99C7A493D871807521908500772B92E4F8FC919E305A607ADB714B22EF08D2C22FC08C8A6EC";
 
     /**
-     * The Cookie header template for Sinai image requests.
-     */
-    private static final String SINAI_COOKIE_REQUEST_HEADER_TEMPLATE =
-            "sinai_authenticated_3day={}; initialization_vector={}";
-
-    /**
      * The id of the non-restricted image.
      */
     private static final String OPEN_ACCESS_IMAGE = "test-open.tif";
@@ -244,6 +238,16 @@ public class HauthDelegateIT {
 
         return HTTP_CLIENT.send(requestBuilder.build(), BodyHandlers.ofString()) //
                 .headers().firstValue("Set-Cookie").get();
+    }
+
+    /**
+     * Obtains an access cookie header to use in image requests for all-or-nothing access items.
+     *
+     * @return The access cookie header
+     */
+    private static String getSinaiAccessCookieHeader() {
+        return StringUtils.format("sinai_authenticated_3day={}; initialization_vector={}",
+                TEST_SINAI_AUTHENTICATED_3DAY, TEST_INITIALIZATION_VECTOR);
     }
 
     /**
@@ -598,9 +602,8 @@ public class HauthDelegateIT {
 
         @Override
         public void testFullAccessResponseAllOrNothingAuthorized() throws IOException, InterruptedException {
-            final String cookieHeader = StringUtils.format(SINAI_COOKIE_REQUEST_HEADER_TEMPLATE,
-                    TEST_SINAI_AUTHENTICATED_3DAY, TEST_INITIALIZATION_VECTOR);
-            final HttpResponse<byte[]> response = sendImageRequest(ALL_OR_NOTHING_ACCESS_IMAGE, cookieHeader, 2);
+            final HttpResponse<byte[]> response =
+                    sendImageRequest(ALL_OR_NOTHING_ACCESS_IMAGE, getSinaiAccessCookieHeader(), 2);
             final byte[] expectedResponse = getExpectedImage(ALL_OR_NOTHING_ACCESS_IMAGE);
 
             assertEquals(HTTP.OK, response.statusCode());
@@ -660,9 +663,8 @@ public class HauthDelegateIT {
 
         @Override
         public void testFullAccessResponseAllOrNothingAuthorized() throws IOException, InterruptedException {
-            final String cookieHeader = StringUtils.format(SINAI_COOKIE_REQUEST_HEADER_TEMPLATE,
-                    TEST_SINAI_AUTHENTICATED_3DAY, TEST_INITIALIZATION_VECTOR);
-            final HttpResponse<byte[]> response = sendImageRequest(ALL_OR_NOTHING_ACCESS_IMAGE, cookieHeader, 3);
+            final HttpResponse<byte[]> response =
+                    sendImageRequest(ALL_OR_NOTHING_ACCESS_IMAGE, getSinaiAccessCookieHeader(), 3);
             final byte[] expectedResponse = getExpectedImage(ALL_OR_NOTHING_ACCESS_IMAGE);
 
             assertEquals(HTTP.OK, response.statusCode());
