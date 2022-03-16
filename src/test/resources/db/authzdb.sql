@@ -89,7 +89,8 @@ test-all-or-nothing.tif,2
 -- Name: origins; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.origins (url, degraded_allowed) FROM stdin;
+COPY public.origins (url, degraded_allowed) FROM stdin WITH DELIMITER ',';
+https://client.example.com,TRUE
 \.
 
 --

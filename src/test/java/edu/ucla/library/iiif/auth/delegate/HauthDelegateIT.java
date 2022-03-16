@@ -170,6 +170,11 @@ public class HauthDelegateIT {
             new File("src/test/resources/json/test-no-access-v3-info.json");
 
     /**
+     * The value that we initialize Hauth's {@code origins} table with (via src/test/resources/db/authzdb.sql).
+     */
+    private static final String ORIGIN = "https://client.example.com";
+
+    /**
      * An internal HTTP client.
      */
     private static final HttpClient HTTP_CLIENT =
@@ -223,6 +228,22 @@ public class HauthDelegateIT {
         }
 
         return HTTP_CLIENT.send(requestBuilder.build(), BodyHandlers.ofByteArray());
+    }
+
+    /**
+     * Obtains an access cookie header to use in image requests for tiered access items.
+     *
+     * @return The access cookie header
+     * @throws IOException If there is trouble sending the HTTP request
+     * @throws InterruptedException If there is trouble sending the HTTP request
+     */
+    private static String getAccessCookieHeader() throws IOException, InterruptedException {
+        // Send a request to Hauth to obtain an access cookie
+        final String requestURL = System.getenv(Config.AUTH_COOKIE_SERVICE) + "?origin=" + ORIGIN;
+        final HttpRequest.Builder requestBuilder = HttpRequest.newBuilder(URI.create(requestURL));
+
+        return HTTP_CLIENT.send(requestBuilder.build(), BodyHandlers.ofString()) //
+                .headers().firstValue("Set-Cookie").get();
     }
 
     /**
@@ -551,7 +572,7 @@ public class HauthDelegateIT {
 
         @Override
         public void testFullAccessResponseTieredAuthorized() throws IOException, InterruptedException {
-            final HttpResponse<byte[]> response = sendImageRequest(TIERED_ACCESS_IMAGE, ACCESS_TOKEN, 2);
+            final HttpResponse<byte[]> response = sendImageRequest(TIERED_ACCESS_IMAGE, getAccessCookieHeader(), 2);
             final byte[] expectedResponse = getExpectedImage(TIERED_ACCESS_IMAGE);
 
             assertEquals(HTTP.OK, response.statusCode());
@@ -613,7 +634,7 @@ public class HauthDelegateIT {
 
         @Override
         public void testFullAccessResponseTieredAuthorized() throws IOException, InterruptedException {
-            final HttpResponse<byte[]> response = sendImageRequest(TIERED_ACCESS_IMAGE, ACCESS_TOKEN, 3);
+            final HttpResponse<byte[]> response = sendImageRequest(TIERED_ACCESS_IMAGE, getAccessCookieHeader(), 3);
             final byte[] expectedResponse = getExpectedImage(TIERED_ACCESS_IMAGE);
 
             assertEquals(HTTP.OK, response.statusCode());
