@@ -216,6 +216,7 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
         final int[] configuredScaleConstraint = myConfig.getScaleConstraint();
         final String cookieHeader = getContext().getRequestHeaders().get(COOKIE);
 
+<<<<<<< HEAD
         // Degraded image request for the size we allow (probably via an earlier HTTP 302 redirect)
         if (Arrays.equals(configuredScaleConstraint, scaleConstraint)) {
             return true;
@@ -227,16 +228,26 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
         }
 
         // Full access from an on-campus IP
+=======
+        LOGGER.debug(MessageCodes.CAD_017);
+
+        // Full access
+>>>>>>> faa4ea1 ([SERV-370] Update jpv3 services)
         if (cookieHeader != null && hasCampusNetworkCookie(cookieHeader)) {
             LOGGER.debug(MessageCodes.CAD_018);
             return true;
         }
 
+<<<<<<< HEAD
         // Full image request, but non-campus IP (the long types make a difference here, apparently)
-        LOGGER.debug(MessageCodes.CAD_019);
         return Map.of(STATUS_CODE, Long.valueOf(HTTP.FOUND), //
                 SCALE_NUMERATOR, (long) configuredScaleConstraint[0], //
                 SCALE_DENOMINATOR, (long) configuredScaleConstraint[1]);
+=======
+        // No access without a cookie
+        LOGGER.debug(MessageCodes.CAD_019);
+        return Map.of(STATUS_CODE, Long.valueOf(HTTP.UNAUTHORIZED), CHALLENGE, WWW_AUTHENTICATE_HEADER_VALUE);
+>>>>>>> faa4ea1 ([SERV-370] Update jpv3 services)
     }
 
     /**

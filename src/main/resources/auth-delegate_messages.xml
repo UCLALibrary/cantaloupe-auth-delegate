@@ -15,6 +15,21 @@
   <entry key="CAD-007">ID returned by authorization lookup doesn't match requested: {} != {}</entry>
   <entry key="CAD-008">Cookie found, but it didn't grant access: {}</entry>
   <entry key="CAD-009">The code to indicate whether access is allowed was not expected: {} [{}]</entry>
-  <entry key="CAD-010"></entry><!-- This can be used for a new message -->
+  <entry key="CAD-010">Pre-authorized access granted: open access</entry>
+  <entry key="CAD-011">Pre-authorized access requested: tiered</entry>
+  <entry key="CAD-012">Pre-authorized access requested: all-or-nothing</entry>
+  <entry key="CAD-013">Processing a tiered information request</entry>
+  <entry key="CAD-014">Access allowed: Auth token is present and has a valid IP</entry>
+  <entry key="CAD-015">Access denied: Scale constraints are not allowed: {} != {}</entry>
+  <entry key="CAD-016">Tiered access granted: Full image request from an unauthorized IP</entry>
+  <entry key="CAD-017">Processing a tiered image request</entry>
+  <entry key="CAD-018">Access allowed: Tiered image request has expected cookie</entry>
+  <entry key="CAD-019">Access denied: Tiered image request doesn't have expected cookie</entry>
+  <entry key="CAD-020">Processing an all-or-nothing information request</entry>
+  <entry key="CAD-021">Access allowed: All-or-nothing info request has expected token</entry>
+  <entry key="CAD-022">Access denied: All-or-nothing info request lacks expected token</entry>
+  <entry key="CAD-023">Processing an all-or-nothing image request</entry>
+  <entry key="CAD-024">Access allowed: All-or-nothing image request has expected cookie</entry>
+  <entry key="CAD-025">Access denied: All-or-nothing image request lacks expected cookie</entry>
 
 </properties>

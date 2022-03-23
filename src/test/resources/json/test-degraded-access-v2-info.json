@@ -77,7 +77,6 @@
     "@context": "http://iiif.io/api/auth/1/context.json",
     "@id": "{}",
     "@type": "AuthCookieService1",
-    "label": "{}",
     "profile": "http://iiif.io/api/auth/1/kiosk",
     "service": [
       {

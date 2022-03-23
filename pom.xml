@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>edu.ucla.library</groupId>
@@ -59,7 +58,7 @@
 
   <properties>
     <!-- Dependency versions -->
-    <jiiify.presentation.version>0.10.1</jiiify.presentation.version>
+    <jiiify.presentation.version>0.0.0-SNAPSHOT</jiiify.presentation.version> <!-- 0.10.1 -->
     <freelib.utils.version>3.0.1</freelib.utils.version>
     <cantaloupe.version>5.0.5</cantaloupe.version>
 
@@ -77,10 +76,6 @@
 
     <!-- Build-time options -->
     <update.sql>false</update.sql>
-
-    <!-- String constants -->
-    <access.cookie.service.label>UCLA Library</access.cookie.service.label>
-    <sinai.access.cookie.service.label>Sinai Palimpsests at UCLA Library</sinai.access.cookie.service.label>
   </properties>
 
   <dependencies>
@@ -506,6 +501,7 @@
                 <configuration>
                   <args>
                     <arg>--org=${env.UCLALIBRARY_SNYK_ORG}</arg>
+                    <arg>--fail-on=all</arg>
                   </args>
                 </configuration>
               </execution>
@@ -517,6 +513,7 @@
                 <configuration>
                   <args>
                     <arg>--org=${env.UCLALIBRARY_SNYK_ORG}</arg>
+                    <arg>--fail-on=all</arg>
                   </args>
                 </configuration>
               </execution>
@@ -542,6 +539,6 @@
   <parent>
     <artifactId>freelib-parent</artifactId>
     <groupId>info.freelibrary</groupId>
-    <version>7.2.0</version>
+    <version>7.2.1</version>
   </parent>
 </project>
