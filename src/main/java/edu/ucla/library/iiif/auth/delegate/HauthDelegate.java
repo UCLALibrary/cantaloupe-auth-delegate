@@ -291,17 +291,21 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
      * @return An auth service description
      */
     private Map<String, Object> getAuthServices() {
-        final AuthService<?> cookieService;
+        final Map<String, Object> serviceMap;
         final AuthTokenService1 tokenService;
+        final AuthService<?> cookieService;
+        final String label;
 
         switch (myAccessMode) {
             case TIERED:
                 tokenService = new AuthTokenService1(myConfig.getTokenService());
                 cookieService = new KioskCookieService1(myConfig.getCookieService(), tokenService);
+                label = "Internal cookie granting service";
                 break;
             case ALL_OR_NOTHING:
                 tokenService = new AuthTokenService1(myConfig.getSinaiTokenService());
                 cookieService = new ExternalCookieService1(tokenService);
+                label = "External authentication required";
                 break;
             case OPEN:
             default:
@@ -309,7 +313,11 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
                 return Collections.emptyMap();
         }
 
-        return JSON.convertValue(cookieService, MAP_TYPE_REFERENCE);
+        // Workaround for Mirador bug that requires label be present (Cf. https://bitly.com/3NllMLq+)
+        serviceMap = JSON.convertValue(cookieService, MAP_TYPE_REFERENCE);
+        serviceMap.putIfAbsent(JsonKeys.LABEL, label);
+
+        return serviceMap;
     }
 
     /**

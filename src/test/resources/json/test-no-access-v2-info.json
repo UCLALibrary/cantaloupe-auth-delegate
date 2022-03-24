@@ -81,6 +81,7 @@
   "service": [{
     "@context": "http://iiif.io/api/auth/1/context.json",
     "@type": "AuthCookieService1",
+    "label": "External authentication required",
     "profile": "http://iiif.io/api/auth/1/external",
     "service": [
       {
