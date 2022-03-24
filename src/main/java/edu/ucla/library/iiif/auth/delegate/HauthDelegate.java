@@ -23,7 +23,7 @@ import info.freelibrary.util.HTTP;
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
 
-import info.freelibrary.iiif.presentation.v3.services.AuthService;
+import info.freelibrary.iiif.presentation.v3.services.AuthCookieService1;
 import info.freelibrary.iiif.presentation.v3.services.AuthTokenService1;
 import info.freelibrary.iiif.presentation.v3.services.ExternalCookieService1;
 import info.freelibrary.iiif.presentation.v3.services.KioskCookieService1;
@@ -291,9 +291,9 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
      * @return An auth service description
      */
     private Map<String, Object> getAuthServices() {
-        final Map<String, Object> serviceMap;
+        final AuthCookieService1<?> cookieService;
         final AuthTokenService1 tokenService;
-        final AuthService<?> cookieService;
+        final Map<String, Object> serviceMap;
         final String label;
 
         switch (myAccessMode) {
