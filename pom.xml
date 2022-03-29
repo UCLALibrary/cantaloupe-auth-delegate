@@ -58,7 +58,7 @@
 
   <properties>
     <!-- Dependency versions -->
-    <jiiify.presentation.version>0.0.0-SNAPSHOT</jiiify.presentation.version> <!-- 0.10.1 -->
+    <jiiify.presentation.version>0.12.0</jiiify.presentation.version>
     <freelib.utils.version>3.0.1</freelib.utils.version>
     <cantaloupe.version>5.0.5</cantaloupe.version>
 
