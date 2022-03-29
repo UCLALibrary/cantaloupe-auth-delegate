@@ -114,6 +114,11 @@ public class HauthDelegateIT {
             StringUtils.format("test-tiered.tif;{}", System.getenv().get(Config.TIERED_ACCESS_SCALE_CONSTRAINT));
 
     /**
+     * The filename of the image identified by {@link TIERED_ACCESS_IMAGE_DEGRADED_VALID}.
+     */
+    private static final String TIERED_ACCESS_IMAGE_DEGRADED = "test-tiered-degraded.tif";
+
+    /**
      * The id of the restricted image at a degraded access tier that is not allowed.
      */
     private static final String TIERED_ACCESS_IMAGE_DEGRADED_UNAVAILABLE = "test-tiered.tif;3:4";
@@ -587,9 +592,11 @@ public class HauthDelegateIT {
         @Override
         public void testDegradedAccessResponseTieredUnauthorized() throws IOException, InterruptedException {
             final HttpResponse<byte[]> response = sendImageRequest(TIERED_ACCESS_IMAGE, null, 2);
+            final byte[] expectedResponse = getExpectedImage(TIERED_ACCESS_IMAGE_DEGRADED);
 
-            assertEquals(HTTP.UNAUTHORIZED, response.statusCode());
-            assertFalse(TestUtils.responseHasContentType(response, MediaType.IMAGE_TIFF));
+            assertEquals(HTTP.OK, response.statusCode());
+            assertTrue(TestUtils.responseHasContentType(response, MediaType.IMAGE_TIFF));
+            assertTrue(Arrays.equals(expectedResponse, response.body()));
         }
 
         @Override
@@ -648,9 +655,11 @@ public class HauthDelegateIT {
         @Override
         public void testDegradedAccessResponseTieredUnauthorized() throws IOException, InterruptedException {
             final HttpResponse<byte[]> response = sendImageRequest(TIERED_ACCESS_IMAGE, null, 3);
+            final byte[] expectedResponse = getExpectedImage(TIERED_ACCESS_IMAGE_DEGRADED);
 
-            assertEquals(HTTP.UNAUTHORIZED, response.statusCode());
-            assertFalse(TestUtils.responseHasContentType(response, MediaType.IMAGE_TIFF));
+            assertEquals(HTTP.OK, response.statusCode());
+            assertTrue(TestUtils.responseHasContentType(response, MediaType.IMAGE_TIFF));
+            assertTrue(Arrays.equals(expectedResponse, response.body()));
         }
 
         @Override
