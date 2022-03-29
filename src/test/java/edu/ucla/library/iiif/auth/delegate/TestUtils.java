@@ -13,7 +13,6 @@ import java.util.TreeMap;
 import java.util.stream.Stream;
 
 import org.apache.http.HttpHeaders;
-
 import org.junit.Assert;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -53,7 +52,12 @@ public final class TestUtils {
     public static boolean responseHasContentType(final HttpResponse<?> aResponse, final MediaType... aMediaTypes) {
         final String contentTypeHeader = aResponse.headers().firstValue(HttpHeaders.CONTENT_TYPE).get();
 
-        return Stream.of(aMediaTypes).map(String::valueOf).anyMatch(contentTypeHeader::contains);
+        System.out.println("==> Media-types count: " + aMediaTypes.length);
+        System.out.println("==> " + contentTypeHeader);
+        return Stream.of(aMediaTypes).map(String::valueOf).anyMatch(value -> {
+            System.out.println("====> " + value);
+            return contentTypeHeader.contains(value);
+        });
     }
 
     /**
