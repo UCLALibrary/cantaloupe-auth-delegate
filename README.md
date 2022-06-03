@@ -18,9 +18,9 @@ There is a two step build process. First, to install the cantaloupe jar in your 
 
     mvn validate
 
-After that is done, you can run the following to build the delegate:
+After that is done, you can run the following to build the delegate (Docker credentials are required to pull the `cantaloupe-ucla` image for testing):
 
-    mvn verify
+    mvn verify -Ddocker.username=username -Ddocker.password=password
 
 This will run tests of the delegate and provide a Jar file to use with your v5 Cantaloupe installation.
 
@@ -30,7 +30,7 @@ There are unit and integration tests. The integration tests spin up Docker conta
 
 An alternative to running the test containers as a part of the integration test suite is to run them directly. To do this, one would type:
 
-    mvn package docker:build docker:run -Dmaven.test.skip
+    mvn package docker:build docker:run -Dmaven.test.skip -Ddocker.username=username -Ddocker.password=password
 
 To find out which host ports the containers are running on, look for output in the Maven console logs that looks like:
 
@@ -44,7 +44,7 @@ Those port numbers can be used, in conjunction with the localhost host name, to 
 
 It's also possible to override one (or more) of these values from the command line (if you don't want to look the port number of a particular service each time you restart). To do this, you'd type:
 
-    mvn package docker:build docker:run -Dtest.iiif.images.port=8888
+    mvn package docker:build docker:run -Dtest.iiif.images.port=8888 -Ddocker.username=username -Ddocker.password=password
 
 Once all manual testing is completed, the containers can be stopped by typing: [ctrl]-C.
 
@@ -64,7 +64,7 @@ There are some environmental properties that are supplied automatically for the 
 
 To deploy a SNAPSHOT version of the delegate, run the following (with the proper credentials in your Maven settings.xml file):
 
-    mvn deploy -Drevision=0.0.1
+    mvn deploy -Drevision=0.0.1 -Ddocker.username=username -Ddocker.password=password
 
 To use the deployed Jar file with a [docker-cantaloupe](https://github.com/uclalibrary/docker-cantaloupe) container, supply the Maven repository location of the delegate via the DELEGATE_URL.
 

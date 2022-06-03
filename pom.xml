@@ -61,7 +61,7 @@
     <!-- Dependency versions -->
     <jiiify.presentation.version>0.10.1</jiiify.presentation.version>
     <freelib.utils.version>3.0.1</freelib.utils.version>
-    <cantaloupe.version>5.0.4</cantaloupe.version>
+    <cantaloupe.version>5.0.5</cantaloupe.version>
 
     <!-- Plugin versions -->
     <shade.plugin.version>3.2.4</shade.plugin.version>
@@ -73,7 +73,7 @@
     <hauth.container.version>0.0.4</hauth.container.version>
     <psql.container.version>12.7-alpine</psql.container.version>
     <redis.container.version>6.2.5-alpine</redis.container.version>
-    <cantaloupe.container.version>nightly</cantaloupe.container.version>
+    <cantaloupe.container.version>5.0.5</cantaloupe.container.version>
 
     <!-- Build-time options -->
     <update.sql>false</update.sql>
@@ -355,7 +355,7 @@
               </run>
             </delegate_hauth>
             <delegate_cantaloupe>
-              <name>uclalibrary/cantaloupe:${cantaloupe.container.version}</name>
+              <name>uclalibrary/cantaloupe-ucla:${cantaloupe.container.version}</name>
               <run>
                 <containerNamePattern>delegate_hauth_cantaloupe</containerNamePattern>
                 <ports>
