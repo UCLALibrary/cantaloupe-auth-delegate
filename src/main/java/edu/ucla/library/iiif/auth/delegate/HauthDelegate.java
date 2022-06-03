@@ -73,6 +73,16 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
     private static final String STATUS_CODE = "status_code";
 
     /**
+     * The scale numerator key for {@link #preAuthorize} responses.
+     */
+    private static final String SCALE_NUMERATOR = "scale_numerator";
+
+    /**
+     * The scale denominator key for {@link #preAuthorize} responses.
+     */
+    private static final String SCALE_DENOMINATOR = "scale_denominator";
+
+    /**
      * The regex pattern for a single whitespace character.
      */
     private static final String SINGLE_SPACE_PATTERN = "\\s";
@@ -182,8 +192,8 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
 
         // Full image request, but non-campus IP (the long types make a difference here, apparently)
         return Map.of(STATUS_CODE, Long.valueOf(HTTP.FOUND), //
-                "scale_numerator", (long) configuredScaleConstraint[0], //
-                "scale_denominator", (long) configuredScaleConstraint[1]);
+                SCALE_NUMERATOR, (long) configuredScaleConstraint[0], //
+                SCALE_DENOMINATOR, (long) configuredScaleConstraint[1]);
     }
 
     /**
@@ -192,15 +202,30 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
      * @return True or a map with an unauthorized status response
      */
     private Object getTieredImage() {
+        // For full image requests, this array value is equal to { 1, 1 }
+        final int[] scaleConstraint = getContext().getScaleConstraint();
+        final int[] configuredScaleConstraint = myConfig.getScaleConstraint();
         final String cookieHeader = getContext().getRequestHeaders().get(COOKIE);
 
-        // Full access
+        // Degraded image request for the size we allow (probably via an earlier HTTP 302 redirect)
+        if (Arrays.equals(configuredScaleConstraint, scaleConstraint)) {
+            return true;
+        }
+
+        // Degraded image request for a size we don't allow access to; return HTTP 403
+        if (scaleConstraint[0] != scaleConstraint[1]) {
+            return Map.of(STATUS_CODE, Long.valueOf(HTTP.UNAUTHORIZED), CHALLENGE, WWW_AUTHENTICATE_HEADER_VALUE);
+        }
+
+        // Full access from an on-campus IP
         if (cookieHeader != null && hasCampusNetworkCookie(cookieHeader)) {
             return true;
         }
 
-        // No access without a cookie
-        return Map.of(STATUS_CODE, Long.valueOf(HTTP.UNAUTHORIZED), CHALLENGE, WWW_AUTHENTICATE_HEADER_VALUE);
+        // Full image request, but non-campus IP (the long types make a difference here, apparently)
+        return Map.of(STATUS_CODE, Long.valueOf(HTTP.FOUND), //
+                SCALE_NUMERATOR, (long) configuredScaleConstraint[0], //
+                SCALE_DENOMINATOR, (long) configuredScaleConstraint[1]);
     }
 
     /**

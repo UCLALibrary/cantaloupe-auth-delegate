@@ -60,4 +60,5 @@ jobs:
           maven_profiles: default
           maven_args: >
             -V -ntp -Dorg.slf4j.simpleLogger.log.net.sourceforge.pmd=error -Ddocker.showLogs=true
+            -Ddocker.username=${{ secrets.DOCKER_USERNAME }} -Ddocker.password=${{ secrets.DOCKER_PASSWORD }}
             -Dsnyk.skip=${{ secrets.SKIP_SNYK }}
