@@ -257,9 +257,11 @@ public class HauthDelegateIT {
      *
      * @return The access cookie header
      */
-    private static String getSinaiAccessCookieHeader() {
-        return StringUtils.format("sinai_authenticated_3day={}; initialization_vector={}",
-                TEST_SINAI_AUTHENTICATED_3DAY, TEST_INITIALIZATION_VECTOR);
+    private static String getSinaiAccessCookieHeader() throws IOException {
+        final String[] values = TestUtils.getMockSinaiCookieValues();
+
+        return StringUtils.format("{}={}; {}={}", "sinai_authenticated_3day", values[0], "initialization_vector",
+                values[1]);
     }
 
     /**

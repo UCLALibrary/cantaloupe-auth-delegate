@@ -58,7 +58,7 @@
 
   <properties>
     <!-- Dependency versions -->
-    <jiiify.presentation.version>0.12.0</jiiify.presentation.version>
+    <jiiify.presentation.version>0.12.1</jiiify.presentation.version>
     <freelib.utils.version>3.0.1</freelib.utils.version>
     <cantaloupe.version>5.0.5</cantaloupe.version>
 
@@ -69,7 +69,7 @@
     <docker.maven.plugin.version>0.37.0</docker.maven.plugin.version>
 
     <!-- Docker images versions used in testing -->
-    <hauth.container.version>0.0.4</hauth.container.version>
+    <hauth.container.version>0.0.6</hauth.container.version>
     <psql.container.version>12.7-alpine</psql.container.version>
     <redis.container.version>6.2.5-alpine</redis.container.version>
     <cantaloupe.container.version>5.0.5</cantaloupe.container.version>
