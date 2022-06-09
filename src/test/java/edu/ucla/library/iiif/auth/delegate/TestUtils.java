@@ -71,11 +71,12 @@ public final class TestUtils {
      * @return A tuple of size 2 whose first element is a {@link CookieNames#SINAI_CIPHERTEXT} cookie and whose second
      *         is a {@link CookieNames#SINAI_IV} cookie
      * @throws IOException If there is an issue generating the cookies
-     * @see <a href=
-     *      "https://github.com/UCLALibrary/sinaimanuscripts/blob/main/app/controllers/application_controller.rb">How
-     *      the Sinai application encodes cookies in the <code>create_encrypted_string</code> method</a>
      */
+    @SuppressWarnings({ "checkstyle:LineLength" })
     public static String[] getMockSinaiCookieValues() throws IOException {
+        // This code mirrors the front-end Ruby code that creates encrypted cookies; see below for the implementation:
+        // https://github.com/UCLALibrary/sinaimanuscripts/blob/v2.15.7/app/controllers/application_controller.rb#L98-L103
+
         try {
             final LocalDate date = LocalDate.now().minusDays(new Random().nextInt(3 + 1));
             final String clearTextSuffix = date.format(DateTimeFormatter.ofPattern("EEE, dd MMM yyyy"));
