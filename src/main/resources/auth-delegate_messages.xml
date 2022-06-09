@@ -20,7 +20,7 @@
   <entry key="CAD-012">Pre-authorized access requested: all-or-nothing</entry>
   <entry key="CAD-013">Processing a tiered information request</entry>
   <entry key="CAD-014">Access allowed: Auth token is present and has a valid IP</entry>
-  <entry key="CAD-015">Access denied: Scale constraints are not allowed: {} != {}</entry>
+  <entry key="CAD-015">Access denied: Scale constraint is not allowed: {}:{}</entry>
   <entry key="CAD-016">Tiered access granted: Full image request from an unauthorized IP</entry>
   <entry key="CAD-017">Processing a tiered image request</entry>
   <entry key="CAD-018">Access allowed: Tiered image request has expected cookie</entry>
@@ -32,5 +32,7 @@
   <entry key="CAD-024">Access allowed: All-or-nothing image request has expected cookie</entry>
   <entry key="CAD-025">Access denied: All-or-nothing image request lacks expected cookie</entry>
   <entry key="CAD-026">Generated cookies: {}={}, {}={} (cleartext: "{}")</entry>
+  <entry key="CAD-027">Access allowed: Degraded image request for the size we allow</entry>
+  <entry key="CAD-028">Access denied: Degraded image request for a size we don't allow: {}:{}</entry>
 
 </properties>

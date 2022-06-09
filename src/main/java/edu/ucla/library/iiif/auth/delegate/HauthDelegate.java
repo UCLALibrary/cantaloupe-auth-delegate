@@ -192,10 +192,10 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
             return myInfoJsonShouldContainAuth = true;
         }
 
-        // Degraded image request for a size we don't allow access to; return HTTP 403
+        // Degraded image request for a size that doesn't match what we've configured and isn't 1:1
         if (scaleConstraint[0] != scaleConstraint[1]) {
             LOGGER.debug(MessageCodes.CAD_015, scaleConstraint[0], scaleConstraint[1]);
-            return false;
+            return false; // returns 403
         }
 
         // Full image request, but non-campus IP (the long types make a difference here, apparently)
@@ -216,13 +216,17 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
         final int[] configuredScaleConstraint = myConfig.getScaleConstraint();
         final String cookieHeader = getContext().getRequestHeaders().get(COOKIE);
 
+        LOGGER.debug(MessageCodes.CAD_017);
+
         // Degraded image request for the size we allow (probably via an earlier HTTP 302 redirect)
         if (Arrays.equals(configuredScaleConstraint, scaleConstraint)) {
+            LOGGER.debug(MessageCodes.CAD_027);
             return true;
         }
 
         // Degraded image request for a size we don't allow access to; return HTTP 403
         if (scaleConstraint[0] != scaleConstraint[1]) {
+            LOGGER.debug(MessageCodes.CAD_028, scaleConstraint[0], scaleConstraint[1]);
             return Map.of(STATUS_CODE, Long.valueOf(HTTP.UNAUTHORIZED), CHALLENGE, WWW_AUTHENTICATE_HEADER_VALUE);
         }
 
