@@ -25,7 +25,6 @@ public class ConfigTest {
     @Before
     public final void setUp() {
         final String fakeService = "https://example.com/service";
-        final String fakeServiceLabel = "UCLA Library";
         final URI fakeServiceURI;
 
         try {
@@ -34,8 +33,7 @@ public class ConfigTest {
             throw new ConfigException(details, fakeService);
         }
 
-        myConfig = new Config(fakeServiceURI, fakeServiceLabel, fakeServiceLabel, fakeServiceURI, fakeServiceURI,
-                fakeServiceURI, "1:2");
+        myConfig = new Config(fakeServiceURI, fakeServiceURI, fakeServiceURI, fakeServiceURI, "1:2");
     }
 
     /**
@@ -64,19 +62,15 @@ public class ConfigTest {
     @Test
     public final void testConfigUriUriUriUriString() {
         final URI cookieService = Config.getURI(Config.AUTH_COOKIE_SERVICE);
-        final String cookieServiceLabel = Config.getString(Config.AUTH_COOKIE_SERVICE_LABEL);
-        final String sinaiCookieServiceLabel = Config.getString(Config.SINAI_AUTH_COOKIE_SERVICE_LABEL);
         final URI tokenService = Config.getURI(Config.AUTH_TOKEN_SERVICE);
         final URI sinaiTokenService = Config.getURI(Config.SINAI_AUTH_TOKEN_SERVICE);
         final URI accessService = Config.getURI(Config.AUTH_ACCESS_SERVICE);
         final String scaleConstraint = Config.getString(Config.TIERED_ACCESS_SCALE_CONSTRAINT);
-        final Config config = new Config(cookieService, cookieServiceLabel, sinaiCookieServiceLabel, tokenService,
-                sinaiTokenService, accessService, scaleConstraint);
+        final Config config =
+                new Config(cookieService, tokenService, sinaiTokenService, accessService, scaleConstraint);
         final int[] scaleConstraints = config.getScaleConstraint();
 
         assertEquals(cookieService, config.getCookieService());
-        assertEquals(cookieServiceLabel, config.getCookieServiceLabel());
-        assertEquals(sinaiCookieServiceLabel, config.getSinaiCookieServiceLabel());
         assertEquals(tokenService, config.getTokenService());
         assertEquals(sinaiTokenService, config.getSinaiTokenService());
         assertEquals(accessService, config.getAccessService());
@@ -94,25 +88,6 @@ public class ConfigTest {
     public final void testSetCookieService() {
         final URI cookieService = Config.getURI(Config.AUTH_COOKIE_SERVICE);
         assertEquals(cookieService, myConfig.setCookieService(cookieService).getCookieService());
-    }
-
-    /**
-     * Tests getting/setting the cookie service label configuration.
-     */
-    @Test
-    public final void testSetCookieServiceLabel() {
-        final String cookieServiceLabel = Config.getString(Config.AUTH_COOKIE_SERVICE_LABEL);
-        assertEquals(cookieServiceLabel, myConfig.setCookieServiceLabel(cookieServiceLabel).getCookieServiceLabel());
-    }
-
-    /**
-     * Tests getting/setting the Sinai cookie service label configuration.
-     */
-    @Test
-    public final void testSetSinaiCookieServiceLabel() {
-        final String sinaiCookieServiceLabel = Config.getString(Config.SINAI_AUTH_COOKIE_SERVICE_LABEL);
-        assertEquals(sinaiCookieServiceLabel,
-                myConfig.setSinaiCookieServiceLabel(sinaiCookieServiceLabel).getSinaiCookieServiceLabel());
     }
 
     /**

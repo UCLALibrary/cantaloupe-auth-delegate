@@ -22,6 +22,8 @@ import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 
 import info.freelibrary.util.HTTP;
+import info.freelibrary.util.Logger;
+import info.freelibrary.util.LoggerFactory;
 import info.freelibrary.util.StringUtils;
 
 import info.freelibrary.iiif.presentation.v3.MediaType;
@@ -32,6 +34,11 @@ import edu.ucla.library.iiif.auth.delegate.hauth.HauthToken;
  * A test of HauthDelegate.
  */
 public class HauthDelegateIT {
+
+    /**
+     * The HauthDelegateIT logger.
+     */
+    private static final Logger LOGGER = LoggerFactory.getLogger(HauthDelegateIT.class, MessageCodes.BUNDLE);
 
     /**
      * The template for image URLs. The slots are:
@@ -250,9 +257,11 @@ public class HauthDelegateIT {
      *
      * @return The access cookie header
      */
-    private static String getSinaiAccessCookieHeader() {
-        return StringUtils.format("sinai_authenticated_3day={}; initialization_vector={}",
-                TEST_SINAI_AUTHENTICATED_3DAY, TEST_INITIALIZATION_VECTOR);
+    private static String getSinaiAccessCookieHeader() throws IOException {
+        final String[] values = TestUtils.getMockSinaiCookieValues();
+
+        return StringUtils.format("{}={}; {}={}", "sinai_authenticated_3day", values[0], "initialization_vector",
+                values[1]);
     }
 
     /**
@@ -275,13 +284,11 @@ public class HauthDelegateIT {
 
         if (aResponseTemplate.equals(DEGRADED_ACCESS_RESPONSE_TEMPLATE_V2) ||
                 aResponseTemplate.equals(DEGRADED_ACCESS_RESPONSE_TEMPLATE_V3)) {
-            // The Hauth service URLs (and cookie service label) need to be added to the info.json
+            // The Hauth service URLs need to be added to the info.json
             responseTemplateURLs.add(envProperties.get(Config.AUTH_COOKIE_SERVICE));
-            responseTemplateURLs.add(envProperties.get(Config.AUTH_COOKIE_SERVICE_LABEL));
             responseTemplateURLs.add(envProperties.get(Config.AUTH_TOKEN_SERVICE));
         } else if (aResponseTemplate.equals(NO_ACCESS_RESPONSE_TEMPLATE_V2) ||
                 aResponseTemplate.equals(NO_ACCESS_RESPONSE_TEMPLATE_V3)) {
-            responseTemplateURLs.add(envProperties.get(Config.SINAI_AUTH_COOKIE_SERVICE_LABEL));
             responseTemplateURLs.add(envProperties.get(Config.SINAI_AUTH_TOKEN_SERVICE));
         }
 

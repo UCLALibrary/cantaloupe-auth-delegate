@@ -19,16 +19,6 @@ public final class Config {
     public static final String AUTH_COOKIE_SERVICE = "AUTH_COOKIE_SERVICE";
 
     /**
-     * An environmental property for the label of the access cookie service.
-     */
-    public static final String AUTH_COOKIE_SERVICE_LABEL = "AUTH_COOKIE_SERVICE_LABEL";
-
-    /**
-     * An environmental property for the label of the Sinai access cookie service.
-     */
-    public static final String SINAI_AUTH_COOKIE_SERVICE_LABEL = "SINAI_AUTH_COOKIE_SERVICE_LABEL";
-
-    /**
      * An environmental property for the URI of the access token service.
      */
     public static final String AUTH_TOKEN_SERVICE = "AUTH_TOKEN_SERVICE";
@@ -56,16 +46,6 @@ public final class Config {
     private URI myCookieService;
 
     /**
-     * A configured cookie service label.
-     */
-    private String myCookieServiceLabel;
-
-    /**
-     * A configured Sinai cookie service label.
-     */
-    private String mySinaiCookieServiceLabel;
-
-    /**
      * A configured token service.
      */
     private URI myTokenService;
@@ -91,9 +71,6 @@ public final class Config {
     public Config() {
         setScaleConstraint(getString(Config.TIERED_ACCESS_SCALE_CONSTRAINT));
 
-        myCookieServiceLabel = getString(Config.AUTH_COOKIE_SERVICE_LABEL);
-        mySinaiCookieServiceLabel = getString(Config.SINAI_AUTH_COOKIE_SERVICE_LABEL);
-
         myCookieService = getURI(Config.AUTH_COOKIE_SERVICE);
         myTokenService = getURI(Config.AUTH_TOKEN_SERVICE);
         mySinaiTokenService = getURI(Config.SINAI_AUTH_TOKEN_SERVICE);
@@ -104,20 +81,14 @@ public final class Config {
      * Creates a new configuration.
      *
      * @param aCookieService A cookie service URI
-     * @param aCookieServiceLabel A cookie service label
-     * @param aSinaiCookieServiceLabel A Sinai cookie service label
      * @param aTokenService A token service URI
      * @param aSinaiTokenService A Sinai token service URI
      * @param aAccessService An access mode service URI
      * @param aScaleConstraint A scale constraint for tiered access
      */
-    public Config(final URI aCookieService, final String aCookieServiceLabel, final String aSinaiCookieServiceLabel,
-            final URI aTokenService, final URI aSinaiTokenService, final URI aAccessService,
-            final String aScaleConstraint) {
+    public Config(final URI aCookieService, final URI aTokenService, final URI aSinaiTokenService,
+            final URI aAccessService, final String aScaleConstraint) {
         setScaleConstraint(aScaleConstraint);
-
-        myCookieServiceLabel = aCookieServiceLabel;
-        mySinaiCookieServiceLabel = aSinaiCookieServiceLabel;
 
         myCookieService = aCookieService;
         myTokenService = aTokenService;
@@ -142,46 +113,6 @@ public final class Config {
      */
     public Config setCookieService(final URI aCookieService) {
         myCookieService = aCookieService;
-        return this;
-    }
-
-    /**
-     * Gets the configured cookie service label.
-     *
-     * @return The configured cookie service label
-     */
-    public String getCookieServiceLabel() {
-        return myCookieServiceLabel;
-    }
-
-    /**
-     * Sets the cookie service label.
-     *
-     * @param aCookieServiceLabel A label
-     * @return This configuration
-     */
-    public Config setCookieServiceLabel(final String aCookieServiceLabel) {
-        myCookieServiceLabel = aCookieServiceLabel;
-        return this;
-    }
-
-    /**
-     * Gets the configured Sinai cookie service label.
-     *
-     * @return The configured Sinai cookie service label
-     */
-    public String getSinaiCookieServiceLabel() {
-        return mySinaiCookieServiceLabel;
-    }
-
-    /**
-     * Sets the Sinai cookie service label.
-     *
-     * @param aSinaiCookieServiceLabel A label
-     * @return This configuration
-     */
-    public Config setSinaiCookieServiceLabel(final String aSinaiCookieServiceLabel) {
-        mySinaiCookieServiceLabel = aSinaiCookieServiceLabel;
         return this;
     }
 

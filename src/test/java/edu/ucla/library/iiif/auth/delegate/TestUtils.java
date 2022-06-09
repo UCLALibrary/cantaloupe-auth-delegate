@@ -2,18 +2,32 @@
 package edu.ucla.library.iiif.auth.delegate;
 
 import static info.freelibrary.util.Constants.EMPTY;
+import static info.freelibrary.util.Constants.SPACE;
 
 import java.io.IOException;
 import java.net.http.HttpResponse;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Random;
 import java.util.TreeMap;
 import java.util.stream.Stream;
 
-import org.apache.http.HttpHeaders;
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 
+import org.apache.commons.codec.binary.Hex;
+import org.apache.http.HttpHeaders;
 import org.junit.Assert;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -23,6 +37,9 @@ import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import info.freelibrary.util.Logger;
+import info.freelibrary.util.LoggerFactory;
 
 import info.freelibrary.iiif.presentation.v3.MediaType;
 
@@ -37,10 +54,54 @@ public final class TestUtils {
     private static final ObjectMapper MAPPER = JsonMapper.builder().nodeFactory(new SortingNodeFactory()).build();
 
     /**
+     * The test utilities logger.
+     */
+    private static final Logger LOGGER = LoggerFactory.getLogger(TestUtils.class, MessageCodes.BUNDLE);
+
+    /**
      * Creates a new test utilities class.
      */
     private TestUtils() {
         // This is intentionally left empty
+    }
+
+    /**
+     * Gets a pair of Sinai cookies by mocking the cookie generation code of the Sinai application.
+     *
+     * @return A tuple of size 2 whose first element is a {@link CookieNames#SINAI_CIPHERTEXT} cookie and whose second
+     *         is a {@link CookieNames#SINAI_IV} cookie
+     * @throws IOException If there is an issue generating the cookies
+     */
+    @SuppressWarnings({ "checkstyle:LineLength" })
+    public static String[] getMockSinaiCookieValues() throws IOException {
+        // This code mirrors the front-end Ruby code that creates encrypted cookies; see below for the implementation:
+        // https://github.com/UCLALibrary/sinaimanuscripts/blob/v2.15.7/app/controllers/application_controller.rb#L98-L103
+
+        try {
+            final LocalDate date = LocalDate.now().minusDays(new Random().nextInt(3 + 1));
+            final String clearTextSuffix = date.format(DateTimeFormatter.ofPattern("EEE, dd MMM yyyy"));
+            final String clearText = String.join(SPACE, "Authenticated", clearTextSuffix);
+            final byte[] password = "ThisPasswordIsReallyHardToGuess!".getBytes();
+            final Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            final SecretKey key = new SecretKeySpec(password, "AES");
+
+            final String sinaiAuthenticated3Day;
+            final String initializationVector;
+            final byte[] cipherText;
+
+            cipher.init(Cipher.ENCRYPT_MODE, key, new SecureRandom());
+            cipherText = cipher.doFinal(clearText.getBytes());
+            sinaiAuthenticated3Day = Hex.encodeHexString(cipherText);
+            initializationVector = Hex.encodeHexString(cipher.getIV());
+
+            LOGGER.debug(MessageCodes.CAD_026, "sinai_authenticated_3day", sinaiAuthenticated3Day,
+                    "initialization_vector", initializationVector, clearText);
+
+            return new String[] { sinaiAuthenticated3Day, initializationVector };
+        } catch (final NoSuchPaddingException | InvalidKeyException | BadPaddingException | NoSuchAlgorithmException |
+                IllegalBlockSizeException details) {
+            throw new IOException(details);
+        }
     }
 
     /**
@@ -53,7 +114,9 @@ public final class TestUtils {
     public static boolean responseHasContentType(final HttpResponse<?> aResponse, final MediaType... aMediaTypes) {
         final String contentTypeHeader = aResponse.headers().firstValue(HttpHeaders.CONTENT_TYPE).get();
 
-        return Stream.of(aMediaTypes).map(String::valueOf).anyMatch(contentTypeHeader::contains);
+        return Stream.of(aMediaTypes).map(String::valueOf).anyMatch(value -> {
+            return contentTypeHeader.contains(value);
+        });
     }
 
     /**

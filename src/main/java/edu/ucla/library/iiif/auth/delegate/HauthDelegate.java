@@ -1,5 +1,5 @@
 
-package edu.ucla.library.iiif.auth.delegate;
+package edu.ucla.library.iiif.auth.delegate; // NOPMD - Excessive imports
 
 import java.io.IOException;
 import java.net.URI;
@@ -23,9 +23,10 @@ import info.freelibrary.util.HTTP;
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
 
-import info.freelibrary.iiif.presentation.v3.services.auth.AuthCookieService1;
-import info.freelibrary.iiif.presentation.v3.services.auth.AuthCookieService1.Profile;
-import info.freelibrary.iiif.presentation.v3.services.auth.AuthTokenService1;
+import info.freelibrary.iiif.presentation.v3.services.AuthCookieService1;
+import info.freelibrary.iiif.presentation.v3.services.AuthTokenService1;
+import info.freelibrary.iiif.presentation.v3.services.ExternalCookieService1;
+import info.freelibrary.iiif.presentation.v3.services.KioskCookieService1;
 import info.freelibrary.iiif.presentation.v3.utils.JSON;
 import info.freelibrary.iiif.presentation.v3.utils.JsonKeys;
 
@@ -128,8 +129,10 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
 
         switch (myAccessMode) {
             case OPEN:
+                LOGGER.debug(MessageCodes.CAD_010);
                 return true;
             case TIERED:
+                LOGGER.debug(MessageCodes.CAD_011);
                 switch (getRequestType()) {
                     case INFORMATION:
                         return getTieredInfo(authorizationHeader);
@@ -139,6 +142,7 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
                 }
             case ALL_OR_NOTHING:
             default:
+                LOGGER.debug(MessageCodes.CAD_012);
                 switch (getRequestType()) {
                     case INFORMATION:
                         return getAllOrNothingInfo(authorizationHeader);
@@ -175,8 +179,11 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
         final int[] configuredScaleConstraint = myConfig.getScaleConstraint();
         final Optional<HauthToken> token = getToken(aAuthHeader);
 
+        LOGGER.debug(MessageCodes.CAD_013);
+
         // Full access from an on-campus IP
         if (token.isPresent() && token.get().isValidIP()) {
+            LOGGER.debug(MessageCodes.CAD_014);
             return true;
         }
 
@@ -185,12 +192,14 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
             return myInfoJsonShouldContainAuth = true;
         }
 
-        // Degraded image request for a size we don't allow access to; return HTTP 403
+        // Degraded image request for a size that doesn't match what we've configured and isn't 1:1
         if (scaleConstraint[0] != scaleConstraint[1]) {
-            return false;
+            LOGGER.debug(MessageCodes.CAD_015, scaleConstraint[0], scaleConstraint[1]);
+            return false; // returns 403
         }
 
         // Full image request, but non-campus IP (the long types make a difference here, apparently)
+        LOGGER.debug(MessageCodes.CAD_016);
         return Map.of(STATUS_CODE, Long.valueOf(HTTP.FOUND), //
                 SCALE_NUMERATOR, (long) configuredScaleConstraint[0], //
                 SCALE_DENOMINATOR, (long) configuredScaleConstraint[1]);
@@ -207,22 +216,28 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
         final int[] configuredScaleConstraint = myConfig.getScaleConstraint();
         final String cookieHeader = getContext().getRequestHeaders().get(COOKIE);
 
+        LOGGER.debug(MessageCodes.CAD_017);
+
         // Degraded image request for the size we allow (probably via an earlier HTTP 302 redirect)
         if (Arrays.equals(configuredScaleConstraint, scaleConstraint)) {
+            LOGGER.debug(MessageCodes.CAD_027);
             return true;
         }
 
         // Degraded image request for a size we don't allow access to; return HTTP 403
         if (scaleConstraint[0] != scaleConstraint[1]) {
+            LOGGER.debug(MessageCodes.CAD_028, scaleConstraint[0], scaleConstraint[1]);
             return Map.of(STATUS_CODE, Long.valueOf(HTTP.UNAUTHORIZED), CHALLENGE, WWW_AUTHENTICATE_HEADER_VALUE);
         }
 
         // Full access from an on-campus IP
         if (cookieHeader != null && hasCampusNetworkCookie(cookieHeader)) {
+            LOGGER.debug(MessageCodes.CAD_018);
             return true;
         }
 
         // Full image request, but non-campus IP (the long types make a difference here, apparently)
+        LOGGER.debug(MessageCodes.CAD_019);
         return Map.of(STATUS_CODE, Long.valueOf(HTTP.FOUND), //
                 SCALE_NUMERATOR, (long) configuredScaleConstraint[0], //
                 SCALE_DENOMINATOR, (long) configuredScaleConstraint[1]);
@@ -237,8 +252,11 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
     private Object getAllOrNothingInfo(final String aAuthHeader) {
         final Optional<HauthSinaiToken> sinaiToken = getSinaiToken(aAuthHeader);
 
+        LOGGER.debug(MessageCodes.CAD_020);
+
         // Full access is granted with a valid token
         if (sinaiToken.isPresent() && sinaiToken.get().hasSinaiAffiliate()) {
+            LOGGER.debug(MessageCodes.CAD_021);
             return true;
         }
 
@@ -246,6 +264,7 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
         myInfoJsonShouldContainAuth = true;
 
         // No access without a token
+        LOGGER.debug(MessageCodes.CAD_022);
         return Map.of(STATUS_CODE, Long.valueOf(HTTP.UNAUTHORIZED), CHALLENGE, WWW_AUTHENTICATE_HEADER_VALUE);
     }
 
@@ -257,12 +276,16 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
     private Object getAllOrNothingImage() {
         final String cookieHeader = getContext().getRequestHeaders().get(COOKIE);
 
+        LOGGER.debug(MessageCodes.CAD_023);
+
         // Full access
         if (cookieHeader != null && hasSinaiAffiliateCookies(cookieHeader)) {
+            LOGGER.debug(MessageCodes.CAD_024);
             return true;
         }
 
         // No access
+        LOGGER.debug(MessageCodes.CAD_025);
         return Map.of(STATUS_CODE, Long.valueOf(HTTP.UNAUTHORIZED), CHALLENGE, WWW_AUTHENTICATE_HEADER_VALUE);
     }
 
@@ -272,20 +295,21 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
      * @return An auth service description
      */
     private Map<String, Object> getAuthServices() {
-        final AuthCookieService1 cookieService;
+        final AuthCookieService1<?> cookieService;
         final AuthTokenService1 tokenService;
+        final Map<String, Object> serviceMap;
+        final String label;
 
         switch (myAccessMode) {
             case TIERED:
                 tokenService = new AuthTokenService1(myConfig.getTokenService());
-                cookieService = new AuthCookieService1(Profile.KIOSK, myConfig.getCookieService(),
-                        myConfig.getCookieServiceLabel(), tokenService);
+                cookieService = new KioskCookieService1(myConfig.getCookieService(), tokenService);
+                label = "Internal cookie granting service";
                 break;
             case ALL_OR_NOTHING:
                 tokenService = new AuthTokenService1(myConfig.getSinaiTokenService());
-                // Cf. https://github.com/ksclarke/jiiify-presentation/issues/155
-                cookieService = new AuthCookieService1(Profile.EXTERNAL, "http://example.com",
-                        myConfig.getSinaiCookieServiceLabel(), tokenService);
+                cookieService = new ExternalCookieService1(tokenService);
+                label = "External authentication required";
                 break;
             case OPEN:
             default:
@@ -293,7 +317,11 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
                 return Collections.emptyMap();
         }
 
-        return JSON.convertValue(cookieService, MAP_TYPE_REFERENCE);
+        // Workaround for Mirador bug that requires label be present (Cf. https://bitly.com/3NllMLq+)
+        serviceMap = JSON.convertValue(cookieService, MAP_TYPE_REFERENCE);
+        serviceMap.putIfAbsent(JsonKeys.LABEL, label);
+
+        return serviceMap;
     }
 
     /**
@@ -320,8 +348,10 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
                     // Cookie found, but it's not what we were expecting
                     LOGGER.error(MessageCodes.CAD_008, aCookieHeader);
                 }
+
                 return accessAllowed;
             }
+
             return false;
         } catch (final InterruptedException | IOException details) {
             LOGGER.error(details, details.getMessage());
@@ -350,6 +380,7 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
 
                 return mapper.readTree(accessToken).get("sinaiAffiliate").asBoolean();
             }
+
             return false;
         } catch (final InterruptedException | IOException details) {
             LOGGER.error(details, details.getMessage());
