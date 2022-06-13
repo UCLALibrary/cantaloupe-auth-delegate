@@ -77,11 +77,10 @@ jobs:
       - name: Publish Jar Artifact to S3
         uses: jakejarvis/s3-sync-action@be0c4ab89158cac4278689ebedd8407dd5f35a83 # v0.5.1
         with:
-          args: --acl public-read
+          args: --acl public-read --follow-symlinks --include 'target/cantaloupe-auth-delegate-*.jar'
         env:
           AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: "us-west-2"
-          SOURCE_DIR: "target/cantaloupe-auth-delegate-${{ github.event.release.tag_name }}.jar"
           DEST_DIR: "/cantaloupe-delegate/"
