@@ -127,8 +127,6 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
      */
     @Override
     public Object preAuthorize() {
-        final String authorizationHeader = getContext().getRequestHeaders().get(HauthToken.HEADER);
-
         // Cache the result of the access level HTTP request
         myAccessMode = new HauthItem(myConfig.getAccessService(), getContext().getIdentifier()).getAccessMode();
 
@@ -140,7 +138,7 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
                 LOGGER.debug(MessageCodes.CAD_011);
                 switch (getRequestType()) {
                     case INFORMATION:
-                        return getTieredInfo(authorizationHeader);
+                        return getTieredInfo();
                     case IMAGE:
                     default:
                         return getTieredImage();
@@ -150,7 +148,7 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
                 LOGGER.debug(MessageCodes.CAD_012);
                 switch (getRequestType()) {
                     case INFORMATION:
-                        return getAllOrNothingInfo(authorizationHeader);
+                        return getAllOrNothingInfo();
                     case IMAGE:
                     default:
                         return getAllOrNothingImage();
@@ -175,14 +173,13 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
     /**
      * Gets the response for a tiered image information request.
      *
-     * @param aAuthHeader An authorization header
      * @return True, false, or a map with scaling information
      */
-    private Object getTieredInfo(final String aAuthHeader) {
+    private Object getTieredInfo() {
         // For full image requests, this array value is equal to { 1, 1 }
         final int[] scaleConstraint = getContext().getScaleConstraint();
         final int[] configuredScaleConstraint = myConfig.getScaleConstraint();
-        final Optional<HauthToken> token = getToken(aAuthHeader);
+        final Optional<HauthToken> token = getToken();
 
         LOGGER.debug(MessageCodes.CAD_013);
 
@@ -219,9 +216,6 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
         // For full image requests, this array value is equal to { 1, 1 }
         final int[] scaleConstraint = getContext().getScaleConstraint();
         final int[] configuredScaleConstraint = myConfig.getScaleConstraint();
-        final String cookieHeader = getContext().getRequestHeaders().get(COOKIE);
-        final Optional<String> xForwardedForHeader =
-                Optional.ofNullable(getContext().getRequestHeaders().get(X_FORWARDED_FOR));
 
         LOGGER.debug(MessageCodes.CAD_017);
 
@@ -238,7 +232,7 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
         }
 
         // Full access from an on-campus IP
-        if (cookieHeader != null && hasCampusNetworkCookie(cookieHeader, xForwardedForHeader)) {
+        if (hasCampusNetworkCookie()) {
             LOGGER.debug(MessageCodes.CAD_018);
             return true;
         }
@@ -253,11 +247,10 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
     /**
      * Gets the response for a all-or-nothing image information request.
      *
-     * @param aAuthHeader An authorization header
      * @return True or a map with an unauthorized status response
      */
-    private Object getAllOrNothingInfo(final String aAuthHeader) {
-        final Optional<HauthSinaiToken> sinaiToken = getSinaiToken(aAuthHeader);
+    private Object getAllOrNothingInfo() {
+        final Optional<HauthSinaiToken> sinaiToken = getSinaiToken();
 
         LOGGER.debug(MessageCodes.CAD_020);
 
@@ -281,14 +274,10 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
      * @return True or a map with an unauthorized status response
      */
     private Object getAllOrNothingImage() {
-        final String cookieHeader = getContext().getRequestHeaders().get(COOKIE);
-        final Optional<String> xForwardedForHeader =
-                Optional.ofNullable(getContext().getRequestHeaders().get(X_FORWARDED_FOR));
-
         LOGGER.debug(MessageCodes.CAD_023);
 
         // Full access
-        if (cookieHeader != null && hasSinaiAffiliateCookies(cookieHeader, xForwardedForHeader)) {
+        if (hasSinaiAffiliateCookies()) {
             LOGGER.debug(MessageCodes.CAD_024);
             return true;
         }
@@ -336,16 +325,28 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
     /**
      * Determines whether or not the client can prove campus network access.
      *
-     * @param aCookieHeader The Cookie HTTP request header
-     * @param anXForwardedForHeader The X-Forwarded-For HTTP request header
      * @return Whether or not the cookie proves campus network access
      */
-    private boolean hasCampusNetworkCookie(final String aCookieHeader, final Optional<String> anXForwardedForHeader) {
+    private boolean hasCampusNetworkCookie() {
         final URI tokenService = myConfig.getTokenService();
-        final HttpRequest.Builder builder = HttpRequest.newBuilder().uri(tokenService).header(COOKIE, aCookieHeader);
+        final HttpRequest.Builder builder = HttpRequest.newBuilder().uri(tokenService);
         final ObjectMapper mapper = new ObjectMapper();
+        final Map<String, String> requestHeaders = getContext().getRequestHeaders();
+        final String cookieHeader = requestHeaders.get(COOKIE);
+        final String xForwardedForHeader = requestHeaders.get(X_FORWARDED_FOR);
 
-        anXForwardedForHeader.ifPresent(xff -> builder.header(X_FORWARDED_FOR, xff));
+        if (cookieHeader != null) {
+            builder.header(COOKIE, cookieHeader);
+        } else {
+            LOGGER.error(MessageCodes.CAD_029, COOKIE);
+            return false;
+        }
+
+        if (xForwardedForHeader != null) {
+            builder.header(X_FORWARDED_FOR, xForwardedForHeader);
+        } else {
+            LOGGER.debug(MessageCodes.CAD_029, X_FORWARDED_FOR);
+        }
 
         try {
             final HttpResponse<String> response =
@@ -359,7 +360,7 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
 
                 if (!accessAllowed) {
                     // Cookie found, but it's not what we were expecting
-                    LOGGER.error(MessageCodes.CAD_008, aCookieHeader);
+                    LOGGER.error(MessageCodes.CAD_008, cookieHeader);
                 }
 
                 return accessAllowed;
@@ -375,16 +376,28 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
     /**
      * Determines whether or not the client can prove Sinai affiliation.
      *
-     * @param aCookieHeader The Cookie HTTP request header
-     * @param anXForwardedForHeader The X-Forwarded-For HTTP request header
      * @return Whether or not the cookies prove Sinai affiliation
      */
-    private boolean hasSinaiAffiliateCookies(final String aCookieHeader, final Optional<String> anXForwardedForHeader) {
+    private boolean hasSinaiAffiliateCookies() {
         final URI tokenService = myConfig.getSinaiTokenService();
-        final HttpRequest.Builder builder = HttpRequest.newBuilder().uri(tokenService).headers(COOKIE, aCookieHeader);
+        final HttpRequest.Builder builder = HttpRequest.newBuilder().uri(tokenService);
         final ObjectMapper mapper = new ObjectMapper();
+        final Map<String, String> requestHeaders = getContext().getRequestHeaders();
+        final String cookieHeader = requestHeaders.get(COOKIE);
+        final String xForwardedForHeader = requestHeaders.get(X_FORWARDED_FOR);
 
-        anXForwardedForHeader.ifPresent(xff -> builder.header(X_FORWARDED_FOR, xff));
+        if (cookieHeader != null) {
+            builder.header(COOKIE, cookieHeader);
+        } else {
+            LOGGER.error(MessageCodes.CAD_029, COOKIE);
+            return false;
+        }
+
+        if (xForwardedForHeader != null) {
+            builder.header(X_FORWARDED_FOR, xForwardedForHeader);
+        } else {
+            LOGGER.debug(MessageCodes.CAD_029, X_FORWARDED_FOR);
+        }
 
         try {
             final HttpResponse<String> response =
@@ -408,12 +421,13 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
     /**
      * Gets a Hauth token from the supplied header value.
      *
-     * @param aHeaderValue An authorization header value
      * @return An optional Hauth authorization token
      */
-    private Optional<HauthToken> getToken(final String aHeaderValue) {
-        if (aHeaderValue != null) {
-            final String[] tokenParts = aHeaderValue.split(SINGLE_SPACE_PATTERN);
+    private Optional<HauthToken> getToken() {
+        final String authorizationHeader = getContext().getRequestHeaders().get(HauthToken.HEADER);
+
+        if (authorizationHeader != null) {
+            final String[] tokenParts = authorizationHeader.split(SINGLE_SPACE_PATTERN);
 
             if (tokenParts.length == 2 && HauthToken.TYPE.equalsIgnoreCase(tokenParts[0])) {
                 try {
@@ -426,6 +440,8 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
                     LOGGER.trace(details.getMessage(), details);
                 }
             }
+        } else {
+            LOGGER.debug(MessageCodes.CAD_029, HauthToken.HEADER);
         }
 
         return Optional.empty();
@@ -434,12 +450,13 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
     /**
      * Gets a Sinai token from the supplied header value.
      *
-     * @param aHeaderValue An authorization header value
      * @return An optional Sinai authorization token
      */
-    private Optional<HauthSinaiToken> getSinaiToken(final String aHeaderValue) {
-        if (aHeaderValue != null) {
-            final String[] tokenParts = aHeaderValue.split(SINGLE_SPACE_PATTERN);
+    private Optional<HauthSinaiToken> getSinaiToken() {
+        final String authorizationHeader = getContext().getRequestHeaders().get(HauthToken.HEADER);
+
+        if (authorizationHeader != null) {
+            final String[] tokenParts = authorizationHeader.split(SINGLE_SPACE_PATTERN);
 
             if (tokenParts.length == 2 && HauthToken.TYPE.equalsIgnoreCase(tokenParts[0])) {
                 try {
@@ -452,6 +469,8 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
                     LOGGER.trace(details.getMessage(), details);
                 }
             }
+        } else {
+            LOGGER.debug(MessageCodes.CAD_029, HauthToken.HEADER);
         }
 
         return Optional.empty();
