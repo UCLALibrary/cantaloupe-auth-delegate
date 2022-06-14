@@ -34,5 +34,6 @@
   <entry key="CAD-026">Generated cookies: {}={}, {}={} (cleartext: "{}")</entry>
   <entry key="CAD-027">Access allowed: Degraded image request for the size we allow</entry>
   <entry key="CAD-028">Access denied: Degraded image request for a size we don't allow: {}:{}</entry>
+  <entry key="CAD-029">Request header "{}" not found</entry>
 
 </properties>
