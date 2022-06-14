@@ -58,6 +58,11 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
     private static final String COOKIE = "Cookie";
 
     /**
+     * The name of the X-Forwarded-For HTTP request header.
+     */
+    private static final String X_FORWARDED_FOR = "X-Forwarded-For";
+
+    /**
      * The Map key, for a {@link #preAuthorize} return value, used to indicate that a WWW-Authenticate HTTP header
      * should be included in the response.
      */
@@ -215,6 +220,8 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
         final int[] scaleConstraint = getContext().getScaleConstraint();
         final int[] configuredScaleConstraint = myConfig.getScaleConstraint();
         final String cookieHeader = getContext().getRequestHeaders().get(COOKIE);
+        final Optional<String> xForwardedForHeader =
+                Optional.ofNullable(getContext().getRequestHeaders().get(X_FORWARDED_FOR));
 
         LOGGER.debug(MessageCodes.CAD_017);
 
@@ -231,7 +238,7 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
         }
 
         // Full access from an on-campus IP
-        if (cookieHeader != null && hasCampusNetworkCookie(cookieHeader)) {
+        if (cookieHeader != null && hasCampusNetworkCookie(cookieHeader, xForwardedForHeader)) {
             LOGGER.debug(MessageCodes.CAD_018);
             return true;
         }
@@ -275,11 +282,13 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
      */
     private Object getAllOrNothingImage() {
         final String cookieHeader = getContext().getRequestHeaders().get(COOKIE);
+        final Optional<String> xForwardedForHeader =
+                Optional.ofNullable(getContext().getRequestHeaders().get(X_FORWARDED_FOR));
 
         LOGGER.debug(MessageCodes.CAD_023);
 
         // Full access
-        if (cookieHeader != null && hasSinaiAffiliateCookies(cookieHeader)) {
+        if (cookieHeader != null && hasSinaiAffiliateCookies(cookieHeader, xForwardedForHeader)) {
             LOGGER.debug(MessageCodes.CAD_024);
             return true;
         }
@@ -328,15 +337,19 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
      * Determines whether or not the client can prove campus network access.
      *
      * @param aCookieHeader The Cookie HTTP request header
+     * @param anXForwardedForHeader The X-Forwarded-For HTTP request header
      * @return Whether or not the cookie proves campus network access
      */
-    private boolean hasCampusNetworkCookie(final String aCookieHeader) {
+    private boolean hasCampusNetworkCookie(final String aCookieHeader, final Optional<String> anXForwardedForHeader) {
         final URI tokenService = myConfig.getTokenService();
-        final HttpRequest request = HttpRequest.newBuilder().uri(tokenService).header(COOKIE, aCookieHeader).build();
+        final HttpRequest.Builder builder = HttpRequest.newBuilder().uri(tokenService).header(COOKIE, aCookieHeader);
         final ObjectMapper mapper = new ObjectMapper();
 
+        anXForwardedForHeader.ifPresent(xff -> builder.header(X_FORWARDED_FOR, xff));
+
         try {
-            final HttpResponse<String> response = HttpClient.newHttpClient().send(request, BodyHandlers.ofString());
+            final HttpResponse<String> response =
+                    HttpClient.newHttpClient().send(builder.build(), BodyHandlers.ofString());
             final JsonNode body = mapper.readTree(response.body());
 
             if (body.has(ACCESS_TOKEN)) {
@@ -363,15 +376,19 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
      * Determines whether or not the client can prove Sinai affiliation.
      *
      * @param aCookieHeader The Cookie HTTP request header
+     * @param anXForwardedForHeader The X-Forwarded-For HTTP request header
      * @return Whether or not the cookies prove Sinai affiliation
      */
-    private boolean hasSinaiAffiliateCookies(final String aCookieHeader) {
+    private boolean hasSinaiAffiliateCookies(final String aCookieHeader, final Optional<String> anXForwardedForHeader) {
         final URI tokenService = myConfig.getSinaiTokenService();
-        final HttpRequest request = HttpRequest.newBuilder().uri(tokenService).header(COOKIE, aCookieHeader).build();
+        final HttpRequest.Builder builder = HttpRequest.newBuilder().uri(tokenService).headers(COOKIE, aCookieHeader);
         final ObjectMapper mapper = new ObjectMapper();
 
+        anXForwardedForHeader.ifPresent(xff -> builder.header(X_FORWARDED_FOR, xff));
+
         try {
-            final HttpResponse<String> response = HttpClient.newHttpClient().send(request, BodyHandlers.ofString());
+            final HttpResponse<String> response =
+                    HttpClient.newHttpClient().send(builder.build(), BodyHandlers.ofString());
             final JsonNode body = mapper.readTree(response.body());
 
             if (body.has(ACCESS_TOKEN)) {
