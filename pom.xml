@@ -60,7 +60,7 @@
     <!-- Dependency versions -->
     <jiiify.presentation.version>0.12.1</jiiify.presentation.version>
     <freelib.utils.version>3.0.1</freelib.utils.version>
-    <cantaloupe.version>5.0.5</cantaloupe.version>
+    <cantaloupe.version>5.0.6</cantaloupe.version>
 
     <!-- Plugin versions -->
     <shade.plugin.version>3.2.4</shade.plugin.version>
