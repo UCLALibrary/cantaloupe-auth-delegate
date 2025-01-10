@@ -130,6 +130,7 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
      * this point in time.
      */
     @Override
+    @SuppressWarnings("PMD.SystemPrintln")
     public Object preAuthorize() {
         final JavaContext context = getContext();
         final String id = context.getIdentifier();

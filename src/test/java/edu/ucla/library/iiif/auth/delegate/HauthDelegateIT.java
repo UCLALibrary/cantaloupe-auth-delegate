@@ -212,9 +212,9 @@ public class HauthDelegateIT {
         assertEquals(200, image.getWidth());
     }
 
-    /******************
-     * Helper methods *
-     ******************/
+    /*
+     * Helper methods
+     */
 
     /**
      * Sends an HTTP request for the description resource containing image information (info.json).
