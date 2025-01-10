@@ -22,7 +22,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import info.freelibrary.util.HTTP;
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
-
 import info.freelibrary.iiif.presentation.v3.services.AuthCookieService1;
 import info.freelibrary.iiif.presentation.v3.services.AuthTokenService1;
 import info.freelibrary.iiif.presentation.v3.services.ExternalCookieService1;
@@ -34,7 +33,7 @@ import edu.ucla.library.iiif.auth.delegate.hauth.AccessMode;
 import edu.ucla.library.iiif.auth.delegate.hauth.HauthItem;
 import edu.ucla.library.iiif.auth.delegate.hauth.HauthSinaiToken;
 import edu.ucla.library.iiif.auth.delegate.hauth.HauthToken;
-
+import edu.illinois.library.cantaloupe.delegate.JavaContext;
 import edu.illinois.library.cantaloupe.delegate.JavaDelegate;
 
 /**
@@ -51,6 +50,11 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
      * A Jackson TypeReference for a Map.
      */
     private static final TypeReference<Map<String, Object>> MAP_TYPE_REFERENCE = new TypeReference<>() {};
+
+    /**
+     * The default thumbnail dimensions.
+     */
+    private static final String THUMBNAIL_DIMS = "/!200,200/";
 
     /**
      * The name of the Cookie HTTP request header.
@@ -126,9 +130,18 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
      * this point in time.
      */
     @Override
+    @SuppressWarnings("PMD.SystemPrintln")
     public Object preAuthorize() {
+        final JavaContext context = getContext();
+        final String id = context.getIdentifier();
+
+        // We let all thumbnail requests through regardless of authorization
+        if (context.getLocalURI().contains(THUMBNAIL_DIMS)) {
+            return true;
+        }
+
         // Cache the result of the access level HTTP request
-        myAccessMode = new HauthItem(myConfig.getAccessService(), getContext().getIdentifier()).getAccessMode();
+        myAccessMode = new HauthItem(myConfig.getAccessService(), id).getAccessMode();
 
         switch (myAccessMode) {
             case OPEN:
