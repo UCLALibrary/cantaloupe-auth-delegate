@@ -194,7 +194,6 @@ public class HauthDelegateIT {
      * Tests that thumbnails of access controlled items are still displayed.
      */
     @Test
-    @SuppressWarnings("PMD.SystemPrintln")
     public final void testAccessControlledThumbnails() throws InterruptedException, IOException {
         final String imageURL =
                 StringUtils.format(IMAGE_URL_TEMPLATE, System.getenv().get(TestConfig.IIIF_URL_PROPERTY), 2,
