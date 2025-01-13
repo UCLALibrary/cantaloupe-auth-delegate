@@ -5,6 +5,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -17,6 +19,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+
+import javax.imageio.ImageIO;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
@@ -185,6 +189,28 @@ public class HauthDelegateIT {
      */
     private static final HttpClient HTTP_CLIENT =
             HttpClient.newBuilder().followRedirects(Redirect.NORMAL).version(HttpClient.Version.HTTP_1_1).build();
+
+    /**
+     * Tests that thumbnails of access controlled items are still displayed.
+     */
+    @Test
+    public final void testAccessControlledThumbnails() throws InterruptedException, IOException {
+        final String imageURL =
+                StringUtils.format(IMAGE_URL_TEMPLATE, System.getenv().get(TestConfig.IIIF_URL_PROPERTY), 2,
+                        ALL_OR_NOTHING_ACCESS_IMAGE + "/full/!200,200/0/default.tif");
+        final HttpRequest.Builder requestBuilder = HttpRequest.newBuilder(URI.create(imageURL));
+        final HttpResponse<byte[]> response = HTTP_CLIENT.send(requestBuilder.build(), BodyHandlers.ofByteArray());
+        final ByteArrayInputStream byteArrayInputStream;
+        final BufferedImage image;
+
+        assertEquals(200, response.statusCode());
+
+        byteArrayInputStream = new ByteArrayInputStream(response.body());
+        image = ImageIO.read(byteArrayInputStream);
+
+        assertEquals(200, image.getHeight());
+        assertEquals(200, image.getWidth());
+    }
 
     /******************
      * Helper methods *
