@@ -26,8 +26,6 @@ import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 
 import info.freelibrary.util.HTTP;
-import info.freelibrary.util.Logger;
-import info.freelibrary.util.LoggerFactory;
 import info.freelibrary.util.StringUtils;
 
 import info.freelibrary.iiif.presentation.v3.MediaType;
