@@ -73,7 +73,7 @@ jobs:
             -Drevision=${{ github.event.release.tag_name }} -DautoReleaseAfterClose=${{ env.AUTORELEASE_ARTIFACT }}
             -ntp -Dorg.slf4j.simpleLogger.log.net.sourceforge.pmd=error -Ddocker.showLogs=true
             -Ddocker.username=${{ secrets.DOCKER_USERNAME }} -Ddocker.password=${{ secrets.DOCKER_PASSWORD }}
-            -DskipNexusStagingDeployMojo=${{ env.SKIP_JAR_DEPLOYMENT }} -DskipTests
+            -DskipNexusStagingDeployMojo=${{ env.SKIP_JAR_DEPLOYMENT }}
       - name: Publish Jar Artifact to S3
         uses: jakejarvis/s3-sync-action@be0c4ab89158cac4278689ebedd8407dd5f35a83 # v0.5.1
         with:
