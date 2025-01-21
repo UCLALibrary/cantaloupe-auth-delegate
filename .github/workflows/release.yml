@@ -7,7 +7,7 @@ on:
 
 jobs:
   publish:
-    name: Maven Artifact Publisher (JDK 11)
+    name: Maven Artifact Publisher (JDK 17)
     runs-on: ubuntu-latest
     env:
       AUTORELEASE_ARTIFACT: ${{ secrets.AUTORELEASE_ARTIFACT }}
@@ -29,11 +29,11 @@ jobs:
           lfs: true
       - name: Checkout LFS objects
         run: git lfs checkout
-      - name: Install JDK 11
+      - name: Install JDK 17
         uses: actions/setup-java@8764a52df183aa0ccea74521dfd9d506ffc7a19a # v2
         with:
           distribution: 'adopt'
-          java-version: 11
+          java-version: 17
       # If running locally in act, install Maven
       - name: Set up Maven if needed
         if: ${{ env.ACT }}
@@ -73,7 +73,7 @@ jobs:
             -Drevision=${{ github.event.release.tag_name }} -DautoReleaseAfterClose=${{ env.AUTORELEASE_ARTIFACT }}
             -ntp -Dorg.slf4j.simpleLogger.log.net.sourceforge.pmd=error -Ddocker.showLogs=true
             -Ddocker.username=${{ secrets.DOCKER_USERNAME }} -Ddocker.password=${{ secrets.DOCKER_PASSWORD }}
-            -DskipNexusStagingDeployMojo=${{ env.SKIP_JAR_DEPLOYMENT }}
+            -DskipNexusStagingDeployMojo=${{ env.SKIP_JAR_DEPLOYMENT }} -DskipTests
       - name: Publish Jar Artifact to S3
         uses: jakejarvis/s3-sync-action@be0c4ab89158cac4278689ebedd8407dd5f35a83 # v0.5.1
         with:

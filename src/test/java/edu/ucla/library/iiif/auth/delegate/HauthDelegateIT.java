@@ -40,11 +40,6 @@ import edu.ucla.library.iiif.auth.delegate.hauth.HauthToken;
 public class HauthDelegateIT {
 
     /**
-     * The HauthDelegateIT logger.
-     */
-    private static final Logger LOGGER = LoggerFactory.getLogger(HauthDelegateIT.class, MessageCodes.BUNDLE);
-
-    /**
      * The template for image URLs. The slots are:
      * <ul>
      * <li>Cantaloupe base URL</li>
@@ -84,9 +79,8 @@ public class HauthDelegateIT {
      */
     private static final String TEST_INITIALIZATION_VECTOR = "30313233343536373839414243444546";
 
-    @SuppressWarnings("checkstyle:lineLengthChecker")
     /**
-     * A test cookie generated using the following Ruby code, mocking the relevant part of the Sinai application:
+     * A test cookie generated using the following Ruby code, mocking the relevant part of the Sinai application.
      * <p>
      *
      * <pre>
@@ -101,9 +95,8 @@ public class HauthDelegateIT {
      * puts (cipher.update("Authenticated #{Time.at(0).utc}") + cipher.final).unpack("H*")[0].upcase
      * </pre>
      *
-     * @see <a href=
-     *      "https://github.com/UCLALibrary/sinaimanuscripts/blob/44cbbd9bf508c32b742f1617205a679edf77603e/app/controllers/application_controller.rb#L98-L103">How
-     *      the Sinai application encodes cookies</a>
+     * @see <a href= "https://github.com/UCLALibrary/sinaimanuscripts/blob/44cbbd9bf508c32b742f1617205a679edf77603e/app/
+     *      controllers/application_controller.rb#L98-L103">How the Sinai application encodes cookies</a>
      */
     private static final String TEST_SINAI_AUTHENTICATED_3DAY =
             "5AFF80488740353F8A11B99C7A493D871807521908500772B92E4F8FC919E305A607ADB714B22EF08D2C22FC08C8A6EC";
@@ -282,6 +275,7 @@ public class HauthDelegateIT {
      * Obtains an access cookie header to use in image requests for all-or-nothing access items.
      *
      * @return The access cookie header
+     * @throws IOException If the Sinai access cookie cannot be retrieved
      */
     private static String getSinaiAccessCookieHeader() throws IOException {
         final String[] values = TestUtils.getMockSinaiCookieValues();
@@ -374,9 +368,9 @@ public class HauthDelegateIT {
         return StringUtils.format(IMAGE_URL_TEMPLATE, aBaseURL, aImageApiVersion, imageApiPath);
     }
 
-    /*********
-     * Tests *
-     *********/
+    /*
+     * Tests
+     */
 
     /**
      * An abstract base class for testing the responses to requests for both description resources (info.json) and

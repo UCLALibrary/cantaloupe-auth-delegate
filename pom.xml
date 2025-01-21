@@ -59,20 +59,20 @@
   <properties>
     <!-- Dependency versions -->
     <jiiify.presentation.version>0.12.1</jiiify.presentation.version>
-    <freelib.utils.version>3.0.1</freelib.utils.version>
+    <freelib.utils.version>5.0.7</freelib.utils.version>
     <cantaloupe.version>5.0.6</cantaloupe.version>
 
     <!-- Plugin versions -->
-    <shade.plugin.version>3.2.4</shade.plugin.version>
+    <shade.plugin.version>3.6.0</shade.plugin.version>
     <download.plugin.version>1.6.7</download.plugin.version>
     <failsafe.plugin.version>2.22.0</failsafe.plugin.version>
-    <docker.maven.plugin.version>0.37.0</docker.maven.plugin.version>
+    <docker.maven.plugin.version>0.45.1</docker.maven.plugin.version>
 
     <!-- Docker images versions used in testing -->
-    <hauth.container.version>0.0.6</hauth.container.version>
+    <hauth.container.version>0.0.7</hauth.container.version>
     <psql.container.version>12.7-alpine</psql.container.version>
     <redis.container.version>6.2.5-alpine</redis.container.version>
-    <cantaloupe.container.version>5.0.5</cantaloupe.container.version>
+    <cantaloupe.container.version>5.0.6</cantaloupe.container.version>
 
     <!-- Build-time options -->
     <update.sql>false</update.sql>
@@ -331,9 +331,9 @@
                   <DB_PASSWORD>${test.db.password}</DB_PASSWORD>
                   <DB_CACHE_PORT>${test.db.cache.port}</DB_CACHE_PORT>
                   <CAMPUS_NETWORK_SUBNETS>172.17.0.0/24,192.168.0.0/24</CAMPUS_NETWORK_SUBNETS>
-                  <SECRET_KEY_GENERATION_PASSWORD>${test.secretkey.password}</SECRET_KEY_GENERATION_PASSWORD>
-                  <SECRET_KEY_GENERATION_SALT>${test.secretkey.salt}</SECRET_KEY_GENERATION_SALT>
-                  <SINAI_COOKIE_SECRET_KEY_GENERATION_PASSWORD>ThisPasswordIsReallyHardToGuess!</SINAI_COOKIE_SECRET_KEY_GENERATION_PASSWORD>
+                  <SECRET_KEY_PASSWORD>${test.secretkey.password}</SECRET_KEY_PASSWORD>
+                  <SECRET_KEY_SALT>${test.secretkey.salt}</SECRET_KEY_SALT>
+                  <SINAI_COOKIE_SECRET_KEY_PASSWORD>ThisPasswordIsReallyHardToGuess!</SINAI_COOKIE_SECRET_KEY_PASSWORD>
                   <SINAI_COOKIE_VALID_PREFIX>Authenticated</SINAI_COOKIE_VALID_PREFIX>
                 </env>
                 <dependsOn>
@@ -504,18 +504,6 @@
                   </args>
                 </configuration>
               </execution>
-              <execution>
-                <id>snyk-monitor</id>
-                <goals>
-                  <goal>monitor</goal>
-                </goals>
-                <configuration>
-                  <args>
-                    <arg>--org=${env.UCLALIBRARY_SNYK_ORG}</arg>
-                    <arg>--fail-on=all</arg>
-                  </args>
-                </configuration>
-              </execution>
             </executions>
           </plugin>
         </plugins>
@@ -538,6 +526,6 @@
   <parent>
     <artifactId>freelib-parent</artifactId>
     <groupId>info.freelibrary</groupId>
-    <version>7.2.1</version>
+    <version>12.0.2</version>
   </parent>
 </project>

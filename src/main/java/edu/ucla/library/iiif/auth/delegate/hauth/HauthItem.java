@@ -115,6 +115,7 @@ public class HauthItem {
      * Constructs the Access Mode Service URI by appending the requested ID onto the end of the service URI's path.
      *
      * @return A URI for the access mode service with the requested ID included
+     * @throws ConfigException if there is a problem with the access service's URI
      */
     private URI getURI() {
         final URIBuilder uriBuilder = new URIBuilder(myAccessModeService);

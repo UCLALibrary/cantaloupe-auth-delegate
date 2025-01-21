@@ -16,7 +16,7 @@ jobs:
       UCLALIBRARY_SNYK_ORG: ${{ secrets.UCLALIBRARY_SNYK_ORG }}
     strategy:
       matrix:
-        java: [ 11 ]
+        java: [ 17 ]
 
     steps:
       - name: Set up build cache
