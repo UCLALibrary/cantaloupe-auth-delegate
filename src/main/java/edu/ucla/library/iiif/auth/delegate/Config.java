@@ -69,12 +69,12 @@ public final class Config {
      * Creates a new configuration.
      */
     public Config() {
-        setScaleConstraint(getString(Config.TIERED_ACCESS_SCALE_CONSTRAINT));
+        setScaleConstraint(getString(TIERED_ACCESS_SCALE_CONSTRAINT));
 
-        myCookieService = getURI(Config.AUTH_COOKIE_SERVICE);
-        myTokenService = getURI(Config.AUTH_TOKEN_SERVICE);
-        mySinaiTokenService = getURI(Config.SINAI_AUTH_TOKEN_SERVICE);
-        myAccessService = getURI(Config.AUTH_ACCESS_SERVICE);
+        myCookieService = getURI(AUTH_COOKIE_SERVICE);
+        myTokenService = getURI(AUTH_TOKEN_SERVICE);
+        mySinaiTokenService = getURI(SINAI_AUTH_TOKEN_SERVICE);
+        myAccessService = getURI(AUTH_ACCESS_SERVICE);
     }
 
     /**
@@ -190,6 +190,7 @@ public final class Config {
      *
      * @param aScaleConstraint A scale constraint for tiered access
      * @return This configuration
+     * @throws ConfigException if there is a problem with the scale constraint's syntax
      */
     public Config setScaleConstraint(final String aScaleConstraint) {
         try {

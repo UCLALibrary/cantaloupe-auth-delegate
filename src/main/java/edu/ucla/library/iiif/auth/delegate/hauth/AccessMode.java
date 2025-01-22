@@ -9,5 +9,13 @@ package edu.ucla.library.iiif.auth.delegate.hauth;
  *      Access-Controlled Resources </a>
  */
 public enum AccessMode {
-    OPEN, TIERED, ALL_OR_NOTHING;
+
+    /** An open access mode. */
+    OPEN,
+
+    /** A tiered access mode. */
+    TIERED,
+
+    /** An all-or-nothing access mode. */
+    ALL_OR_NOTHING;
 }

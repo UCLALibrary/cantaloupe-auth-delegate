@@ -124,6 +124,8 @@ public final class TestUtils {
      *
      * @param aExpected A first JSON string
      * @param aFound A second JSON string
+     * @throws JsonProcessingException If there is trouble processing the JSON tree
+     * @throws IOException If there is trouble reading the JSON tree
      */
     public static void assertEquals(final String aExpected, final String aFound)
             throws JsonProcessingException, IOException {
@@ -133,7 +135,7 @@ public final class TestUtils {
     /**
      * A sorting node factory.
      */
-    private static class SortingNodeFactory extends JsonNodeFactory {
+    private static final class SortingNodeFactory extends JsonNodeFactory {
 
         /**
          * The <code>serialVersionUID</code> for the sorting node factory.
@@ -157,7 +159,7 @@ public final class TestUtils {
     private static class SortedArrayNode extends ArrayNode {
 
         /**
-         * The <code>serialVersionUID</code>
+         * The <code>serialVersionUID</code> of this node.
          */
         private static final long serialVersionUID = 4000699652392697259L;
 

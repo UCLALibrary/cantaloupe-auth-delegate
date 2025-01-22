@@ -130,6 +130,7 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
      * this point in time.
      */
     @Override
+    @SuppressWarnings({ "PMD.ImplicitSwitchFallThrough" })
     public Object preAuthorize() {
         final JavaContext context = getContext();
         final String id = context.getIdentifier();
@@ -492,7 +493,12 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
      * The different types of requests that this delegate may process.
      */
     private enum RequestType {
-        INFORMATION, IMAGE;
+
+        /** An information request type. */
+        INFORMATION,
+
+        /** An image request type. */
+        IMAGE;
     }
 
     /**
