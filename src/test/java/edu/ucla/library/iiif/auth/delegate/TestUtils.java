@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.TreeMap;
 import java.util.stream.Stream;
@@ -112,11 +113,9 @@ public final class TestUtils {
      * @return Whether or not at least one of the content types is included in the response's Content-Type header
      */
     public static boolean responseHasContentType(final HttpResponse<?> aResponse, final MediaType... aMediaTypes) {
-        final String contentTypeHeader = aResponse.headers().firstValue(HttpHeaders.CONTENT_TYPE).get();
-
-        return Stream.of(aMediaTypes).map(String::valueOf).anyMatch(value -> {
-            return contentTypeHeader.contains(value);
-        });
+        final Optional<String> contentType = aResponse.headers().firstValue(HttpHeaders.CONTENT_TYPE);
+        return contentType.isPresent() &&
+                Stream.of(aMediaTypes).map(String::valueOf).anyMatch(value -> contentType.get().contains(value));
     }
 
     /**

@@ -19,15 +19,6 @@ jobs:
         java: [ 17 ]
 
     steps:
-      - name: Set up build cache
-        uses: actions/cache@0781355a23dac32fd3bac414512f4b903437991a # v2
-        if: ${{ env.MAVEN_CACHE_KEY }}
-        with:
-          path: |
-            ~/.m2
-            lib
-          key: uclalibrary-cache-${{ env.MAVEN_CACHE_KEY }}-${{ hashFiles('**/pom.xml') }}
-          restore-keys: uclalibrary-cache-${{ env.MAVEN_CACHE_KEY }}-
       - name: Check out code
         uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f # v2
         with:
