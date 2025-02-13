@@ -38,6 +38,11 @@ import edu.ucla.library.iiif.auth.delegate.hauth.HauthToken;
 public class HauthDelegateIT {
 
     /**
+     * A sample thumbnail IIIF request.
+     */
+    private static final String THUMBNAIL = "/full/!200,200/0/default.tif";
+
+    /**
      * The template for image URLs. The slots are:
      * <ul>
      * <li>Cantaloupe base URL</li>
@@ -54,7 +59,7 @@ public class HauthDelegateIT {
      * </code>
      * <p>
      * This would be the value of the "accessToken" key shown
-     * <a href="https://iiif.io/api/auth/1.0/#the-json-access-token-response">here</a>.
+     * <a href= "https://iiif.io/api/auth/1.0/#the-json-access-token-response">here</a>.
      */
     private static final String ACCESS_TOKEN =
             "eyJ2ZXJzaW9uIjogIjAuMC4wLVNOQVBTSE9UIiwgImNhbXB1c05ldHdvcmsiOiB0cnVlfQo=";
@@ -66,38 +71,10 @@ public class HauthDelegateIT {
      * </code>
      * <p>
      * This would be the value of the "accessToken" key shown
-     * <a href="https://iiif.io/api/auth/1.0/#the-json-access-token-response">here</a>.
+     * <a href= "https://iiif.io/api/auth/1.0/#the-json-access-token-response">here</a>.
      */
     private static final String SINAI_ACCESS_TOKEN =
             "eyJ2ZXJzaW9uIjogIjAuMC4wLVNOQVBTSE9UIiwgInNpbmFpQWZmaWxpYXRlIjogdHJ1ZX0K";
-
-    /**
-     * A test initialization vector used to encrypt {@link #TEST_SINAI_AUTHENTICATED_3DAY}. This is just the value
-     * "0123456789ABCDEF" (see Ruby script below) encoded in hexadecimal.
-     */
-    private static final String TEST_INITIALIZATION_VECTOR = "30313233343536373839414243444546";
-
-    /**
-     * A test cookie generated using the following Ruby code, mocking the relevant part of the Sinai application.
-     * <p>
-     *
-     * <pre>
-     * #!/usr/bin/env ruby
-     *
-     * require "openssl"
-     *
-     * cipher = OpenSSL::Cipher::AES256.new :CBC
-     * cipher.encrypt
-     * cipher.key = "ThisPasswordIsReallyHardToGuess!"
-     * cipher.iv = "0123456789ABCDEF"
-     * puts (cipher.update("Authenticated #{Time.at(0).utc}") + cipher.final).unpack("H*")[0].upcase
-     * </pre>
-     *
-     * @see <a href= "https://github.com/UCLALibrary/sinaimanuscripts/blob/44cbbd9bf508c32b742f1617205a679edf77603e/app/
-     *      controllers/application_controller.rb#L98-L103">How the Sinai application encodes cookies</a>
-     */
-    private static final String TEST_SINAI_AUTHENTICATED_3DAY =
-            "5AFF80488740353F8A11B99C7A493D871807521908500772B92E4F8FC919E305A607ADB714B22EF08D2C22FC08C8A6EC";
 
     /**
      * The id of the non-restricted image.
@@ -183,12 +160,38 @@ public class HauthDelegateIT {
 
     /**
      * Tests that thumbnails of access controlled items are still displayed.
+     *
+     * @throws InterruptedException If the test is interrupted
+     * @throws IOException If there is trouble reading and writing test resources
      */
     @Test
-    public final void testAccessControlledThumbnails() throws InterruptedException, IOException {
-        final String imageURL =
-                StringUtils.format(IMAGE_URL_TEMPLATE, System.getenv().get(TestConfig.IIIF_URL_PROPERTY), 2,
-                        ALL_OR_NOTHING_ACCESS_IMAGE + "/full/!200,200/0/default.tif");
+    public final void testAllOrNothingThumbnails() throws InterruptedException, IOException {
+        final String imageURL = StringUtils.format(IMAGE_URL_TEMPLATE,
+                System.getenv().get(TestConfig.IIIF_URL_PROPERTY), 2, ALL_OR_NOTHING_ACCESS_IMAGE + THUMBNAIL);
+        final HttpRequest.Builder requestBuilder = HttpRequest.newBuilder(URI.create(imageURL));
+        final HttpResponse<byte[]> response = HTTP_CLIENT.send(requestBuilder.build(), BodyHandlers.ofByteArray());
+        final ByteArrayInputStream byteArrayInputStream;
+        final BufferedImage image;
+
+        assertEquals(200, response.statusCode());
+
+        byteArrayInputStream = new ByteArrayInputStream(response.body());
+        image = ImageIO.read(byteArrayInputStream);
+
+        assertEquals(200, image.getHeight());
+        assertEquals(200, image.getWidth());
+    }
+
+    /**
+     * Tests that thumbnails of access controlled items are still displayed.
+     *
+     * @throws InterruptedException If the test is interrupted
+     * @throws IOException If there is trouble reading and writing test resources
+     */
+    @Test
+    public final void testTieredAccessControlledThumbnails() throws InterruptedException, IOException {
+        final String imageURL = StringUtils.format(IMAGE_URL_TEMPLATE,
+                System.getenv().get(TestConfig.IIIF_URL_PROPERTY), 2, TIERED_ACCESS_IMAGE_DEGRADED_VALID + THUMBNAIL);
         final HttpRequest.Builder requestBuilder = HttpRequest.newBuilder(URI.create(imageURL));
         final HttpResponse<byte[]> response = HTTP_CLIENT.send(requestBuilder.build(), BodyHandlers.ofByteArray());
         final ByteArrayInputStream byteArrayInputStream;
@@ -350,7 +353,8 @@ public class HauthDelegateIT {
         final String imageApiPathTemplate;
         final String imageApiPath;
 
-        // Use TIFFs so that we can easily compare the response payload with the source image
+        // Use TIFFs so that we can easily compare the response payload with the source
+        // image
         switch (aImageApiVersion) {
             case 2:
                 imageApiPathTemplate = "{}/full/full/0/default.tif";
@@ -481,6 +485,8 @@ public class HauthDelegateIT {
             final HttpResponse<String> response =
                     sendImageInfoRequest(TIERED_ACCESS_IMAGE_DEGRADED_UNAVAILABLE, null, 2);
 
+            System.out.println(response.headers().toString());
+
             assertEquals(HTTP.FORBIDDEN, response.statusCode());
             assertFalse(TestUtils.responseHasContentType(response, MediaType.APPLICATION_JSON,
                     MediaType.APPLICATION_LD_PLUS_JSON));
@@ -506,6 +512,9 @@ public class HauthDelegateIT {
                     getExpectedImageInfo(ALL_OR_NOTHING_ACCESS_IMAGE, NO_ACCESS_RESPONSE_TEMPLATE_V2, 2);
 
             assertEquals(HTTP.UNAUTHORIZED, response.statusCode());
+
+            System.out.println(response.headers().toString());
+
             assertTrue(TestUtils.responseHasContentType(response, MediaType.APPLICATION_JSON,
                     MediaType.APPLICATION_LD_PLUS_JSON));
             TestUtils.assertEquals(expectedResponse, response.body());

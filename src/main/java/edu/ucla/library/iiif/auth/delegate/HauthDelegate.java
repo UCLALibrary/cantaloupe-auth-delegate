@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import info.freelibrary.util.HTTP;
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
+
 import info.freelibrary.iiif.presentation.v3.services.AuthCookieService1;
 import info.freelibrary.iiif.presentation.v3.services.AuthTokenService1;
 import info.freelibrary.iiif.presentation.v3.services.ExternalCookieService1;
@@ -33,6 +34,7 @@ import edu.ucla.library.iiif.auth.delegate.hauth.AccessMode;
 import edu.ucla.library.iiif.auth.delegate.hauth.HauthItem;
 import edu.ucla.library.iiif.auth.delegate.hauth.HauthSinaiToken;
 import edu.ucla.library.iiif.auth.delegate.hauth.HauthToken;
+
 import edu.illinois.library.cantaloupe.delegate.JavaContext;
 import edu.illinois.library.cantaloupe.delegate.JavaDelegate;
 
@@ -52,9 +54,9 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
     private static final TypeReference<Map<String, Object>> MAP_TYPE_REFERENCE = new TypeReference<>() {};
 
     /**
-     * The default thumbnail dimensions.
+     * The way we identify if a thumbnail is being requested.
      */
-    private static final String THUMBNAIL_DIMS = "/!200,200/";
+    private static final String THUMBNAIL = "/full/!200,200/0/";
 
     /**
      * The name of the Cookie HTTP request header.
@@ -135,8 +137,9 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
         final JavaContext context = getContext();
         final String id = context.getIdentifier();
 
-        // We let all thumbnail requests through regardless of authorization
-        if (context.getLocalURI().contains(THUMBNAIL_DIMS)) {
+        // Allow any kind of thumbnail request, no questions asked
+        if (context.getLocalURI().contains(THUMBNAIL)) {
+            LOGGER.debug(MessageCodes.CAD_030, context.getLocalURI());
             return true;
         }
 
@@ -202,18 +205,21 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
             return true;
         }
 
-        // Degraded image request for the size we allow (probably via an earlier HTTP 302 redirect)
+        // Degraded image request for the size we allow (probably via an earlier HTTP
+        // 302 redirect)
         if (Arrays.equals(configuredScaleConstraint, scaleConstraint)) {
             return myInfoJsonShouldContainAuth = true;
         }
 
-        // Degraded image request for a size that doesn't match what we've configured and isn't 1:1
+        // Degraded image request for a size that doesn't match what we've configured
+        // and isn't 1:1
         if (scaleConstraint[0] != scaleConstraint[1]) {
             LOGGER.debug(MessageCodes.CAD_015, scaleConstraint[0], scaleConstraint[1]);
             return false; // returns 403
         }
 
-        // Full image request, but non-campus IP (the long types make a difference here, apparently)
+        // Full image request, but non-campus IP (the long types make a difference here,
+        // apparently)
         LOGGER.debug(MessageCodes.CAD_016);
         return Map.of(STATUS_CODE, Long.valueOf(HTTP.FOUND), //
                 SCALE_NUMERATOR, (long) configuredScaleConstraint[0], //
@@ -232,7 +238,8 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
 
         LOGGER.debug(MessageCodes.CAD_017);
 
-        // Degraded image request for the size we allow (probably via an earlier HTTP 302 redirect)
+        // Degraded image request for the size we allow (probably via an earlier HTTP
+        // 302 redirect)
         if (Arrays.equals(configuredScaleConstraint, scaleConstraint)) {
             LOGGER.debug(MessageCodes.CAD_027);
             return true;
@@ -250,7 +257,8 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
             return true;
         }
 
-        // Full image request, but non-campus IP (the long types make a difference here, apparently)
+        // Full image request, but non-campus IP (the long types make a difference here,
+        // apparently)
         LOGGER.debug(MessageCodes.CAD_019);
         return Map.of(STATUS_CODE, Long.valueOf(HTTP.FOUND), //
                 SCALE_NUMERATOR, (long) configuredScaleConstraint[0], //
@@ -324,11 +332,13 @@ public class HauthDelegate extends CantaloupeDelegate implements JavaDelegate {
                 break;
             case OPEN:
             default:
-                // The OPEN and default branches should not be reachable, but are included here just in case
+                // The OPEN and default branches should not be reachable, but are included here
+                // just in case
                 return Collections.emptyMap();
         }
 
-        // Workaround for Mirador bug that requires label be present (Cf. https://bitly.com/3NllMLq+)
+        // Workaround for Mirador bug that requires label be present (Cf.
+        // https://bitly.com/3NllMLq+)
         serviceMap = JSON.convertValue(cookieService, MAP_TYPE_REFERENCE);
         serviceMap.putIfAbsent(JsonKeys.LABEL, label);
 
