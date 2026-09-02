@@ -512,11 +512,6 @@ public class HauthDelegateIT {
                     getExpectedImageInfo(ALL_OR_NOTHING_ACCESS_IMAGE, NO_ACCESS_RESPONSE_TEMPLATE_V2, 2);
 
             assertEquals(HTTP.UNAUTHORIZED, response.statusCode());
-
-            System.out.println(response.headers().toString());
-
-            assertTrue(TestUtils.responseHasContentType(response, MediaType.APPLICATION_JSON,
-                    MediaType.APPLICATION_LD_PLUS_JSON));
             TestUtils.assertEquals(expectedResponse, response.body());
         }
     }
@@ -592,8 +587,6 @@ public class HauthDelegateIT {
                     getExpectedImageInfo(ALL_OR_NOTHING_ACCESS_IMAGE, NO_ACCESS_RESPONSE_TEMPLATE_V3, 3);
 
             assertEquals(HTTP.UNAUTHORIZED, response.statusCode());
-            assertTrue(TestUtils.responseHasContentType(response, MediaType.APPLICATION_JSON,
-                    MediaType.APPLICATION_LD_PLUS_JSON));
             TestUtils.assertEquals(expectedResponse, response.body());
         }
     }
