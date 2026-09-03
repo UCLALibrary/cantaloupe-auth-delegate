@@ -60,20 +60,19 @@
     <!-- Dependency versions -->
     <jiiify.presentation.version>0.12.1</jiiify.presentation.version>
     <freelib.utils.version>5.0.7</freelib.utils.version>
-    <cantaloupe.version>5.0.6</cantaloupe.version>
+    <cantaloupe.version>5.0.7</cantaloupe.version>
 
     <!-- Plugin versions -->
     <shade.plugin.version>3.6.0</shade.plugin.version>
     <download.plugin.version>1.6.7</download.plugin.version>
     <failsafe.plugin.version>2.22.0</failsafe.plugin.version>
-    <docker.maven.plugin.version>0.45.1</docker.maven.plugin.version>
+    <docker.maven.plugin.version>0.49.0</docker.maven.plugin.version>
 
     <!-- Docker images versions used in testing -->
     <hauth.container.version>1.0.7</hauth.container.version>
     <psql.container.version>12.7-alpine</psql.container.version>
     <redis.container.version>6.2.5-alpine</redis.container.version>
-    <!--<cantaloupe.container.version>5.0.6-6</cantaloupe.container.version>-->
-    <cantaloupe.container.version>5.0.6-4</cantaloupe.container.version>
+    <cantaloupe.container.version>5.0.7-1</cantaloupe.container.version>
 
     <!-- Build-time options -->
     <update.sql>false</update.sql>
@@ -148,7 +147,6 @@
             <phase>validate</phase>
             <configuration>
               <file>${basedir}/lib/cantaloupe-${cantaloupe.version}.jar</file>
-              <repositoryLayout>default</repositoryLayout>
               <groupId>edu.illinois.library.cantaloupe</groupId>
               <artifactId>cantaloupe</artifactId>
               <version>${cantaloupe.version}</version>

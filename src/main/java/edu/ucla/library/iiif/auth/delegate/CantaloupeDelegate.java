@@ -99,4 +99,8 @@ public class CantaloupeDelegate extends AbstractJavaDelegate implements JavaDele
         return null;
     }
 
+    @Override
+    public String getJDBCSourceLastModified() {
+        return null;
+    }
 }
