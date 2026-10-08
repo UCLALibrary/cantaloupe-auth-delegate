@@ -55,10 +55,10 @@ jobs:
           mvn -V -B -ntp validate
 
       - name: Build with Maven
-        run: >
-          mvn -V -B -ntp deploy -Ddocker.showLogs=true -Ddocker.username=${{ secrets.DOCKER_USERNAME }}
-            -Ddocker.password=${{ secrets.DOCKER_PASSWORD }} -Dautorelease.artifact=${{ env.AUTORELEASE_ARTIFACT }}
-            -DskipNexusStagingDeployMojo=${{ env.SKIP_JAR_DEPLOYMENT }} -DlogLevel=DEBUG -DtestLogLevel=DEBUG
+        run: |
+          mvn -V -B -ntp deploy -Ddocker.showLogs=true -Ddocker.username=${{ secrets.DOCKER_USERNAME }} \
+            -Ddocker.password=${{ secrets.DOCKER_PASSWORD }} -Dautorelease.artifact=${{ env.AUTORELEASE_ARTIFACT }} \
+            -DskipNexusStagingDeployMojo=${{ env.SKIP_JAR_DEPLOYMENT }} -DlogLevel=DEBUG -DtestLogLevel=DEBUG \
             -Drevision=${{ github.event.release.tag_name }} -Ddocker.showLogs=true
 
       - name: Publish Jar Artifact to S3
