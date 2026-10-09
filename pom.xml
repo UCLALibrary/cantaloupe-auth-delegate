@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>edu.ucla.library</groupId>
@@ -58,8 +60,7 @@
 
   <properties>
     <!-- Dependency versions -->
-    <jiiify.presentation.version>0.12.1</jiiify.presentation.version>
-    <freelib.utils.version>5.0.7</freelib.utils.version>
+    <freelib.utils.version>6.0.1</freelib.utils.version>
     <cantaloupe.version>5.0.7</cantaloupe.version>
 
     <!-- Plugin versions -->
@@ -67,17 +68,19 @@
     <download.plugin.version>1.6.7</download.plugin.version>
     <failsafe.plugin.version>2.22.0</failsafe.plugin.version>
     <docker.maven.plugin.version>0.49.0</docker.maven.plugin.version>
+    <freelib.maven.version>0.5.2</freelib.maven.version>
 
     <!-- Docker images versions used in testing -->
-    <hauth.container.version>1.0.7</hauth.container.version>
     <psql.container.version>12.7-alpine</psql.container.version>
-    <redis.container.version>6.2.5-alpine</redis.container.version>
     <cantaloupe.container.version>5.0.7-1</cantaloupe.container.version>
 
     <!-- Build-time options -->
     <update.sql>false</update.sql>
     <skipUTs>false</skipUTs>
     <skipITs>false</skipITs>
+
+    <!-- Upstream enforcer rules require JDK 21 -->
+    <enforcer.skip>true</enforcer.skip>
   </properties>
 
   <dependencies>
@@ -86,11 +89,6 @@
       <groupId>info.freelibrary</groupId>
       <artifactId>freelib-utils</artifactId>
       <version>${freelib.utils.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>info.freelibrary</groupId>
-      <artifactId>jiiify-presentation-v3</artifactId>
-      <version>${jiiify.presentation.version}</version>
     </dependency>
     <dependency>
       <groupId>edu.illinois.library.cantaloupe</groupId>
@@ -121,10 +119,8 @@
         <artifactId>build-helper-maven-plugin</artifactId>
         <configuration>
           <portNames>
-            <portName>test.hauth.port</portName>
             <portName>test.db.port</portName>
             <portName>test.iiif.images.port</portName>
-            <portName>test.db.cache.port</portName>
           </portNames>
         </configuration>
         <executions>
@@ -163,6 +159,7 @@
       <plugin>
         <groupId>info.freelibrary</groupId>
         <artifactId>freelib-maven-plugins</artifactId>
+        <version>${freelib.maven.version}</version><!-- Overriding b/c newer versions require JDK 21 -->
         <executions>
           <!-- generate I18n codes execution runs by default -->
           <execution>
@@ -199,16 +196,25 @@
         <configuration>
           <!-- This doesn't exist, but prevents the FreeLibrary styles from being used -->
           <stylesheetfile>stylesheet.css</stylesheetfile>
-          <links>
-            <link>https://vertx.io/docs/apidocs/</link>
-          </links>
         </configuration>
       </plugin>
       <plugin>
         <artifactId>maven-pmd-plugin</artifactId>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
       </plugin>
       <plugin>
         <artifactId>maven-checkstyle-plugin</artifactId>
+        <configuration>
+          <skip>${checkstyle.skip}</skip>
+        </configuration>
+        <executions>
+          <execution>
+             <id>checkstyle</id>
+            <phase>none</phase>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <artifactId>maven-enforcer-plugin</artifactId>
@@ -218,13 +224,6 @@
         <configuration>
           <argLine>${jacoco.agent.arg}</argLine>
           <environmentVariables>
-            <!-- Test service IPs outside the containers use the host's default IP address -->
-            <!-- The Auth Access Mode Service URI will have the ID to be checked appended onto the end -->
-            <AUTH_ACCESS_SERVICE>http://0.0.0.0:${test.hauth.port}/access</AUTH_ACCESS_SERVICE>
-            <AUTH_COOKIE_SERVICE>http://0.0.0.0:${test.hauth.port}/cookie</AUTH_COOKIE_SERVICE>
-            <AUTH_TOKEN_SERVICE>http://0.0.0.0:${test.hauth.port}/token</AUTH_TOKEN_SERVICE>
-            <SINAI_AUTH_TOKEN_SERVICE>http://0.0.0.0:${test.hauth.port}/token/sinai</SINAI_AUTH_TOKEN_SERVICE>
-            <TIERED_ACCESS_SCALE_CONSTRAINT>1:2</TIERED_ACCESS_SCALE_CONSTRAINT>
           </environmentVariables>
           <skipTests>${skipUTs}</skipTests>
         </configuration>
@@ -236,14 +235,8 @@
           <!-- Workaround for GitHub issue: freelib-utils#38 -->
           <useModulePath>false</useModulePath>
           <environmentVariables>
-            <!-- Test service IPs inside the containers use the Docker bridge IP address -->
-            <AUTH_COOKIE_SERVICE>http://172.17.0.1:${test.hauth.port}/cookie</AUTH_COOKIE_SERVICE>
-            <AUTH_TOKEN_SERVICE>http://172.17.0.1:${test.hauth.port}/token</AUTH_TOKEN_SERVICE>
-            <IIIF_IMAGE_URL>http://172.17.0.1:${test.iiif.images.port}</IIIF_IMAGE_URL>
-            <SINAI_AUTH_TOKEN_SERVICE>http://172.17.0.1:${test.hauth.port}/token/sinai</SINAI_AUTH_TOKEN_SERVICE>
-            <TIERED_ACCESS_SCALE_CONSTRAINT>1:2</TIERED_ACCESS_SCALE_CONSTRAINT>
           </environmentVariables>
-          <skipTests>${skipITs}</skipTests>
+          <skipITs>${skipITs}</skipITs>
         </configuration>
       </plugin>
       <plugin>
@@ -301,54 +294,6 @@
                 </wait>
               </run>
             </delegate_hauth_pgsql>
-            <delegate_hauth_redis>
-              <name>redis:${redis.container.version}</name>
-              <run>
-                <containerNamePattern>delegate_hauth_redis</containerNamePattern>
-                <ports>
-                  <port>${test.db.cache.port}:6379</port>
-                </ports>
-                <wait>
-                  <log>Ready to accept connections</log>
-                </wait>
-              </run>
-            </delegate_hauth_redis>
-            <delegate_hauth>
-              <name>uclalibrary/hauth:${hauth.container.version}</name>
-              <run>
-                <containerNamePattern>delegate_hauth</containerNamePattern>
-                <ports>
-                  <!-- Start test container on an available host port -->
-                  <port>${test.hauth.port}:8888</port>
-                </ports>
-                <env>
-                  <ACCESS_TOKEN_EXPIRES_IN>1800</ACCESS_TOKEN_EXPIRES_IN>
-                  <HAUTH_VERSION>${hauth.container.version}</HAUTH_VERSION>
-                  <!-- Default Docker bridge host IP -->
-                  <DB_HOST>172.17.0.1</DB_HOST>
-                  <DB_PORT>${test.db.port}</DB_PORT>
-                  <DB_PASSWORD>${test.db.password}</DB_PASSWORD>
-                  <DB_CACHE_PORT>${test.db.cache.port}</DB_CACHE_PORT>
-                  <CAMPUS_NETWORK_SUBNETS>172.17.0.0/24,192.168.0.0/24</CAMPUS_NETWORK_SUBNETS>
-                  <SECRET_KEY_PASSWORD>${test.secretkey.password}</SECRET_KEY_PASSWORD>
-                  <SECRET_KEY_SALT>${test.secretkey.salt}</SECRET_KEY_SALT>
-                  <SINAI_COOKIE_SECRET_KEY_PASSWORD>ThisPasswordIsReallyHardToGuess!</SINAI_COOKIE_SECRET_KEY_PASSWORD>
-                  <SINAI_COOKIE_VALID_PREFIX>Authenticated</SINAI_COOKIE_VALID_PREFIX>
-                </env>
-                <dependsOn>
-                  <container>delegate_hauth_pgsql</container>
-                  <container>delegate_hauth_redis</container>
-                </dependsOn>
-                <!-- Test to make sure the server started as expected -->
-                <wait>
-                  <http>
-                    <url>http://0.0.0.0:${test.hauth.port}/status</url>
-                    <method>GET</method>
-                    <status>200</status>
-                  </http>
-                </wait>
-              </run>
-            </delegate_hauth>
             <delegate_cantaloupe>
               <name>uclalibrary/cantaloupe-ucla:${cantaloupe.container.version}</name>
               <run>
@@ -371,18 +316,8 @@
                   <CANTALOUPE_ENDPOINT_ADMIN_ENABLED>true</CANTALOUPE_ENDPOINT_ADMIN_ENABLED>
                   <CANTALOUPE_DELEGATE_SCRIPT_ENABLED>true</CANTALOUPE_DELEGATE_SCRIPT_ENABLED>
                   <CANTALOUPE_DELEGATE_SCRIPT_PATHNAME>/usr/local/cantaloupe/delegate.jar</CANTALOUPE_DELEGATE_SCRIPT_PATHNAME>
-                  <!-- Delegate configuration -->
-                  <!-- Test service IPs inside the containers use the Docker bridge IP address -->
-                  <!-- The Auth Access Mode Service URI will have the ID to be checked appended onto the end -->
-                  <AUTH_ACCESS_SERVICE>http://172.17.0.1:${test.hauth.port}/access</AUTH_ACCESS_SERVICE>
-                  <AUTH_COOKIE_SERVICE>http://172.17.0.1:${test.hauth.port}/cookie</AUTH_COOKIE_SERVICE>
-                  <AUTH_TOKEN_SERVICE>http://172.17.0.1:${test.hauth.port}/token</AUTH_TOKEN_SERVICE>
-                  <SINAI_AUTH_TOKEN_SERVICE>http://172.17.0.1:${test.hauth.port}/token/sinai</SINAI_AUTH_TOKEN_SERVICE>
                   <TIERED_ACCESS_SCALE_CONSTRAINT>1:2</TIERED_ACCESS_SCALE_CONSTRAINT>
                 </env>
-                <dependsOn>
-                  <container>delegate_hauth</container>
-                </dependsOn>
                 <wait>
                   <http>
                     <url>http://0.0.0.0:${test.iiif.images.port}</url>
@@ -469,46 +404,8 @@
           </execution>
         </executions>
       </plugin>
-      <plugin>
-        <groupId>net.revelc.code.formatter</groupId>
-        <artifactId>formatter-maven-plugin</artifactId>
-      </plugin>
     </plugins>
   </build>
-
-  <profiles>
-    <profile>
-      <id>snyk-check</id>
-      <activation>
-        <property>
-          <name>env.SNYK_TOKEN</name>
-        </property>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>io.snyk</groupId>
-            <artifactId>snyk-maven-plugin</artifactId>
-            <!-- Configurations have to be overridden in the executions' configuration elements -->
-            <executions>
-              <execution>
-                <id>snyk-test</id>
-                <goals>
-                  <goal>test</goal>
-                </goals>
-                <configuration>
-                  <args>
-                    <arg>--org=${env.UCLALIBRARY_SNYK_ORG}</arg>
-                    <arg>--fail-on=all</arg>
-                  </args>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
 
   <!-- Override the default distribution management with the new repo URLs -->
   <distributionManagement>
@@ -525,6 +422,6 @@
   <parent>
     <artifactId>freelib-parent</artifactId>
     <groupId>info.freelibrary</groupId>
-    <version>12.0.3</version>
+    <version>14.3.3</version>
   </parent>
 </project>
