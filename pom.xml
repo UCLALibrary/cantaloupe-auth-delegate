@@ -65,7 +65,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xs
 
     <!-- Plugin versions -->
     <shade.plugin.version>3.6.0</shade.plugin.version>
-    <download.plugin.version>1.6.7</download.plugin.version>
+    <download.plugin.version>1.13.0</download.plugin.version>
     <failsafe.plugin.version>2.22.0</failsafe.plugin.version>
     <docker.maven.plugin.version>0.49.0</docker.maven.plugin.version>
     <freelib.maven.version>0.5.2</freelib.maven.version>
