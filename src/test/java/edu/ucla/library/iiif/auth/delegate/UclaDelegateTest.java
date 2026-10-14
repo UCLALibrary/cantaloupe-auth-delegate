@@ -9,13 +9,13 @@ public class UclaDelegateTest {
     
 
     @Test
-    void testUclaIP() {
+    public void testUclaIP() {
     	UclaDelegate delegate = new UclaDelegate();
         assertTrue( delegate.isUclaIp("66.228.56.140"));
     }
 
     @Test
-    void testNotUclaIP() {
+    public void testNotUclaIP() {
     	UclaDelegate delegate = new UclaDelegate();
         assertFalse( delegate.isUclaIp("127.0.0.1"));
     }
