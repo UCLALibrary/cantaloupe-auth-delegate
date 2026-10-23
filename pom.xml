@@ -456,6 +456,6 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xs
   <parent>
     <artifactId>freelib-parent</artifactId>
     <groupId>info.freelibrary</groupId>
-    <version>14.3.3</version>
+    <version>14.3.4</version>
   </parent>
 </project>
