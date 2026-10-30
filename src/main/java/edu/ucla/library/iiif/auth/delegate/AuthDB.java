@@ -91,6 +91,7 @@ public final class AuthDB {
             try (ResultSet results = statement.executeQuery()) {
                 final int accessMode;
 
+                // If ID isn't in our database, let it through; anything not access restricted is OPEN
                 if (!results.next()) {
                     return AccessMode.OPEN;
                 }
