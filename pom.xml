@@ -64,6 +64,8 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xs
     <cantaloupe.version>5.0.7</cantaloupe.version>
     <postgresql.version>42.7.14</postgresql.version>
     <hikari.version>7.1.0</hikari.version>
+    <commons.net.version>3.13.0</commons.net.version>
+    <slf4j.version>2.0.20</slf4j.version>
 
     <!-- Plugin versions -->
     <shade.plugin.version>3.6.2</shade.plugin.version>
@@ -103,6 +105,11 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xs
       <version>${hikari.version}</version>
     </dependency>
     <dependency>
+      <groupId>commons-net</groupId>
+      <artifactId>commons-net</artifactId>
+      <version>${commons.net.version}</version>
+    </dependency>
+    <dependency>
       <groupId>edu.illinois.library.cantaloupe</groupId>
       <artifactId>cantaloupe</artifactId>
       <version>${cantaloupe.version}</version>
@@ -119,6 +126,12 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xs
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-simple</artifactId>
+      <version>${slf4j.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -150,6 +163,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xs
         <artifactId>maven-install-plugin</artifactId>
         <groupId>org.apache.maven.plugins</groupId>
         <executions>
+          <!-- This contains maven-assembly-plugin, so we get a warning; fix this for 5.0.8 if it's still a problem -->
           <execution>
             <id>install-cantaloupe</id>
             <phase>validate</phase>
@@ -403,6 +417,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xs
                   <include>edu.ucla.library:*</include>
                   <include>org.slf4j:*</include>
                   <include>com.zaxxer:HikariCP</include>
+                  <include>commons-net:commons-net</include>
                   <include>org.postgresql:postgresql</include>
                 </includes>
               </artifactSet>
@@ -427,7 +442,9 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xs
                     <!-- Duplicated files that are okay to exclude -->
                     <exclude>META-INF/MANIFEST.MF</exclude>
                     <exclude>META-INF/LICENSE</exclude>
+                    <exclude>META-INF/LICENSE.txt</exclude>
                     <exclude>META-INF/NOTICE</exclude>
+                    <exclude>META-INF/versions/9/module-info.class</exclude>
                   </excludes>
                 </filter>
               </filters>

@@ -1,6 +1,7 @@
 
 package edu.ucla.library.iiif.auth.delegate;
 
+import static info.freelibrary.util.Constants.TRUE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -149,7 +150,7 @@ public class UclaDelegateIT {
      */
     @Test
     public final void testResponseOpenUnauthorizedV2() throws IOException, InterruptedException {
-        final HttpResponse<String> response = sendImageInfoRequest(OPEN_ACCESS_IMAGE, 2);
+        final HttpResponse<String> response = sendImageInfoRequest(OPEN_ACCESS_IMAGE, 2, false);
         final String expectedResponse = getExpectedImageInfo(OPEN_ACCESS_IMAGE, FULL_ACCESS_RESPONSE_TEMPLATE_V2, 2);
 
         assertEquals(HTTP.OK, response.statusCode());
@@ -165,13 +166,29 @@ public class UclaDelegateIT {
      */
     @Test
     public final void testResponseTieredUnauthorizedV2() throws IOException, InterruptedException {
-        final HttpResponse<String> response = sendImageInfoRequest(TIERED_ACCESS_IMAGE, 2);
+        final HttpResponse<String> response = sendImageInfoRequest(TIERED_ACCESS_IMAGE, 2, false);
         final String expectedResponse =
                 getExpectedImageInfo(TIERED_ACCESS_IMAGE, DEGRADED_ACCESS_RESPONSE_TEMPLATE_V2, 2);
 
         assertEquals(HTTP.OK, response.statusCode());
         assertTrue(responseHasContentType(response, APPLICATION_JSON, APPLICATION_LD_PLUS_JSON));
         localAssertEquals(expectedResponse, response.body());
+    }
+
+    /**
+     * Test IP authorized v2 manifest.
+     *
+     * @throws InterruptedException If the test is interrupted
+     * @throws IOException If there is trouble reading and writing test resources
+     */
+    @Test
+    public final void testResponseIpAuthorizedV2() throws IOException, InterruptedException {
+        final HttpResponse<String> response = sendImageInfoRequest(TIERED_ACCESS_IMAGE, 2, true);
+        final String expected = getExpectedImageInfo(TIERED_ACCESS_IMAGE, FULL_ACCESS_RESPONSE_TEMPLATE_V2, 2);
+
+        assertEquals(HTTP.OK, response.statusCode());
+        assertTrue(responseHasContentType(response, APPLICATION_JSON, APPLICATION_LD_PLUS_JSON));
+        localAssertEquals(expected, response.body());
     }
 
     /**
@@ -182,7 +199,7 @@ public class UclaDelegateIT {
      */
     @Test
     public final void testResponseOpenUnauthorizedV3() throws IOException, InterruptedException {
-        final HttpResponse<String> response = sendImageInfoRequest(OPEN_ACCESS_IMAGE, 3);
+        final HttpResponse<String> response = sendImageInfoRequest(OPEN_ACCESS_IMAGE, 3, false);
         final String expectedResponse = getExpectedImageInfo(OPEN_ACCESS_IMAGE, FULL_ACCESS_RESPONSE_TEMPLATE_V3, 3);
 
         assertEquals(HTTP.OK, response.statusCode());
@@ -198,13 +215,29 @@ public class UclaDelegateIT {
      */
     @Test
     public final void testResponseTieredUnauthorizedV3() throws IOException, InterruptedException {
-        final HttpResponse<String> response = sendImageInfoRequest(TIERED_ACCESS_IMAGE, 3);
+        final HttpResponse<String> response = sendImageInfoRequest(TIERED_ACCESS_IMAGE, 3, false);
         final String expectedResponse =
                 getExpectedImageInfo(TIERED_ACCESS_IMAGE, DEGRADED_ACCESS_RESPONSE_TEMPLATE_V3, 3);
 
         assertEquals(HTTP.OK, response.statusCode());
         assertTrue(responseHasContentType(response, APPLICATION_JSON, APPLICATION_LD_PLUS_JSON));
         localAssertEquals(expectedResponse, response.body());
+    }
+
+    /**
+     * Test IP authorized v3 manifest.
+     *
+     * @throws InterruptedException If the test is interrupted
+     * @throws IOException If there is trouble reading and writing test resources
+     */
+    @Test
+    public final void testResponseIpAuthorizedV3() throws IOException, InterruptedException {
+        final HttpResponse<String> response = sendImageInfoRequest(TIERED_ACCESS_IMAGE, 3, true);
+        final String expected = getExpectedImageInfo(TIERED_ACCESS_IMAGE, FULL_ACCESS_RESPONSE_TEMPLATE_V3, 3);
+
+        assertEquals(HTTP.OK, response.statusCode());
+        assertTrue(responseHasContentType(response, APPLICATION_JSON, APPLICATION_LD_PLUS_JSON));
+        localAssertEquals(expected, response.body());
     }
 
     /**
@@ -229,10 +262,15 @@ public class UclaDelegateIT {
      * @throws IOException If there is trouble sending the HTTP request
      * @throws InterruptedException If there is trouble sending the HTTP request
      */
-    private HttpResponse<String> sendImageInfoRequest(final String aImageID, final int aImageApiVersion)
-            throws IOException, InterruptedException {
+    private HttpResponse<String> sendImageInfoRequest(final String aImageID, final int aImageApiVersion,
+            final boolean aIpTest) throws IOException, InterruptedException {
         final String imageURL = getImageInfoURL(System.getenv().get(IIIF_URL_PROPERTY), aImageApiVersion, aImageID);
         final HttpRequest.Builder requestBuilder = HttpRequest.newBuilder(URI.create(imageURL + "/info.json"));
+
+        // Confirm we want to include the Docker IP range when testing
+        if (aIpTest) {
+            requestBuilder.setHeader(UclaDelegate.TEST_IP_RANGE, TRUE);
+        }
 
         return HTTP_CLIENT.send(requestBuilder.build(), BodyHandlers.ofString());
     }
