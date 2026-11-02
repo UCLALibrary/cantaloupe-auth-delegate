@@ -29,7 +29,7 @@ jobs:
           cache: maven
           distribution: 'temurin'
           java-version: 17
-          server-id: ossrh-s01
+          server-id: central
           server-username: MAVEN_USERNAME
           server-password: MAVEN_PASSWORD
 
