@@ -76,7 +76,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xs
 
     <!-- Docker images versions used in testing -->
     <psql.container.version>12.7-alpine</psql.container.version>
-    <cantaloupe.container.version>5.0.7-1</cantaloupe.container.version>
+    <cantaloupe.container.version>5.0.7-2</cantaloupe.container.version>
 
     <!-- Build-time options -->
     <update.sql>false</update.sql>

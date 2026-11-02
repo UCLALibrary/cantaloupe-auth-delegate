@@ -24,13 +24,16 @@ import edu.illinois.library.cantaloupe.delegate.Logger;
 public final class AuthDB {
 
     /** The database URL template. */
-    private static final String DB_URL = "jdbc:postgresql://{}:{}/postgres";
+    private static final String DB_URL = "jdbc:postgresql://{}:{}/{}";
 
     /** Constant for auth database host. */
     private static final String DB_HOST = "AUTHDB_HOST";
 
     /** Constant for auth database port. */
     private static final String DB_PORT = "AUTHDB_PORT";
+
+    /** Constant for the auth database name. */
+    private static final String DB_NAME = "AUTHDB_NAME";
 
     /** Constant for auth database username. */
     private static final String DB_USERNAME = "AUTHDB_USERNAME";
@@ -60,7 +63,8 @@ public final class AuthDB {
      * @return A database connection
      */
     private static HikariDataSource createPool() {
-        final String dbURL = StringUtils.format(DB_URL, Env.get(DB_HOST, "localhost"), Env.get(DB_PORT, 5432));
+        final String dbURL = StringUtils.format(DB_URL, Env.get(DB_HOST, "localhost"), Env.get(DB_PORT, 5432),
+                Env.get(DB_NAME, "postgres"));
         final HikariConfig config = new HikariConfig();
 
         config.setDriverClassName("org.postgresql.Driver");
