@@ -247,7 +247,6 @@ public class UclaDelegate extends CantaloupeDelegate implements JavaDelegate {
     /**
      * Gets a scale constraint for tiered access.
      *
-     * @param aScaleConstraint A scale constraint for tiered access
      * @return The scale constraint
      * @throws NumberFormatException If the scale constraint's numbers aren't valid
      * @throws NullPointerException If the scale constraint hasn't been configured
