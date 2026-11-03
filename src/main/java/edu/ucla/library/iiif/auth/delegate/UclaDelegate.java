@@ -13,6 +13,7 @@ import java.util.stream.Stream;
 import org.apache.commons.net.util.SubnetUtils;
 import org.apache.commons.net.util.SubnetUtils.SubnetInfo;
 
+import info.freelibrary.util.Constants;
 import info.freelibrary.util.Env;
 import info.freelibrary.util.HTTP;
 import info.freelibrary.util.StringUtils;
@@ -139,6 +140,10 @@ public class UclaDelegate extends CantaloupeDelegate implements JavaDelegate {
         // If we don't have access from above, we must check item's access level
         try {
             final String id = context.getIdentifier();
+
+            final Map<String, String> headers = context.getRequestHeaders();
+            final String xIP = headers != null ? headers.get("X-Forwarded-For") : Constants.EMPTY;
+            Logger.info("Checking " + id + " for access by: " + ip + "[" + xIP + "]");
 
             switch (new AuthDB().getAccessMode(id)) {
                 case OPEN:
