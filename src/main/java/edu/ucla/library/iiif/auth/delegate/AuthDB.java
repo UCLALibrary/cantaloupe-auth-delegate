@@ -120,9 +120,9 @@ public final class AuthDB {
                 }
 
                 return switch (accessMode) {
-                    case 0 -> AccessMode.OPEN;
-                    case 1 -> AccessMode.TIERED;
-                    default -> AccessMode.OPEN;
+                    case 0 -> AccessMode.OPEN; // We may have a few that are loaded as explicitly open access
+                    case 1, 2 -> AccessMode.TIERED; // Lisa confirmed we show tiered for all access restricted
+                    default -> AccessMode.OPEN; // No database entry mean it's open access
                 };
             }
         }
