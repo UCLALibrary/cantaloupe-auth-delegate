@@ -116,6 +116,7 @@ public class UclaDelegate extends CantaloupeDelegate implements JavaDelegate {
     public Object preAuthorize() {
         final JavaContext context = getContext();
         final String ip = context.getClientIPAddress();
+        final String id = context.getIdentifier();
 
         try {
             // Check whether to consider the IP range used for testing, indicated by a supplied HTTP header
@@ -132,6 +133,10 @@ public class UclaDelegate extends CantaloupeDelegate implements JavaDelegate {
             Logger.error(StringUtils.format("Unexpected {} header value extraction error", TEST_IP_RANGE));
         }
 
+        final Map<String, String> headers = context.getRequestHeaders();
+        final String xIP = headers != null ? headers.get("X-Forwarded-For") : Constants.EMPTY;
+        Logger.info("Checking " + id + " for access by: " + ip + "[" + xIP + "]");
+
         // Allow any kind of thumbnail request or any UCLA IP, no questions asked
         if (context.getLocalURI().contains(THUMBNAIL) || isUclaIp(ip)) {
             return true;
@@ -139,12 +144,6 @@ public class UclaDelegate extends CantaloupeDelegate implements JavaDelegate {
 
         // If we don't have access from above, we must check item's access level
         try {
-            final String id = context.getIdentifier();
-
-            final Map<String, String> headers = context.getRequestHeaders();
-            final String xIP = headers != null ? headers.get("X-Forwarded-For") : Constants.EMPTY;
-            Logger.info("Checking " + id + " for access by: " + ip + "[" + xIP + "]");
-
             switch (new AuthDB().getAccessMode(id)) {
                 case OPEN:
                     return true;
