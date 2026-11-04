@@ -142,8 +142,10 @@ public class UclaDelegate extends CantaloupeDelegate implements JavaDelegate {
 
             switch (new AuthDB().getAccessMode(id)) {
                 case OPEN:
+                    Logger.info("Item " + id + " is OPEN access from: " + ip);
                     return true;
                 case TIERED:
+                    Logger.info("Item " + id + " is TIERED access from: " + ip);
                     switch (getRequestType()) {
                         case INFORMATION:
                             return getTieredInfo();
@@ -153,6 +155,7 @@ public class UclaDelegate extends CantaloupeDelegate implements JavaDelegate {
                     }
                 case ALL_OR_NOTHING:
                 default:
+                    Logger.info("Item " + id + " is UNEXPECTED access from: " + ip);
                     // The AuthDB interface treats things not in the auth database as open access
                     throw new RuntimeException("Unexpected access mode value: ALL_OR_NOTHING");
             }
