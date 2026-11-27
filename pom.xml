@@ -62,7 +62,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xs
     <!-- Dependency versions -->
     <freelib.utils.version>5.3.2</freelib.utils.version>
     <cantaloupe.version>5.0.7</cantaloupe.version>
-    <postgresql.version>42.7.14</postgresql.version>
+    <postgresql.version>42.7.15</postgresql.version>
     <hikari.version>7.1.0</hikari.version>
     <commons.net.version>3.13.0</commons.net.version>
     <slf4j.version>2.0.20</slf4j.version>
